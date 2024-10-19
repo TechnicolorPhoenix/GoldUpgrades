@@ -1,0 +1,10 @@
+{
+  "item.thex.amethyst": "Amethyst",
+  "item.thex.sea_grazer": "Sea Grazer",
+  "item.thex.hex_shield": "Hex Shield",
+
+  "block.thex.amethyst_ore": "Amethyst Ore",
+  "block.thex.glowdust_block": "Glowdust",
+
+  "ItemGroup.titanhexModTab": "Thex Mod"
+}

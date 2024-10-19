@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_diamond",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_tower_wood"
+    },
+    "#": {
+      "tag": "forge:gems/diamond"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_tower_diamond"
+  }
+}

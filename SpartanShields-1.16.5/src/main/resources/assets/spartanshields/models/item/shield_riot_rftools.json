@@ -1,0 +1,30 @@
+{
+    "parent":"spartanshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"spartanshields:items/powered/shield_riot_rftools_base",
+		"layer1":"spartanshields:items/powered/shield_riot_rftools_active"
+    },
+    "overrides": [
+        {
+            "predicate": {
+				"disabled": 0,
+                "blocking": 1
+            },
+            "model": "spartanshields:item/shield_riot_rftools_blocking"
+        },
+		{
+            "predicate": {
+				"disabled": 1,
+                "blocking": 0
+            },
+            "model": "spartanshields:item/shield_riot_rftools_deactivated"
+		},
+        {
+            "predicate": {
+				"disabled": 1,
+                "blocking": 1
+            },
+            "model": "spartanshields:item/shield_riot_rftools_deactivated_blocking"
+        }
+    ]
+}

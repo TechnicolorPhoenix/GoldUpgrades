@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "thexshields:shield_invar",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "thexshields:shield_tower_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/invar"
+    }
+  },
+  "result": {
+    "item": "thexshields:shield_tower_invar"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/invar",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#E#",
+    "#|#",
+    " M "
+  ],
+  "key": {
+    "#": {
+      "tag": "forge:ingots/manasteel"
+    },
+    "|": {
+      "item": "botania:livingwood_twig"
+    },
+    "E": {
+      "tag": "botania:runes/earth"
+    },
+    "M": {
+      "tag": "botania:runes/mana"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_botania_manasteel"
+  },
+  "conditions": [
+    {
+      "modid": "botania",
+      "type": "forge:mod_loaded"
+    }
+  ]
+}

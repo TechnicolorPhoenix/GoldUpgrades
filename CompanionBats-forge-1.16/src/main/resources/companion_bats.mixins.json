@@ -1,0 +1,17 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "dev.fulmineo.companion_bats.mixin",
+    "compatibilityLevel": "JAVA_8",
+    "refmap": "companion_bats.refmap.json",
+    "mixins": [
+		"BatEntityMixin",
+		"LivingEntityMixin",
+        "SwampHutGeneratorMixin"
+	],
+    "client": [],
+    "server": [],
+    "injectors": {
+      	"defaultRequire": 1
+    }
+}

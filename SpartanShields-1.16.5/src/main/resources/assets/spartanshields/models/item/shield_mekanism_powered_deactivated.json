@@ -1,0 +1,7 @@
+{
+    "parent":"spartanshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"spartanshields:items/powered/shield_riot_enderio_base",
+		"layer1":"spartanshields:items/powered/shield_riot_enderio_deactivated"
+    }
+}

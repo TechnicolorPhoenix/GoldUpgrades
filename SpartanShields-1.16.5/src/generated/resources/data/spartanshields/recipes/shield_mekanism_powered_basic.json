@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ADA",
+    "CBC",
+    "#B#"
+  ],
+  "key": {
+    "A": {
+      "item": "mekanism:alloy_infused"
+    },
+    "D": {
+      "item": "mekanism:enriched_diamond"
+    },
+    "C": {
+      "item": "mekanism:basic_control_circuit"
+    },
+    "B": {
+      "item": "mekanism:energy_tablet"
+    },
+    "#": {
+      "tag": "forge:ingots/steel"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_mekanism_powered_basic"
+  },
+  "conditions": [
+    {
+      "modid": "mekanism",
+      "type": "forge:mod_loaded"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_nickel",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_tower_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/nickel"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_tower_nickel"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/nickel",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

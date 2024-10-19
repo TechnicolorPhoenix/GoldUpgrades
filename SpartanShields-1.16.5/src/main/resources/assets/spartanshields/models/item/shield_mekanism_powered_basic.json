@@ -1,0 +1,30 @@
+{
+    "parent":"spartanshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"spartanshields:items/mekanism/shield_powered_mekanism_base",
+		"layer1":"spartanshields:items/mekanism/shield_powered_mekanism_lights_on"
+	},
+    "overrides": [
+        {
+            "predicate": {
+				"disabled": 0,
+                "blocking": 1
+            },
+            "model": "spartanshields:item/shield_mekanism_powered_basic_blocking"
+        },
+		{
+            "predicate": {
+				"disabled": 1,
+                "blocking": 0
+            },
+            "model": "spartanshields:item/shield_mekanism_powered_basic_deactivated"
+		},
+        {
+            "predicate": {
+				"disabled": 1,
+                "blocking": 1
+            },
+            "model": "spartanshields:item/shield_mekanism_powered_basic_deactivated_blocking"
+        }
+    ]
+}

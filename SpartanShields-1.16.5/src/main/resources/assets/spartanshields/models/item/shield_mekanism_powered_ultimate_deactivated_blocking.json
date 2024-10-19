@@ -1,0 +1,7 @@
+{
+    "parent":"spartanshields:item/shield_mekanism_powered_basic_blocking",
+    "textures": {
+        "layer0":"spartanshields:items/mekanism/shield_powered_mekanism_base",
+		"layer1":"spartanshields:items/mekanism/shield_powered_mekanism_lights_off"
+    }
+}

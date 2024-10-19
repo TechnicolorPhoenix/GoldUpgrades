@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "spartanshields:shield_mekanism_osmium"
+    ]
+  },
+  "criteria": {
+    "has_osmium_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "tag": "forge:ingots/osmium"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "spartanshields:shield_mekanism_osmium"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_osmium_ingot",
+      "has_the_recipe"
+    ]
+  ]
+}

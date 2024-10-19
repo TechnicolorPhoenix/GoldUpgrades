@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_electrum",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_tower_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/electrum"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_tower_electrum"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/electrum",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

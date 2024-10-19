@@ -1,0 +1,14 @@
+{
+    "parent":"thexshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"thexshields:items/abyssalcraft/shield_basic_dreadium"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "blocking": 1
+            },
+            "model": "thexshields:item/shield_abyssalcraft_dreadium_blocking"
+        }
+    ]
+}

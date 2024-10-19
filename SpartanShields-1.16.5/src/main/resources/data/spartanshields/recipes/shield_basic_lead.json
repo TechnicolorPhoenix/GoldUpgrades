@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_lead",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_basic_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/lead"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_basic_lead"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/lead",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

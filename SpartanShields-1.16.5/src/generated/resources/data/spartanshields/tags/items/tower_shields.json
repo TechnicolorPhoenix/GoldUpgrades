@@ -1,0 +1,23 @@
+{
+  "replace": false,
+  "values": [
+    "spartanshields:shield_tower_wood",
+    "spartanshields:shield_tower_stone",
+    "spartanshields:shield_tower_iron",
+    "spartanshields:shield_tower_gold",
+    "spartanshields:shield_tower_diamond",
+    "spartanshields:shield_tower_netherite",
+    "spartanshields:shield_tower_obsidian",
+    "spartanshields:shield_tower_copper",
+    "spartanshields:shield_tower_tin",
+    "spartanshields:shield_tower_bronze",
+    "spartanshields:shield_tower_steel",
+    "spartanshields:shield_tower_silver",
+    "spartanshields:shield_tower_lead",
+    "spartanshields:shield_tower_nickel",
+    "spartanshields:shield_tower_invar",
+    "spartanshields:shield_tower_constantan",
+    "spartanshields:shield_tower_platinum",
+    "spartanshields:shield_tower_electrum"
+  ]
+}

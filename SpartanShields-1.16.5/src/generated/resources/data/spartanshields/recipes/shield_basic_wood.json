@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_wood",
+  "pattern": [
+    "## ",
+    "#|#",
+    " ##"
+  ],
+  "key": {
+    "|": {
+      "tag": "forge:rods/wooden"
+    },
+    "#": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_basic_wood"
+  }
+}

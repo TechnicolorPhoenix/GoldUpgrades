@@ -1,0 +1,14 @@
+{
+    "parent":"spartanshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"spartanshields:items/mekanism/shield_mekanism_refined_glowstone"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "blocking": 1
+            },
+            "model": "spartanshields:item/shield_mekanism_refined_glowstone_blocking"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_invar",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_tower_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/invar"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_tower_invar"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/invar",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

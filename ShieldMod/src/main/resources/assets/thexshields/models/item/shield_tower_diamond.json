@@ -1,0 +1,11 @@
+{
+    "parent": "thexshields:item/shield_tower_wood",
+    "overrides": [
+        {
+            "predicate": {
+                "blocking": 1
+            },
+            "model": "thexshields:item/shield_tower_wood_blocking"
+        }
+    ]
+}

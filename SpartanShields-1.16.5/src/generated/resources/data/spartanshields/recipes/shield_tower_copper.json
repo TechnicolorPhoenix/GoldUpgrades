@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "spartanshields:shield_copper",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_tower_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/copper"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_tower_copper"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/copper",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

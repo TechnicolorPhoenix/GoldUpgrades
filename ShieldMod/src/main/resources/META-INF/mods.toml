@@ -1,0 +1,33 @@
+modLoader="javafml"
+loaderVersion="[34,)"
+# The license for your mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
+# Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
+license="All Rights Reserved"
+issueTrackerURL="https://minecraft.curseforge.com/projects/spartan-shields/issues"
+logoFile="logo.png"
+
+[[mods]]
+	modId="thexshields"
+	version="${version}"
+	displayName="Titanhex Shields"
+	# A URL to query for updates for this mod. See the JSON update specification <here>
+	#updateJSONURL="http://myurl.me/"
+	displayURL="https://minecraft.curseforge.com/projects/spartan-shields"
+	credits="ObliviousSpartan for the source code"
+	authors="Titanhex"
+	description='''
+Adds a variety of new shields to Minecraft.
+    '''
+	
+[[dependencies.thexshields]]
+    modId="forge"
+    mandatory=true
+    versionRange="[34,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.thexshields]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.3, 1.16.5]"
+    ordering="NONE"
+    side="BOTH"

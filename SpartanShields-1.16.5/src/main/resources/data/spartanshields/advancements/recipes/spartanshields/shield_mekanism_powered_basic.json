@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "spartanshields:shield_mekanism_powered_basic"
+    ]
+  },
+  "criteria": {
+    "has_infused_alloy": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "mekanism:alloy_infused"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "spartanshields:shield_mekanism_powered_basic"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_infused_alloy",
+      "has_the_recipe"
+    ]
+  ]
+}

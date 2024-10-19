@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "thexshields:shield_lead",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "thexshields:shield_basic_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/lead"
+    }
+  },
+  "result": {
+    "item": "thexshields:shield_basic_lead"
+  },
+  "conditions": [
+    {
+      "value": {
+        "tag": "forge:ingots/lead",
+        "type": "forge:tag_empty"
+      },
+      "type": "forge:not"
+    }
+  ]
+}

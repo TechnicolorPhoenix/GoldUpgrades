@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " # ",
+    "#@#",
+    " # "
+  ],
+  "key": {
+    "@": {
+      "item": "spartanshields:shield_basic_wood"
+    },
+    "#": {
+      "tag": "forge:ingots/osmium"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_mekanism_osmium"
+  },
+  "conditions": [
+    {
+      "modid": "mekanism",
+      "type": "forge:mod_loaded"
+    }
+  ]
+}

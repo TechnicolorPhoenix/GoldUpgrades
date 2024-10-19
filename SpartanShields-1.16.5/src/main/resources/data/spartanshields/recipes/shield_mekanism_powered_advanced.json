@@ -1,0 +1,34 @@
+{
+  "type": "spartanshields:upgrade_powered_shield",
+  "pattern": [
+    "ASA",
+    "CBC",
+    "#B#"
+  ],
+  "key": {
+    "S": {
+      "item": "spartanshields:shield_mekanism_powered_basic"
+    },
+    "A": {
+      "item": "mekanism:alloy_reinforced"
+    },
+    "C": {
+      "item": "mekanism:advanced_control_circuit"
+    },
+    "B": {
+      "item": "mekanism:energy_tablet"
+    },
+    "#": {
+      "tag": "forge:ingots/steel"
+    }
+  },
+  "result": {
+    "item": "spartanshields:shield_mekanism_powered_advanced"
+  },
+  "conditions": [
+    {
+      "modid": "mekanism",
+      "type": "forge:mod_loaded"
+    }
+  ]
+}

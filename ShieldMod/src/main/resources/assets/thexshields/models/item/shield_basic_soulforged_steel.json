@@ -1,0 +1,14 @@
+{
+    "parent":"thexshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"thexshields:items/bwm/shield_basic_soulforged_steel"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "blocking": 1
+            },
+            "model": "thexshields:item/shield_basic_soulforged_steel_blocking"
+        }
+    ]
+}

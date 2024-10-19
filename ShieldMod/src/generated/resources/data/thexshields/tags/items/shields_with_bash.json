@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:shield",
+    "#thexshields:basic_shields",
+    "#thexshields:tower_shields"
+  ]
+}

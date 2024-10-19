@@ -1,0 +1,14 @@
+{
+    "parent":"thexshields:item/shield_basic_base",
+    "textures": {
+        "layer0":"thexshields:items/shield_basic_lumium"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "blocking": 1
+            },
+            "model": "thexshields:item/shield_basic_lumium_blocking"
+        }
+    ]
+}

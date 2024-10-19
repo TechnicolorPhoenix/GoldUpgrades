@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "spartanshields:shield_botania_terrasteel"
+    ]
+  },
+  "criteria": {
+    "has_manasteel": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "tag": "forge:ingots/terrasteel"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "spartanshields:shield_botania_terrasteel"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_manasteel",
+      "has_the_recipe"
+    ]
+  ]
+}

@@ -1,0 +1,39 @@
+modLoader="javafml"
+loaderVersion="[34,)"
+# The license for your mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
+# Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
+license="All Rights Reserved"
+issueTrackerURL="https://minecraft.curseforge.com/projects/spartan-shields/issues"
+logoFile="logo.png"
+
+[[mods]]
+	modId="spartanshields"
+	version="${version}"
+	displayName="Spartan Shields"
+	# A URL to query for updates for this mod. See the JSON update specification <here>
+	#updateJSONURL="http://myurl.me/"
+	displayURL="https://minecraft.curseforge.com/projects/spartan-shields"
+	credits="Evinsta for the name, and the translators: Ryo_Pasternak (Russian), InterPlay02 (Brazillian) and Neerwan (French)"
+	authors="ObliviousSpartan"
+	description='''
+Spartan Shields adds a variety of new shields to Minecraft.
+    '''
+	
+[[dependencies.spartanshields]]
+    modId="forge"
+    mandatory=true
+    versionRange="[34,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.spartanshields]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.3, 1.16.5]"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.spartanshields]]
+    modId="botania"
+    mandatory=false
+    versionRange="[1.16.3-409,)"
+    ordering="AFTER"
+    side="BOTH"
