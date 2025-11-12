@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "goldupgrades:item/fire_power_gold_axe"
+  }
+}

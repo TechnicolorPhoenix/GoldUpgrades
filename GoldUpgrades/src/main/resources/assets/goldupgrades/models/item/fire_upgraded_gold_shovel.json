@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "goldupgrades:item/fire_upgraded_gold_shovel"
+  }
+}

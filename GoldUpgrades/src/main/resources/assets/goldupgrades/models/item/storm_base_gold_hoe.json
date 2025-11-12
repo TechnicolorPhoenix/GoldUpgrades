@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "goldupgrades:item/storm_base_gold_hoe"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    { "item": "minecraft:wither_skeleton_skull" },
+    { "item": "minecraft:nether_star" },
+    { "item": "minecraft:ghast_tear" }
+  ],
+  "result": {
+    "item": "goldupgrades:fire_power_gold_chestplate",
+    "count": 1
+  },
+  "weather": "THUNDERING",
+  "moon_phase": "FULL_MOON",
+  "dimension": "OVERWORLD",
+  "min_time": 20000,
+  "max_time": 6000
+}
