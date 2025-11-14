@@ -1,0 +1,20 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_pickaxe"
+    },
+    {
+      "item": "minecraft:obsidian"
+    },
+    {
+      "item": "minecraft:obsidian"
+    },
+    {
+      "item": "minecraft:obsidian"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:obsidian_base_gold_pickaxe"
+  }
+}

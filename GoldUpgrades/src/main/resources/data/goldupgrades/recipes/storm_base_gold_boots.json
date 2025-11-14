@@ -1,0 +1,17 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_boots"
+    },
+    {
+      "item": "minecraft:honeycomb"
+    },
+    {
+      "item": "minecraft:honeycomb"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:storm_base_gold_boots"
+  }
+}

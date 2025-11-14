@@ -1,0 +1,19 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "weather": "RAINING",
+  
+  "ingredients": [
+    {
+      "item": "goldupgrades:sea_base_gold_helmet"
+    },
+    {
+      "item": "minecraft:nautilus_shell"
+    },
+    {
+      "item": "minecraft:nautilus_shell"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:sea_upgraded_gold_helmet"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_shovel"
+    },
+    {
+      "item": "minecraft:magma_block"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:fire_base_gold_shovel"
+  }
+}

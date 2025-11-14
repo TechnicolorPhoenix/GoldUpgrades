@@ -1,0 +1,17 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_helmet"
+    },
+    {
+      "item": "minecraft:magma_block"
+    },
+    {
+      "item": "minecraft:magma_block"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:fire_base_gold_helmet"
+  }
+}

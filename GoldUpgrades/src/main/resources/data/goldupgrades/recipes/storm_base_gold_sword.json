@@ -1,0 +1,17 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_sword"
+    },
+    {
+      "item": "minecraft:honeycomb"
+    },
+    {
+      "item": "minecraft:honeycomb"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:storm_base_gold_sword"
+  }
+}

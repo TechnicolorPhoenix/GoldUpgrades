@@ -1,0 +1,31 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "weather": "RAINING",
+  
+  "ingredients": [
+    {
+      "item": "goldupgrades:sea_base_gold_chestplate"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:sea_upgraded_gold_chestplate"
+  }
+}

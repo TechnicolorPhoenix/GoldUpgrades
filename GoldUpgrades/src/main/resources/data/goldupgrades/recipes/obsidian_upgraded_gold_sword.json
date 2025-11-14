@@ -1,0 +1,19 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "min_time": 20000,
+  "max_time": 6000,
+  "ingredients": [
+    {
+      "item": "goldupgrades:obsidian_base_gold_sword"
+    },
+    {
+      "item": "minecraft:crying_obsidian"
+    },
+    {
+      "item": "minecraft:crying_obsidian"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:obsidian_upgraded_gold_sword"
+  }
+}

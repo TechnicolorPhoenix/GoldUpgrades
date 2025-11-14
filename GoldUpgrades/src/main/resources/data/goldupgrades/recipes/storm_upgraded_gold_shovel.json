@@ -1,0 +1,16 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "weather": "THUNDERING",
+  
+  "ingredients": [
+    {
+      "item": "goldupgrades:storm_base_gold_shovel"
+    },
+    {
+      "item": "minecraft:slime_block"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:storm_upgraded_gold_shovel"
+  }
+}

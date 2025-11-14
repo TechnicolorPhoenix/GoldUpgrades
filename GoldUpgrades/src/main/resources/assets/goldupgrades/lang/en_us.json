@@ -116,6 +116,9 @@
   "item.goldupgrades.raid_base_chestplate": "Raid Chestplate",
   "item.goldupgrades.raid_base_helmet": "Raid Helmet",
 
+  "enchantment.goldupgrades.curse_of_rust": "Curse of Rust",
+  "effect.goldupgrades.curse_of_rust": "Curse of Rust",
+
   "itemGroup.goldBaseArmorTab": "Gold Base Equipment",
   "itemGroup.goldUpgradedArmorTab": "Gold Upgraded Equipment",
   "itemGroup.goldPowerArmorTab": "Gold Power Equipment",

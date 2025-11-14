@@ -1,0 +1,14 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_shovel"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:sea_base_gold_shovel"
+  }
+}

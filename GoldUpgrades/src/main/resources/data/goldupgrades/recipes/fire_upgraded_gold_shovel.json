@@ -1,0 +1,15 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "dimension": "NETHER",
+  "ingredients": [
+    {
+      "item": "goldupgrades:fire_base_gold_shovel"
+    },
+    {
+      "item": "minecraft:magma_cream"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:fire_upgraded_gold_shovel"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_helmet"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    },
+    {
+      "item": "minecraft:salmon_bucket"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:sea_base_gold_helmet"
+  }
+}
