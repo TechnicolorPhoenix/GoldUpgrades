@@ -1,7 +1,0 @@
-{
-    "parent":"thexshields:item/shield_basic_base",
-    "textures": {
-        "layer0":"thexshields:items/mekanism/shield_powered_mekanism_base",
-		"layer1":"thexshields:items/mekanism/shield_powered_mekanism_lights_off"
-    }
-}

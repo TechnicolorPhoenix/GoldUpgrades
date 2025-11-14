@@ -1,7 +1,0 @@
-{
-    "parent":"thexshields:item/shield_basic_base",
-    "textures": {
-        "layer0":"thexshields:items/powered/shield_riot_enderio_base",
-		"layer1":"thexshields:items/powered/shield_riot_enderio_deactivated"
-    }
-}

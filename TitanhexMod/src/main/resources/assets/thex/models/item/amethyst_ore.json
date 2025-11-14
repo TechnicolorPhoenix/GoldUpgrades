@@ -1,6 +1,0 @@
-{
-  "parent": "thex:block/amethyst_ore",
-  "textures": {
-    "layer0": "thex:block/amethyst_ore"
-  }
-}

@@ -1,6 +1,0 @@
-{
-  "parent": "thex:block/glowdust_block",
-  "textures": {
-    "layer0": "thex:block/glowdust_block"
-  }
-}

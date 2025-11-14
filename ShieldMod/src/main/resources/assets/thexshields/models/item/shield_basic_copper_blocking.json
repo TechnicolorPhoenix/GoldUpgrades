@@ -1,6 +1,0 @@
-{
-    "parent":"thexshields:item/shield_basic_base_blocking",
-    "textures": {
-        "layer0":"thexshields:items/shield_basic_copper"
-    }
-}
