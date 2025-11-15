@@ -16,6 +16,15 @@ public class ModEffects {
     public static final RegistryObject<Effect> CURSE_OF_RUST =
             EFFECTS.register("curse_of_rust", () -> new CurseOfRustEffect());
 
+    public static final RegistryObject<Effect> STONESKIN =
+            EFFECTS.register("stoneskin", () -> new StoneskinEffect());
+
+    public static final RegistryObject<Effect> STASIS =
+            EFFECTS.register("stasis", () -> new StasisEffect());
+
+    public static final RegistryObject<Effect> DEATH_DELAY =
+            EFFECTS.register("death_delay", () -> new DeathDelayEffect());
+
     /**
      * Call this method from your main mod constructor to register the effects.
      */

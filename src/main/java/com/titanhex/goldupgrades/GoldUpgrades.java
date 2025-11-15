@@ -3,9 +3,7 @@ package com.titanhex.goldupgrades;
 import com.titanhex.goldupgrades.data.recipes.ModRecipeTypes;
 import com.titanhex.goldupgrades.effect.ModEffects;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
-import com.titanhex.goldupgrades.event.CurseOfRustEventHandler;
-import com.titanhex.goldupgrades.event.JumpEventHandler;
-import com.titanhex.goldupgrades.event.RaidArmorEventHandler;
+import com.titanhex.goldupgrades.event.*;
 import com.titanhex.goldupgrades.item.ModToolItems;
 import com.titanhex.goldupgrades.item.ModArmorItems;
 import net.minecraft.block.Block;
@@ -55,10 +53,9 @@ public class GoldUpgrades
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
-            // Register the event handler instance on the FORGE bus
-        MinecraftForge.EVENT_BUS.register(new JumpEventHandler());
-        MinecraftForge.EVENT_BUS.register(new CurseOfRustEventHandler());
-        MinecraftForge.EVENT_BUS.register(new RaidArmorEventHandler());
+
+        // Register the event handler instance on the FORGE bus
+        ModEvents.register(MinecraftForge.EVENT_BUS);
     }
 
     private void setup(final FMLCommonSetupEvent event)

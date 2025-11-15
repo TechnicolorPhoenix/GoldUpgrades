@@ -28,7 +28,7 @@ public class ModEnchantments {
     public static final RegistryObject<Enchantment> CURSE_OF_RUST =
             ENCHANTMENTS.register("curse_of_rust", () -> new CurseOfRustEnchantment(
                     Enchantment.Rarity.RARE, // Choose Rarity
-                    EquipmentSlotType.CHEST          // Pass the array of all possible slots
+                    ALL_SLOTS          // Pass the array of all possible slots
             ));
     /**
      * Call this method from your main mod constructor to register the effects.

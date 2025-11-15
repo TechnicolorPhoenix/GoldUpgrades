@@ -117,7 +117,11 @@
   "item.goldupgrades.raid_base_helmet": "Raid Helmet",
 
   "enchantment.goldupgrades.curse_of_rust": "Curse of Rust",
-  "effect.goldupgrades.curse_of_rust": "Curse of Rust",
+
+  "effect.goldupgrades.curse_of_rust": "Rusting",
+  "effect.goldupgrades.stoneskin": "Stoneskin",
+  "effect.goldupgrades.stasis": "Stasis",
+  "effect.goldupgrades.death_delay": "Death Delay",
 
   "itemGroup.goldBaseArmorTab": "Gold Base Equipment",
   "itemGroup.goldUpgradedArmorTab": "Gold Upgraded Equipment",
