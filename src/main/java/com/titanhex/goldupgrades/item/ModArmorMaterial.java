@@ -61,19 +61,7 @@ public enum ModArmorMaterial implements IArmorMaterial {
     STORM_POWER_GOLD("storm_power_gold", 28, new int[]{3, 6, 8, 3}, 25,
             SoundEvents.LIGHTNING_BOLT_IMPACT, 2.0F, 0.0F, () -> {
         return Ingredient.of(Items.SHULKER_SHELL);
-    }),
-    RAID_BASE("raid_base", 7, new int[]{2, 4, 5, 1}, 10,
-            SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.of(Items.LEATHER);
-    }),
-    RAID_UPGRADED("raid_upgraded", 10, new int[]{2, 5, 6, 2}, 13,
-            SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.of(Items.EMERALD);
-    }),
-    RAID_POWER("raid_power", 13, new int[]{3, 6, 8, 3}, 16,
-            SoundEvents.ARMOR_EQUIP_LEATHER, 2.0F, 0.0F, () -> {
-        return Ingredient.of(Items.EMERALD_BLOCK);
-    }),
+    })
     ;
 ;
 

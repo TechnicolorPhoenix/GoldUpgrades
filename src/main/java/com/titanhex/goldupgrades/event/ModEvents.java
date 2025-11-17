@@ -7,9 +7,5 @@ public class ModEvents {
 
     public static void register(IEventBus bus){
         bus.register(new JumpEventHandler());
-        bus.register(new CurseOfRustEventHandler());
-        bus.register(new RaidArmorEventHandler());
-        bus.register(new StoneskinEventHandler());
-        bus.register(new StasisHandler());
     }
 }

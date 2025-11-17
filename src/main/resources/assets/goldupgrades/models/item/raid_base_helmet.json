@@ -1,7 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "goldupgrades:item/raid_base_helmet",
-    "layer1": "goldupgrades:item/raid_base_helmet_overlay"
-  }
-}

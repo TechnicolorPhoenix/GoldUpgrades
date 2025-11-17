@@ -1,8 +1,6 @@
 package com.titanhex.goldupgrades;
 
 import com.titanhex.goldupgrades.data.recipes.ModRecipeTypes;
-import com.titanhex.goldupgrades.effect.ModEffects;
-import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.event.*;
 import com.titanhex.goldupgrades.item.ModToolItems;
 import com.titanhex.goldupgrades.item.ModArmorItems;
@@ -38,8 +36,6 @@ public class GoldUpgrades
 
         ModRecipeTypes.register(eventBus);
 
-        ModEffects.register(eventBus);
-        ModEnchantments.register(eventBus);
         ModArmorItems.register(eventBus);
         ModToolItems.register(eventBus);
 

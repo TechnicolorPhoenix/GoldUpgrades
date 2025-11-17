@@ -111,20 +111,7 @@
   "item.goldupgrades.storm_power_gold_shovel": "Storm Gold Shovel",
   "item.goldupgrades.storm_power_gold_pickaxe": "Storm Gold Pickaxe",
 
-  "item.goldupgrades.raid_base_boots": "Raid Boots",
-  "item.goldupgrades.raid_base_leggings": "Raid Leggings",
-  "item.goldupgrades.raid_base_chestplate": "Raid Chestplate",
-  "item.goldupgrades.raid_base_helmet": "Raid Helmet",
-
-  "enchantment.goldupgrades.curse_of_rust": "Curse of Rust",
-
-  "effect.goldupgrades.curse_of_rust": "Rusting",
-  "effect.goldupgrades.stoneskin": "Stoneskin",
-  "effect.goldupgrades.stasis": "Stasis",
-  "effect.goldupgrades.death_delay": "Death Delay",
-
   "itemGroup.goldBaseArmorTab": "Gold Base Equipment",
   "itemGroup.goldUpgradedArmorTab": "Gold Upgraded Equipment",
-  "itemGroup.goldPowerArmorTab": "Gold Power Equipment",
-  "itemGroup.raidArmorTab": "Raid Armors"
+  "itemGroup.goldPowerArmorTab": "Gold Power Equipment"
 }

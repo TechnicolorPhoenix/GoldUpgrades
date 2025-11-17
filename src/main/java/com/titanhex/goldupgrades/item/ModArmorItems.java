@@ -11,6 +11,5 @@ public class ModArmorItems {
         FireArmorItems.ITEMS.register(eventBus);
         StormArmorItems.ITEMS.register(eventBus);
         SeaArmorItems.ITEMS.register(eventBus);
-        RaidArmorItems.ITEMS.register(eventBus);
     }
 }
