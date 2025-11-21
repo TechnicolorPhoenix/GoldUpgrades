@@ -12,37 +12,37 @@ public enum ModItemTier implements IItemTier {
     OBSIDIAN_BASE_GOLD(0, 150, 12.0F, 0.0F, 22, () -> {
         return Ingredient.of(Items.OBSIDIAN);
     }),
-    OBSIDIAN_UPGRADED_GOLD(2, 350, 11.0F, 1.0F, 25, () -> {
+    OBSIDIAN_UPGRADED_GOLD(2, 350, 11.0F, 0.0F, 25, () -> {
         return Ingredient.of(Items.CRYING_OBSIDIAN);
     }),
-    OBSIDIAN_POWER_GOLD(3, 1125, 13.0F, 2.0F, 28, () -> {
+    OBSIDIAN_POWER_GOLD(3, 1125, 13.0F, 0.0F, 28, () -> {
         return Ingredient.of(Items.GILDED_BLACKSTONE);
     }),
     FIRE_BASE_GOLD(1, 100, 9.0F, 0.5F, 22, () -> {
         return Ingredient.of(Items.MAGMA_BLOCK);
     }),
-    FIRE_UPGRADED_GOLD(2, 200, 11.0F, 1.5F, 25, () -> {
+    FIRE_UPGRADED_GOLD(2, 200, 11.0F, 0.5F, 25, () -> {
         return Ingredient.of(Items.BLAZE_ROD);
     }),
-    FIRE_POWER_GOLD(3, 900, 13.0F, 2.5F, 28, () -> {
+    FIRE_POWER_GOLD(3, 900, 13.0F, 0.5F, 28, () -> {
         return Ingredient.of(Items.MAGMA_CREAM);
     }),
     SEA_BASE_GOLD(1, 100, 9.0F, 0.0F, 25, () -> {
         return Ingredient.of(Items.WATER_BUCKET);
     }),
-    SEA_UPGRADED_GOLD(2, 300, 11.0F, 1.0F, 29, () -> {
+    SEA_UPGRADED_GOLD(2, 300, 11.0F, 0.0F, 29, () -> {
         return Ingredient.of(Items.NAUTILUS_SHELL);
     }),
-    SEA_POWER_GOLD(3, 900, 13.0F, 2.0F, 33, () -> {
+    SEA_POWER_GOLD(3, 900, 13.0F, 0.0F, 33, () -> {
         return Ingredient.of(Items.CONDUIT);
     }),
     STORM_BASE_GOLD(1, 100, 11.0F, 0.0F, 22, () -> {
         return Ingredient.of(Items.HONEYCOMB);
     }),
-    STORM_UPGRADED_GOLD(2, 300, 13.0F, 1.0F, 25, () -> {
+    STORM_UPGRADED_GOLD(2, 300, 13.0F, 0.0F, 25, () -> {
         return Ingredient.of(Items.SLIME_BLOCK);
     }),
-    STORM_POWER_GOLD(3, 900, 15.0F, 2.0F, 28, () -> {
+    STORM_POWER_GOLD(3, 900, 15.0F, 0.0F, 28, () -> {
         return Ingredient.of(Items.SHULKER_SHELL);
     }),
     ;

@@ -9,6 +9,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
 public class ObsidianGoldSword extends SwordItem
@@ -38,23 +41,40 @@ public class ObsidianGoldSword extends SwordItem
         // Using the isRemote check ensures logic runs once, and player != null is a safety check.
         if (!world.isClientSide && player != null && world.dimension() != World.NETHER) {
 
+            RayTraceResult hitResult = world.clip(
+                    new RayTraceContext(
+                            player.getEyePosition(1.0F),
+                            player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
+                            RayTraceContext.BlockMode.OUTLINE,
+                            RayTraceContext.FluidMode.ANY, // Check ANY block/fluid in range
+                            player
+                    )
+            );
+
             // Check 2: Block is Lava source block
-            if (clickedState.getBlock() == Blocks.LAVA) {
+            if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
+                BlockRayTraceResult blockHit = (BlockRayTraceResult) hitResult;
+                BlockPos rayHitPos = blockHit.getBlockPos();
+                BlockState rayHitState = world.getBlockState(rayHitPos);
 
-                // Remove Lava by setting it to air (or block if desired, but air removes the source)
-                world.setBlock(clickedPos, Blocks.AIR.defaultBlockState(), 3);
+                // 1. Check for Water -> Ice conversion (Priority 1)
+                if (rayHitState.getBlock() == Blocks.LAVA) {
 
-                // Repair Tool by LAVA_REPAIR_AMOUNT
-                int currentDamage = stack.getDamageValue();
-                stack.setDamageValue(Math.max(0, currentDamage - repairAmount)); // Sets damage to a lower value, max 0.
+                    // Remove Lava by setting it to air (or block if desired, but air removes the source)
+                    world.setBlock(rayHitPos, Blocks.AIR.defaultBlockState(), 3);
 
-                // Give EXP
-                player.giveExperiencePoints(1);
+                    // Repair Tool by LAVA_REPAIR_AMOUNT
+                    int currentDamage = stack.getDamageValue();
+                    stack.setDamageValue(Math.max(0, currentDamage - repairAmount)); // Sets damage to a lower value, max 0.
 
-                // Play sound (Extinguish)
-                world.playSound(null, clickedPos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                    // Give EXP
+                    player.giveExperiencePoints(1);
 
-                return ActionResultType.SUCCESS;
+                    // Play sound (Extinguish)
+                    world.playSound(null, clickedPos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+
+                    return ActionResultType.SUCCESS;
+                }
             }
         }
 

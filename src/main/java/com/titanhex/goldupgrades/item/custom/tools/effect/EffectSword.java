@@ -4,9 +4,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.util.*;
 import net.minecraft.world.World;
 
 import java.util.Map;
@@ -53,10 +51,8 @@ public class EffectSword extends SwordItem
      * Handles the item use event (Right Click) to apply status effects to the player.
      */
     @Override
-    public ActionResultType useOn(ItemUseContext context) {
-        PlayerEntity player = context.getPlayer();
-        World world = context.getLevel();
-        ItemStack stack = context.getItemInHand();
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+        ItemStack stack = player.getItemInHand(hand);
 
         // The aura/buff should only apply on the server side and if a player is holding it.
         if (!world.isClientSide && player != null) {
@@ -81,17 +77,17 @@ public class EffectSword extends SwordItem
 
             // 2. Damage the tool
             // The durability cost is fixed, as defined in the constructor
-            stack.hurtAndBreak(this.baseDurabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
+            stack.hurtAndBreak(this.baseDurabilityCost, player, (p) -> p.broadcastBreakEvent(hand));
 
             // 3. Play a sound to confirm the action (Level Up sound is a good indicator of a buff)
             world.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5F, 1.0F);
 
             // Since the action was successful and the item was used, return SUCCESS
-            return ActionResultType.SUCCESS;
+            return ActionResult.success(stack);
         }
 
-        return ActionResultType.PASS;
+        return ActionResult.pass(stack);
     }
 
     // Note: The base hitEntity method from PickaxeItem will still apply

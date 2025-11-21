@@ -55,7 +55,15 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
 
             // Play sound effect
-            world.playSound(player, firePos, SoundEvents.FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
+            world.playSound(
+                    player,
+                    firePos,
+                    SoundEvents.FLINTANDSTEEL_USE,
+                    SoundCategory.BLOCKS,
+                    1.0F,
+                    random.nextFloat() * 0.4F + 0.8F
+            );
+
 
             // Set the block to fire
             world.setBlock(firePos, Blocks.FIRE.getBlock().defaultBlockState(), burnTicks);
