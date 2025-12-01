@@ -69,40 +69,40 @@ public class SeaToolItems {
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_SHOVEL = ITEMS.register("sea_upgraded_gold_shovel",
             () -> new SeaGoldShovel(ModItemTier.SEA_UPGRADED_GOLD, 3.0F, -3.0F,
-                    upgradedToolBonus, 60, 5,
+                    upgradedToolBonus, 30, 5,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_PICKAXE = ITEMS.register("sea_upgraded_gold_pickaxe",
             () -> new SeaGoldPickaxe(ModItemTier.SEA_UPGRADED_GOLD, 3, -2.8F,
-                    upgradedToolBonus, 60, 5,
+                    upgradedToolBonus, 30, 5,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_AXE = ITEMS.register("sea_upgraded_gold_axe",
             () -> new SeaGoldAxe(ModItemTier.SEA_UPGRADED_GOLD, 8.0F, -3.0F,
-                    upgradedToolBonus, 60, 5,
+                    upgradedToolBonus, 30, 5,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_HOE = ITEMS.register("sea_upgraded_gold_hoe",
             () -> new SeaGoldHoe(ModItemTier.SEA_UPGRADED_GOLD, 1, -3.0F,
-                    upgradedToolBonus, 60, 5,
+                    upgradedToolBonus, 30, 5,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     
     // POWER
     public static final RegistryObject<Item> SEA_POWER_GOLD_SWORD = ITEMS.register("sea_power_gold_sword",
             () -> new SeaGoldSword(ModItemTier.SEA_POWER_GOLD, 6, -2.4F,
-                    powerToolBonus, 100, 3,
+                    powerToolBonus, 70, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_SHOVEL = ITEMS.register("sea_power_gold_shovel",
             () -> new SeaGoldShovel(ModItemTier.SEA_POWER_GOLD, 3.5F, -3.0F,
-                    powerToolBonus, 100, 3,
+                    powerToolBonus, 70, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_PICKAXE = ITEMS.register("sea_power_gold_pickaxe",
             () -> new SeaGoldPickaxe(ModItemTier.SEA_POWER_GOLD, 3, -2.8F,
-                    powerToolBonus, 100, 3,
+                    powerToolBonus, 70, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_AXE = ITEMS.register("sea_power_gold_axe",
             () -> new SeaGoldAxe(ModItemTier.SEA_POWER_GOLD, 9.0F, -3.0F,
-                    powerToolBonus, 100, 3,
+                    powerToolBonus, 70, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_HOE = ITEMS.register("sea_power_gold_hoe",
             () -> new SeaGoldHoe(ModItemTier.SEA_POWER_GOLD, 1, -3.0F,
-                    powerToolBonus, 100, 3,
+                    powerToolBonus, 70, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
 }

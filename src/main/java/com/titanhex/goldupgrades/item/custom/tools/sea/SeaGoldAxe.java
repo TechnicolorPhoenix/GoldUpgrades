@@ -8,7 +8,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +15,6 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 
 import java.util.Map;
 
@@ -60,33 +58,13 @@ public class SeaGoldAxe extends EffectAxe {
 
             if (hitState.getBlock() == Blocks.WATER ||
                     hitState.getBlock() == Blocks.ICE ||
-                    hitState.getBlock() == Blocks.PACKED_ICE) {
+                    hitState.getBlock() == Blocks.PACKED_ICE ) {
 
                 return ActionResult.pass(stack);
             }
         }
-        ActionResult<ItemStack> result = super.use(world, player, hand);
 
-        if (result.getResult().consumesAction()) {
-            if (!world.isClientSide) {
-                ServerWorld serverWorld = (ServerWorld) world;
-
-                // Spawn Falling Water Particles around the player
-                double x = player.getX();
-                double y = player.getY() + player.getBbHeight() / 2.0D;
-                double z = player.getZ();
-
-                serverWorld.sendParticles(
-                        ParticleTypes.FALLING_WATER, // The particle type
-                        x, y, z,                     // Position (center of the player)
-                        30,                          // Count (number of particles to spawn)
-                        0.5D, 0.5D, 0.5D,             // X, Y, Z displacement variance (spread)
-                        0.05D                         // Speed
-                );
-            }
-        }
-
-        return result;
+        return super.use(world, player, hand);
     }
 
     /**
@@ -133,20 +111,20 @@ public class SeaGoldAxe extends EffectAxe {
                 }
 
                 return ActionResultType.SUCCESS;
-            } else if (state.getBlock() == Blocks.PACKED_ICE) {
-
-                // Set the block state to Packed Ice
-                world.setBlock(hitPos, Blocks.BLUE_ICE.defaultBlockState(), 11);
-
-                // Play a sound to indicate the hardening/packing
-                world.playSound(null, hitPos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
-
-                // Damage the tool by a small amount (1 point for block conversion)
-                if (player != null) {
-                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                }
-
-                return ActionResultType.SUCCESS;
+//            } else if (state.getBlock() == Blocks.PACKED_ICE) {
+//
+//                // Set the block state to Packed Ice
+//                world.setBlock(hitPos, Blocks.BLUE_ICE.defaultBlockState(), 11);
+//
+//                // Play a sound to indicate the hardening/packing
+//                world.playSound(null, hitPos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
+//
+//                // Damage the tool by a small amount (1 point for block conversion)
+//                if (player != null) {
+//                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
+//                }
+//
+//                return ActionResultType.SUCCESS;
             } else if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
                 BlockRayTraceResult blockHit = (BlockRayTraceResult) hitResult;
                 BlockPos rayHitPos = blockHit.getBlockPos();

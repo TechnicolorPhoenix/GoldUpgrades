@@ -117,10 +117,10 @@ public class SeaGoldHoe extends EffectHoe {
             );
 
             // 1. Check for Water -> Ice conversion (Priority 1)
-            if (state.getBlock() == Blocks.SAND) {
+            if (state.getBlock() == Blocks.SAND || state.getBlock() == Blocks.DIRT) {
 
                 // Set the block state to Ice
-                world.setBlock(pos, Blocks.ICE.defaultBlockState(), 11);
+                world.setBlock(pos, Blocks.SNOW.defaultBlockState(), 11);
 
                 // Play a freezing sound
                 world.playSound(null, pos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
@@ -131,7 +131,7 @@ public class SeaGoldHoe extends EffectHoe {
                 }
 
                 return ActionResultType.SUCCESS;
-            } else if (state.getBlock() == Blocks.ICE) {
+            } else if (state.getBlock() == Blocks.SNOW) {
 
                 // Set the block state to Packed Ice
                 world.setBlock(pos, Blocks.PACKED_ICE.defaultBlockState(), 11);
@@ -145,20 +145,20 @@ public class SeaGoldHoe extends EffectHoe {
                 }
 
                 return ActionResultType.SUCCESS;
-            } else if (state.getBlock() == Blocks.PACKED_ICE) {
-
-                // Set the block state to Packed Ice
-                world.setBlock(pos, Blocks.BLUE_ICE.defaultBlockState(), 11);
-
-                // Play a sound to indicate the hardening/packing
-                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
-
-                // Damage the tool by a small amount (1 point for block conversion)
-                if (player != null) {
-                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                }
-
-                return ActionResultType.SUCCESS;
+//            } else if (state.getBlock() == Blocks.PACKED_ICE) {
+//
+//                // Set the block state to Packed Ice
+//                world.setBlock(pos, Blocks.BLUE_ICE.defaultBlockState(), 11);
+//
+//                // Play a sound to indicate the hardening/packing
+//                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
+//
+//                // Damage the tool by a small amount (1 point for block conversion)
+//                if (player != null) {
+//                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
+//                }
+//
+//                return ActionResultType.SUCCESS;
             } else if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
                 BlockRayTraceResult blockHit = (BlockRayTraceResult) hitResult;
                 BlockPos rayHitPos = blockHit.getBlockPos();

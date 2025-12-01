@@ -144,27 +144,27 @@ public class SeaGoldShovel extends EffectShovel {
                 }
 
                 return ActionResultType.SUCCESS;
-            } else if (state.getBlock() == Blocks.PACKED_ICE) {
-
-                // Set the block state to Packed Ice
-                world.setBlock(pos, Blocks.BLUE_ICE.defaultBlockState(), 11);
-
-                // Play a sound to indicate the hardening/packing
-                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
-
-                // Damage the tool by a small amount (1 point for block conversion)
-                if (player != null) {
-                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                }
-
-                return ActionResultType.SUCCESS;
+//            } else if (state.getBlock() == Blocks.PACKED_ICE) {
+//
+//                // Set the block state to Packed Ice
+//                world.setBlock(pos, Blocks.BLUE_ICE.defaultBlockState(), 11);
+//
+//                // Play a sound to indicate the hardening/packing
+//                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
+//
+//                // Damage the tool by a small amount (1 point for block conversion)
+//                if (player != null) {
+//                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
+//                }
+//
+//                return ActionResultType.SUCCESS;
             } else if (state.getBlock() == Blocks.STONE) {
 
                 // Set the block state to Packed Ice
-                world.setBlock(pos, Blocks.ICE.defaultBlockState(), 11);
+                world.setBlock(pos, Blocks.WATER.defaultBlockState(), 11);
 
                 // Play a sound to indicate the hardening/packing
-                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
+                world.playSound(null, pos, SoundEvents.AMBIENT_UNDERWATER_ENTER, SoundCategory.BLOCKS, 1.0F, 0.8F);
 
                 // Damage the tool by a small amount (1 point for block conversion)
                 if (player != null) {
