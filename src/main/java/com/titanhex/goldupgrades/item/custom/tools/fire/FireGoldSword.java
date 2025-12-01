@@ -3,6 +3,7 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 import com.titanhex.goldupgrades.item.IgnitableTool;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.TorchBlock;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -95,12 +96,16 @@ public class FireGoldSword extends SwordItem implements IgnitableTool
         ItemStack stack = context.getItemInHand(); // Get the ItemStack directly from the context
 
         // Target position is one block out from the clicked face
-        BlockPos firePos = context.getClickedPos().relative(face);
+        BlockPos clickPos = context.getClickedPos();
+        BlockPos firePos = clickPos.relative(face);
 
         if (world.isClientSide) {
             // In 1.16.5, return success on client side so the action plays out correctly
             return ActionResultType.SUCCESS;
         }
+
+        if (world.getBlockState(clickPos).getBlock() instanceof TorchBlock)
+            world.setBlock(clickPos, Blocks.TORCH.defaultBlockState(), 11);
 
         // Check if the target block is replaceable with fire
         // In 1.16.5, you check if the block is air/replaceable OR if the fire block can be placed there

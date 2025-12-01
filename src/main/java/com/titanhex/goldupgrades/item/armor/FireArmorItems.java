@@ -73,9 +73,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_UPGRADED_GOLD,
                     0.1F,
-                    20,
+                    60,
                     EquipmentSlotType.FEET,
-                    FIRE_UPGRADED_ARMOR_BONUSES,
+                    0.5F,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -84,9 +84,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_UPGRADED_GOLD,
                     0.1F,
-                    20,
+                    60,
                     EquipmentSlotType.LEGS,
-                    FIRE_UPGRADED_ARMOR_BONUSES,
+                    0.5F,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -95,9 +95,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_UPGRADED_GOLD,
                     0.1F,
-                    20,
+                    60,
                     EquipmentSlotType.CHEST,
-                    FIRE_UPGRADED_ARMOR_BONUSES,
+                    0.5F,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -106,9 +106,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_UPGRADED_GOLD,
                     0.1F,
-                    20,
+                    60,
                     EquipmentSlotType.HEAD,
-                    FIRE_UPGRADED_ARMOR_BONUSES,
+                    0.5F,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -119,9 +119,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_POWER_GOLD,
                     0.1F,
-                    10,
+                    20,
                     EquipmentSlotType.FEET,
-                    FIRE_POWER_ARMOR_BONUSES,
+                    1F,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
@@ -130,9 +130,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_POWER_GOLD,
                     0.1F,
-                    10,
+                    20,
                     EquipmentSlotType.LEGS,
-                    FIRE_POWER_ARMOR_BONUSES,
+                    1F,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
@@ -141,9 +141,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_POWER_GOLD,
                     0.1F,
-                    10,
+                    20,
                     EquipmentSlotType.CHEST,
-                    FIRE_POWER_ARMOR_BONUSES,
+                    1F,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
@@ -152,9 +152,9 @@ public class FireArmorItems {
             () -> new FireArmorItem(
                     ModArmorMaterial.FIRE_POWER_GOLD,
                     0.1F,
-                    10,
+                    20,
                     EquipmentSlotType.HEAD,
-                    FIRE_POWER_ARMOR_BONUSES,
+                    1F,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
