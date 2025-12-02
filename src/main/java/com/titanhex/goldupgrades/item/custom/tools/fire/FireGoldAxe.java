@@ -1,29 +1,80 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
+import com.titanhex.goldupgrades.data.DimensionType;
+import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.IgnitableTool;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class FireGoldAxe extends AxeItem implements IgnitableTool
 {
     int burnTicks;
     int durabilityUse;
 
+    protected Weather weather = Weather.CLEAR;
+    protected DimensionType dimension = DimensionType.OVERWORLD;
+
     public FireGoldAxe(IItemTier tier, float atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+        world.getMaxLocalRawBrightness(holdingEntity.blockPosition());
+        if (world.isClientSide)
+            return;
+
+        Weather newWeather = Weather.getCurrentWeather(world);
+        DimensionType newDimension = DimensionType.getCurrentDimension(world);
+
+        if (this.weather != newWeather) {
+            this.weather = newWeather;
+            stack.setTag(stack.getTag());
+        }
+        if (this.dimension != newDimension) {
+            this.dimension = newDimension;
+            stack.setTag(stack.getTag());
+        }
+
+        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+    }
+
+    private boolean bonusConditionsMet(){
+        return this.weather == Weather.CLEAR || this.dimension == DimensionType.NETHER;
+    }
+
+    @Override
+    public float getDestroySpeed(ItemStack stack, BlockState state) {
+        float baseSpeed = super.getDestroySpeed(stack, state);
+        float bonusSpeed = bonusConditionsMet() ? 0.25F : 0F;
+
+        if (baseSpeed > 1.0F) {
+
+            float speedMultiplier = 1.0F + bonusSpeed;
+
+            return baseSpeed * speedMultiplier;
+        }
+
+        return baseSpeed;
     }
 
     /**
@@ -48,13 +99,10 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
      */
     @Override
     public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos pos) {
-        BlockState blockstate = world.getBlockState(pos);
-
         BlockPos firePos = pos;
 
         if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
 
-            // Play sound effect
             world.playSound(
                     player,
                     firePos,
@@ -64,11 +112,8 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
                     random.nextFloat() * 0.4F + 0.8F
             );
 
-
-            // Set the block to fire
             world.setBlock(firePos, Blocks.FIRE.getBlock().defaultBlockState(), burnTicks);
 
-            // Damage the tool item
             if (player != null) {
                 player.getItemInHand(player.swingingArm).hurtAndBreak(durabilityUse, player, (p) -> {
                     p.broadcastBreakEvent(player.getUsedItemHand());
@@ -86,14 +131,29 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
      */
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        // 1. Call the interface method to apply the custom effect
         igniteEntity(target);
 
-        // 2. Damage the tool item (separate from combat damage)
-        stack.hurtAndBreak(1, attacker, (e) -> e.broadcastBreakEvent(attacker.getUsedItemHand()));
-
-        // Return true to indicate the attack was successful
         return true;
+    }
+
+    // --- Tooltip Display (Reads state from NBT) ---
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
+
+        // Read the synchronized NBT state for display
+        boolean isClearSkyActive = weather == Weather.CLEAR;
+        boolean isNetherActive = dimension == DimensionType.NETHER;
+        boolean isDamageBonusActive = isClearSkyActive || isNetherActive;
+
+        if (isDamageBonusActive) {
+            // §a is the color code for bright green
+            tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+25% Attack Damage)"));
+        } else {
+            // §c is the color code for light red/pink
+            tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
+        }
     }
 
     /**
@@ -108,49 +168,43 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
-        // --- NEW LOGIC: Check for Logs (Axe/Firewood functionality) ---
         if (clickedState.is(BlockTags.LOGS)) {
             if (!world.isClientSide) {
-                // Remove the log block without dropping it (false)
                 world.removeBlock(clickedPos, false);
 
-                // Drop Charcoal item at the position
                 Block.popResource(world, clickedPos, new ItemStack(Items.CHARCOAL));
 
-                // Give experience (safely check for null player)
                 if (player != null) {
                     player.giveExperiencePoints(1);
-                    // Optional: Play a sound effect for the conversion
                     world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
                 }
 
-                // Damage the tool
                 stack.hurtAndBreak(durabilityUse*2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
                 return ActionResultType.SUCCESS;
             }
-            // Return success on client side to indicate action was processed
             return ActionResultType.SUCCESS;
         }
 
-
-        // --- ORIGINAL LOGIC: Fire Lighting (Flint and Steel functionality) ---
-
-        // Target position is one block out from the clicked face
-        BlockPos firePos = clickedPos.relative(face);
+        BlockPos facePos = clickedPos.relative(face);
 
         if (world.isClientSide) {
-            // In 1.16.5, return success on client side so the action plays out correctly
             return ActionResultType.SUCCESS;
         }
 
-        // Check if the target block is replaceable with fire
-        // In 1.16.5, you check if the block is air/replaceable OR if the fire block can be placed there
-        if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
+        if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
+            world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);
+            stack.hurtAndBreak(5, player, (e) -> e.broadcastBreakEvent(context.getHand()));
+            player.giveExperiencePoints(1);
 
-            igniteBlock(player, world, firePos);
+            return ActionResultType.SUCCESS;
+        } else if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
+            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) + 2);
+            player.giveExperiencePoints(1);
 
-            // Return success on the server side
+            world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
+
             return ActionResultType.SUCCESS;
         }
 

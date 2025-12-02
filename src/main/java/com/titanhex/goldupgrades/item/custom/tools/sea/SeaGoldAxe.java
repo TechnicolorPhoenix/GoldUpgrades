@@ -1,6 +1,5 @@
 package com.titanhex.goldupgrades.item.custom.tools.sea;
 
-import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectAxe;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -47,7 +46,7 @@ public class SeaGoldAxe extends EffectAxe {
                         player.getEyePosition(1.0F),
                         player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
                         RayTraceContext.BlockMode.OUTLINE,
-                        RayTraceContext.FluidMode.ANY, // Check ANY block/fluid in range
+                        RayTraceContext.FluidMode.ANY,
                         player
                 )
         );
@@ -77,35 +76,28 @@ public class SeaGoldAxe extends EffectAxe {
         PlayerEntity player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
 
-        // The BlockPos of the block that was hit, which might be the water block itself.
         BlockPos hitPos = context.getClickedPos();
 
-        // --- Server-side Logic ---
         if (!world.isClientSide) {
 
-            // Get the RayTraceResult from the context, which holds the precise block hit.
             RayTraceResult hitResult = world.clip(
                     new RayTraceContext(
-                            player.getEyePosition(1.0F),             // Start position (player's eyes)
-                            player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)), // End position (5 blocks away)
-                            RayTraceContext.BlockMode.OUTLINE,       // Only hit blocks with an outline
-                            RayTraceContext.FluidMode.SOURCE_ONLY,           // Crucially, hit ANY fluid block
+                            player.getEyePosition(1.0F),
+                            player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
+                            RayTraceContext.BlockMode.OUTLINE,
+                            RayTraceContext.FluidMode.SOURCE_ONLY,
                             player
                     )
             );
 
             BlockState state = world.getBlockState(hitPos);
 
-            // Check if the ray trace result is a BlockRayTraceResult (meaning it hit a block)
             if (state.getBlock() == Blocks.ICE) {
 
-                // Set the block state to Packed Ice
                 world.setBlock(hitPos, Blocks.PACKED_ICE.defaultBlockState(), 11);
 
-                // Play a sound to indicate the hardening/packing
                 world.playSound(null, hitPos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
 
-                // Damage the tool by a small amount (1 point for block conversion)
                 if (player != null) {
                     stack.hurtAndBreak(durabilityCost/2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
                 }
@@ -113,13 +105,10 @@ public class SeaGoldAxe extends EffectAxe {
                 return ActionResultType.SUCCESS;
 //            } else if (state.getBlock() == Blocks.PACKED_ICE) {
 //
-//                // Set the block state to Packed Ice
 //                world.setBlock(hitPos, Blocks.BLUE_ICE.defaultBlockState(), 11);
 //
-//                // Play a sound to indicate the hardening/packing
 //                world.playSound(null, hitPos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
 //
-//                // Damage the tool by a small amount (1 point for block conversion)
 //                if (player != null) {
 //                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 //                }
@@ -130,15 +119,11 @@ public class SeaGoldAxe extends EffectAxe {
                 BlockPos rayHitPos = blockHit.getBlockPos();
                 BlockState rayHitState = world.getBlockState(rayHitPos);
 
-                // 1. Check for Water -> Ice conversion (Priority 1)
                 if (rayHitState.getBlock() == Blocks.WATER) {
-                    // Set the block state to Ice
                     world.setBlock(rayHitPos, Blocks.ICE.defaultBlockState(), 11);
 
-                    // Play a freezing sound
                     world.playSound(null, rayHitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
 
-                    // Damage the tool by a small amount (1 point for block conversion)
                     if (player != null) {
                         stack.hurtAndBreak(durabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
                     }

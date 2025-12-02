@@ -1,9 +1,12 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
+import com.titanhex.goldupgrades.data.DimensionType;
+import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.IgnitableTool;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.TorchBlock;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -18,11 +21,34 @@ public class FireGoldSword extends SwordItem implements IgnitableTool
 {
     int burnTicks;
     int durabilityUse;
+    protected Weather weather = Weather.CLEAR;
+    protected DimensionType dimension = DimensionType.OVERWORLD;
 
     public FireGoldSword(IItemTier tier, int atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+        world.getMaxLocalRawBrightness(holdingEntity.blockPosition());
+        if (world.isClientSide)
+            return;
+
+        Weather newWeather = Weather.getCurrentWeather(world);
+        DimensionType newDimension = DimensionType.getCurrentDimension(world);
+
+        if (this.weather != newWeather) {
+            this.weather = newWeather;
+            stack.setTag(stack.getTag());
+        }
+        if (this.dimension != newDimension) {
+            this.dimension = newDimension;
+            stack.setTag(stack.getTag());
+        }
+
+        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
     /**

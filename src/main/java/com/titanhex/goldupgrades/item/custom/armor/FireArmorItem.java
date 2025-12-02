@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -91,16 +92,29 @@ public class FireArmorItem extends ArmorItem {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Clear Skies)"));
         }
     }
+
     @Override
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
 
-        world.getMaxLocalRawBrightness(player.blockPosition());
         if (world.isClientSide)
             return;
 
-        Weather newWeather = Weather.getCurrentWeather(player.level);
-        DimensionType newDimension = DimensionType.getCurrentDimension(player.level);
+        if (player.tickCount % perTickRecoverSpeed == 0 && (Weather.getCurrentWeather(world) == Weather.CLEAR))
+            player.heal(recoverAmount);
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional)
+    {
+        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+
+        world.getMaxLocalRawBrightness(holdingEntity.blockPosition());
+        if (world.isClientSide)
+            return;
+
+        Weather newWeather = Weather.getCurrentWeather(world);
+        DimensionType newDimension = DimensionType.getCurrentDimension(world);
 
         if (this.weather != newWeather) {
             this.weather = newWeather;
@@ -110,9 +124,5 @@ public class FireArmorItem extends ArmorItem {
             this.dimension = newDimension;
             stack.setTag(stack.getTag());
         }
-        if (world.isClientSide)
-            return;
-        if (player.tickCount % perTickRecoverSpeed == 0 && (Weather.getCurrentWeather(world) == Weather.CLEAR))
-            player.heal(recoverAmount);
     }
 }
