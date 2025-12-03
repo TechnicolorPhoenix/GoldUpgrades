@@ -1,8 +1,12 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.Multimap;
+import com.titanhex.goldupgrades.data.DimensionType;
+import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -16,14 +20,22 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor {
     int drainFactor;
     int cooldown = 0;
+    protected Weather weather = Weather.CLEAR;
+    protected DimensionType dimension = DimensionType.OVERWORLD;
 
     private static final UUID RAIN_SPEED_MODIFIER_UUID =
             UUID.fromString("6d7b5d12-6804-45e0-9e62-421f421f421f");
@@ -34,12 +46,37 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor {
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
+
+        // Read the synchronized NBT state for display
+        boolean isClearSkyActive = weather == Weather.RAIN;
+        boolean isNetherActive = dimension == DimensionType.OVERWORLD;
+        boolean isDamageBonusActive = isClearSkyActive || isNetherActive;
+
+        if (isDamageBonusActive) {
+            tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+" + this.damageBonus + " Attack Damage)"));
+        } else {
+            tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
+        }
+
+        if (isClearSkyActive) {
+            tooltip.add(new StringTextComponent("§aActive: Regen Bonus (+" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
+        } else {
+            tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Clear Skies)"));
+        }
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+
+    }
+
+    @Override
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
-
-        if (player.hasEffect(Effects.BAD_OMEN)) {
-
-        }
+        Weather currentWeather = Weather.getCurrentWeather(world);
 
         if (cooldown > 0) {
             this.cooldown = Math.max(0, this.cooldown - 1);
@@ -51,7 +88,13 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor {
         int oxygenDifference = maxOxygen - currentOxygen;
 
         int toRestore = Math.min(oxygenDifference, 30);
-// 2. Get the player's Movement Speed attribute
+        if (this.weather != currentWeather)
+        {
+            this.weather = currentWeather;
+            if (currentWeather == Weather.RAIN)
+                player.setAbsorptionAmount(6F);
+        }
+
         ModifiableAttributeInstance speedAttribute =
                 player.getAttribute(Attributes.MOVEMENT_SPEED);
 

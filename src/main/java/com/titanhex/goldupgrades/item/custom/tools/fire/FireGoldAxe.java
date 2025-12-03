@@ -1,5 +1,7 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.IgnitableTool;
@@ -9,27 +11,35 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 public class FireGoldAxe extends AxeItem implements IgnitableTool
 {
     int burnTicks;
     int durabilityUse;
-
+    protected int lightLevel = 15;
     protected Weather weather = Weather.CLEAR;
     protected DimensionType dimension = DimensionType.OVERWORLD;
+
+    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
 
     public FireGoldAxe(IItemTier tier, float atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
@@ -39,7 +49,13 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
 
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        world.getMaxLocalRawBrightness(holdingEntity.blockPosition());
+        int currentBrightness = Math.max(world.getBrightness(LightType.BLOCK, holdingEntity.blockPosition()), world.getBrightness(LightType.SKY, holdingEntity.blockPosition()));
+
+        if (this.lightLevel != currentBrightness) {
+            this.lightLevel = currentBrightness;
+            stack.setTag(stack.getTag());
+        }
+
         if (world.isClientSide)
             return;
 
@@ -65,7 +81,7 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = bonusConditionsMet() ? 0.25F : 0F;
+        float bonusSpeed = this.lightLevel * 0.01F;
 
         if (baseSpeed > 1.0F) {
 
@@ -136,6 +152,27 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         return true;
     }
 
+    // --- Attribute Modifiers (Reads state from NBT) ---
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
+        builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
+
+        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
+            // Check the synchronized NBT state
+            if (weather == Weather.CLEAR || dimension == DimensionType.NETHER) {
+                builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                        SUN_DAMAGE_MODIFIER,
+                        "Weapon modifier",
+                        1,
+                        AttributeModifier.Operation.ADDITION
+                ));
+            }
+        }
+
+        return builder.build();
+    }
+
     // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
@@ -148,12 +185,12 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         boolean isDamageBonusActive = isClearSkyActive || isNetherActive;
 
         if (isDamageBonusActive) {
-            // §a is the color code for bright green
-            tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+25% Attack Damage)"));
+            tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+1)"));
         } else {
-            // §c is the color code for light red/pink
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
+
+        tooltip.add(new StringTextComponent("§eHarvest Speed +" + this.lightLevel + "%."));
     }
 
     /**
@@ -186,11 +223,11 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
             return ActionResultType.SUCCESS;
         }
 
-        BlockPos facePos = clickedPos.relative(face);
-
         if (world.isClientSide) {
             return ActionResultType.SUCCESS;
         }
+
+        BlockPos facePos = clickedPos.relative(face);
 
         if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
             world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);

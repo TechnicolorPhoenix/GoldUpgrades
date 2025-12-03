@@ -1,10 +1,14 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
+import com.titanhex.goldupgrades.data.DimensionType;
+import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.IgnitableTool;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CropsBlock;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -13,19 +17,79 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.Dimension;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Random;
 
 public class FireGoldHoe extends HoeItem implements IgnitableTool
 {
     int burnTicks;
     int durabilityUse;
-
+    protected int lightLevel = 0;
+    protected Weather weather = Weather.CLEAR;
+    protected DimensionType dimension = DimensionType.OVERWORLD;
     public FireGoldHoe(IItemTier tier, int atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+        int currentBrightness = Math.max(world.getBrightness(LightType.BLOCK, holdingEntity.blockPosition()), world.getBrightness(LightType.SKY, holdingEntity.blockPosition()));
+
+        if (this.lightLevel != currentBrightness) {
+            this.lightLevel = currentBrightness;
+            stack.setTag(stack.getTag());
+        }
+
+        if (world.isClientSide)
+            return;
+
+        Weather newWeather = Weather.getCurrentWeather(world);
+        DimensionType newDimension = DimensionType.getCurrentDimension(world);
+
+        if (this.weather != newWeather) {
+            this.weather = newWeather;
+            stack.setTag(stack.getTag());
+        }
+        if (this.dimension != newDimension) {
+            this.dimension = newDimension;
+            stack.setTag(stack.getTag());
+        }
+
+        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+    }
+
+    @Override
+    public float getDestroySpeed(ItemStack stack, BlockState state) {
+        float baseSpeed = super.getDestroySpeed(stack, state);
+        float bonusSpeed = this.lightLevel * 0.01F;
+
+        if (baseSpeed > 1.0F) {
+            float speedMultiplier = 1.0F + bonusSpeed;
+
+            return baseSpeed * speedMultiplier;
+        }
+
+        return baseSpeed;
+    }
+
+    // --- Tooltip Display (Reads state from NBT) ---
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
+
+        tooltip.add(new StringTextComponent("§eHarvest Speed +" + this.lightLevel + "%."));
     }
 
     /**
@@ -50,8 +114,6 @@ public class FireGoldHoe extends HoeItem implements IgnitableTool
      */
     @Override
     public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos pos) {
-        BlockState blockstate = world.getBlockState(pos);
-
         BlockPos firePos = pos;
 
         if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
@@ -83,9 +145,6 @@ public class FireGoldHoe extends HoeItem implements IgnitableTool
         // 1. Call the interface method to apply the custom effect
         igniteEntity(target);
 
-        // 2. Damage the tool item (separate from combat damage)
-        stack.hurtAndBreak(1, attacker, (e) -> e.broadcastBreakEvent(attacker.getUsedItemHand()));
-
         // Return true to indicate the attack was successful
         return true;
     }
@@ -103,31 +162,23 @@ public class FireGoldHoe extends HoeItem implements IgnitableTool
         BlockState clickedState = world.getBlockState(clickedPos);
 
 
-        // --- LOGIC: Cook Potato Plant (Hoe functionality) ---
-        // Check if the block is a potato plant.
         if (clickedState.getBlock() == Blocks.POTATOES) {
-            // Cast the block to CropsBlock and use the canonical isMaxAge check.
             CropsBlock potatoBlock = (CropsBlock) clickedState.getBlock();
 
             if (potatoBlock.isMaxAge(clickedState)) {
                 if (!world.isClientSide) {
-                    // Remove the mature potato plant
                     world.removeBlock(clickedPos, false);
 
                     Random rand = world.getRandom();
                     int drops = rand.nextInt(4) + 1; // 1 to 4 cooked potatoes
 
-                    // Drop 1-4 Cooked Potatoes
                     Block.popResource(world, clickedPos, new ItemStack(Items.BAKED_POTATO, drops));
 
-                    // Give experience
                     if (player != null) {
                         player.giveExperiencePoints(1);
-                        // Play a soft sizzling sound
                         world.playSound(null, clickedPos, SoundEvents.FIRE_AMBIENT, SoundCategory.BLOCKS, 0.5F, 1.5F);
                     }
 
-                    // Damage the tool
                     stack.hurtAndBreak(durabilityUse*2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
                 }
@@ -135,17 +186,24 @@ public class FireGoldHoe extends HoeItem implements IgnitableTool
             }
         }
 
-        // Target position is one block out from the clicked face
-        BlockPos firePos = clickedPos.relative(face);
-
         if (world.isClientSide) {
             return ActionResultType.SUCCESS;
         }
 
-        // Check if the target block is replaceable with fire
-        if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
+        BlockPos facePos = clickedPos.relative(face);
 
-            igniteBlock(player, world, firePos);
+        if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
+            world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);
+            stack.hurtAndBreak(5, player, (e) -> e.broadcastBreakEvent(context.getHand()));
+            player.giveExperiencePoints(1);
+
+            return ActionResultType.SUCCESS;
+        } else if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
+            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) + 2);
+            player.giveExperiencePoints(1);
+
+            world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
             return ActionResultType.SUCCESS;
         }

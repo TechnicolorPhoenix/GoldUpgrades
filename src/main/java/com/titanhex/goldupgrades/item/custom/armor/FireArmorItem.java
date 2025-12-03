@@ -72,21 +72,17 @@ public class FireArmorItem extends ArmorItem {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
         // Read the synchronized NBT state for display
-        boolean isClearSkyActive = weather == Weather.CLEAR;
-        boolean isNetherActive = dimension == DimensionType.NETHER;
-        boolean isDamageBonusActive = isClearSkyActive || isNetherActive;
+        boolean isRainActive = weather == Weather.RAIN;
+        boolean isOverworldActive = dimension == DimensionType.OVERWORLD;
+        boolean isDamageBonusActive = isRainActive || isOverworldActive;
 
         if (isDamageBonusActive) {
-            // §a is the color code for bright green
             tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+" + this.damageBonus + " Attack Damage)"));
         } else {
-            // §c is the color code for light red/pink
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
-        // Regen logic (only Clear Skies based on your onArmorTick implementation)
-        if (isClearSkyActive) {
-            // FIXED: Use 20.0 for correct floating point division
+        if (isRainActive) {
             tooltip.add(new StringTextComponent("§aActive: Regen Bonus (+" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Clear Skies)"));

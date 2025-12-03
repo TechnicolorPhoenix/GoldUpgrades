@@ -1,21 +1,37 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.IgnitableTool;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.TorchBlock;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.UUID;
 
 public class FireGoldSword extends SwordItem implements IgnitableTool
 {
@@ -23,6 +39,9 @@ public class FireGoldSword extends SwordItem implements IgnitableTool
     int durabilityUse;
     protected Weather weather = Weather.CLEAR;
     protected DimensionType dimension = DimensionType.OVERWORLD;
+    protected int lightLevel = 15;
+
+    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
 
     public FireGoldSword(IItemTier tier, int atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
@@ -32,7 +51,13 @@ public class FireGoldSword extends SwordItem implements IgnitableTool
 
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        world.getMaxLocalRawBrightness(holdingEntity.blockPosition());
+        int currentBrightness = Math.max(world.getBrightness(LightType.BLOCK, holdingEntity.blockPosition()), world.getBrightness(LightType.SKY, holdingEntity.blockPosition()));
+
+        if (this.lightLevel != currentBrightness) {
+            this.lightLevel = currentBrightness;
+            stack.setTag(stack.getTag());
+        }
+
         if (world.isClientSide)
             return;
 
@@ -49,6 +74,62 @@ public class FireGoldSword extends SwordItem implements IgnitableTool
         }
 
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+    }
+
+    @Override
+    public float getDestroySpeed(ItemStack stack, BlockState state) {
+        float baseSpeed = super.getDestroySpeed(stack, state);
+        float bonusSpeed = this.lightLevel * 0.01F;
+
+        if (baseSpeed > 1.0F) {
+
+            float speedMultiplier = 1.0F + bonusSpeed;
+
+            return baseSpeed * speedMultiplier;
+        }
+
+        return baseSpeed;
+    }
+
+    // --- Attribute Modifiers (Reads state from NBT) ---
+    @Override
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
+        builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
+
+        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
+            // Check the synchronized NBT state
+            if (weather == Weather.CLEAR || dimension == DimensionType.NETHER) {
+                builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                        SUN_DAMAGE_MODIFIER,
+                        "Weapon modifier",
+                        1,
+                        AttributeModifier.Operation.ADDITION
+                ));
+            }
+        }
+
+        return builder.build();
+    }
+
+    // --- Tooltip Display (Reads state from NBT) ---
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
+
+        // Read the synchronized NBT state for display
+        boolean isClearSkyActive = weather == Weather.CLEAR;
+        boolean isNetherActive = dimension == DimensionType.NETHER;
+        boolean isDamageBonusActive = isClearSkyActive || isNetherActive;
+
+        if (isDamageBonusActive) {
+            tooltip.add(new StringTextComponent("§aActive: Damage Bonus +1."));
+        } else {
+            tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
+        }
+
+        tooltip.add(new StringTextComponent("§eHarvest Speed +" + this.lightLevel + "%."));
     }
 
     /**
@@ -115,29 +196,29 @@ public class FireGoldSword extends SwordItem implements IgnitableTool
      */
     @Override
     public ActionResultType useOn(ItemUseContext context) {
-        // Call the interface method to handle block ignition
         PlayerEntity player = context.getPlayer();
         World world = context.getLevel();
         Direction face = context.getClickedFace();
-        ItemStack stack = context.getItemInHand(); // Get the ItemStack directly from the context
-
-        // Target position is one block out from the clicked face
+        ItemStack stack = context.getItemInHand();
         BlockPos clickPos = context.getClickedPos();
-        BlockPos firePos = clickPos.relative(face);
 
         if (world.isClientSide) {
-            // In 1.16.5, return success on client side so the action plays out correctly
-            return ActionResultType.SUCCESS;
+            return ActionResultType.CONSUME;
         }
 
-        if (world.getBlockState(clickPos).getBlock() instanceof TorchBlock)
-            world.setBlock(clickPos, Blocks.TORCH.defaultBlockState(), 11);
+        BlockPos facePos = clickPos.relative(face);
 
-        // Check if the target block is replaceable with fire
-        // In 1.16.5, you check if the block is air/replaceable OR if the fire block can be placed there
-        if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
+        if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
+            world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);
+            stack.hurtAndBreak(5, player, (e) -> e.broadcastBreakEvent(context.getHand()));
+            player.giveExperiencePoints(1);
 
-            igniteBlock(player, world, firePos);
+        } else if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
+            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) + 2);
+            player.giveExperiencePoints(1);
+
+            world.playSound(null, clickPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
             return ActionResultType.SUCCESS;
         }
