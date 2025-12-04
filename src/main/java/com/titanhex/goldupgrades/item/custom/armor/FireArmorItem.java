@@ -6,15 +6,19 @@ import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT; // <-- REQUIRED NEW IMPORT
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -23,38 +27,58 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class FireArmorItem extends ArmorItem {
-    protected float recoverAmount = 0.1F;
-    protected float damageBonus = 0F;
-    protected int perTickRecoverSpeed = 20;
+    protected float recoverAmount;
+    protected float damageBonus;
+    protected int perTickRecoverSpeed;
 
-    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("7A12B68D-F0C6-44D1-A12A-14C2D8397E9C");
+    private static final String NBT_NETHER = "ArmorInNether";
+    private static final String NBT_IN_CLEAR = "ArmorInClearWeather";
 
-    private Weather weather = Weather.CLEAR;
-    private DimensionType dimension = DimensionType.OVERWORLD;
+    private static final UUID[] SUN_DAMAGE_MODIFIER = new UUID[]{
+            UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
+            UUID.fromString("b9a5f1e8-6e7e-40d0-8b6a-9a0f0d2b7c6c"), // LEGGINGS
+            UUID.fromString("730a9e1d-4f5d-4f3b-8c1a-7e0f8b1c4d2e"), // CHESTPLATE
+            UUID.fromString("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d")  // HELMET
+    };
 
-    // --- Constructors (Kept original structure) ---
     public FireArmorItem(IArmorMaterial materialIn, float recoverAmount, int perTickRecoverSpeed, EquipmentSlotType slot, float damageBonus, Properties builderIn) {
         super(materialIn, slot, builderIn);
         this.recoverAmount = recoverAmount;
         this.perTickRecoverSpeed = perTickRecoverSpeed;
         this.damageBonus = damageBonus;
     }
-    // All other constructors omitted for brevity...
 
-    // --- Attribute Modifiers (Reads state from NBT) ---
+    private boolean getNether(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_NETHER);
+    }
+    private void setNether(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_NETHER, value);
+    }
+
+    private boolean getInClear(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_IN_CLEAR);
+    }
+    private void setInClear(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_IN_CLEAR, value);
+    }
+
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
         if (equipmentSlot == this.slot) {
+            boolean inNether = this.getNether(stack);
+            boolean inClear = this.getInClear(stack);
+
             // Check the synchronized NBT state
-            if (weather == Weather.CLEAR || dimension == DimensionType.NETHER) {
+            if (inClear || inNether) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                        SUN_DAMAGE_MODIFIER,
+                        SUN_DAMAGE_MODIFIER[this.slot.getIndex()],
                         "Armor modifier",
                         this.damageBonus,
                         AttributeModifier.Operation.ADDITION
@@ -72,8 +96,8 @@ public class FireArmorItem extends ArmorItem {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
         // Read the synchronized NBT state for display
-        boolean isClearWeather = weather == Weather.CLEAR;
-        boolean isNetherActive = dimension == DimensionType.NETHER;
+        boolean isClearWeather = getInClear(stack);
+        boolean isNetherActive = getNether(stack);
         boolean isDamageBonusActive = isClearWeather || isNetherActive;
 
         if (isDamageBonusActive) {
@@ -90,35 +114,81 @@ public class FireArmorItem extends ArmorItem {
     }
 
     @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional)
+    {
+        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+
+        if (world.isClientSide) return;
+
+        if (!(holdingEntity instanceof LivingEntity)) return;
+
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
+
+        Weather newWeather = Weather.getCurrentWeather(world);
+        DimensionType newDimension = DimensionType.getCurrentDimension(world);
+
+        boolean isNetherNow = DimensionType.NETHER == DimensionType.getCurrentDimension(world);
+        boolean isInClearNow = Weather.CLEAR == Weather.getCurrentWeather(world);
+
+        boolean oldNether = this.getNether(stack);
+        boolean oldInClear = this.getInClear(stack);
+
+        boolean shouldRefresh = false;
+
+        if (isEquipped) {
+            if (isInClearNow != oldInClear) {
+                this.setInClear(stack, isInClearNow);
+                shouldRefresh = true;
+            }
+            if (isNetherNow != oldNether) {
+                this.setNether(stack, isNetherNow);
+                shouldRefresh = true;
+            }
+
+        } else {
+            // Crucial: If unequipped, force the NBT state to INACTIVE.
+            // This ensures the attribute modifiers map will be empty for dynamic bonuses.
+            if (oldInClear || oldNether) {
+                setInClear(stack, false);
+                setNether(stack, false);
+                // When an item is unequipped, the game engine usually handles attribute removal,
+                // but forcing the state to false is a good guard.
+                shouldRefresh = true;
+            }
+        }
+
+        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
+
+            Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
+
+            ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
+            if (attackInstance != null) {
+                attackInstance.removeModifier(SUN_DAMAGE_MODIFIER[this.slot.getIndex()]);
+            }
+
+            if (isEquipped) {
+                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
+                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
+                    if (instance != null) {
+                        if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER[this.slot.getIndex()]))
+                        {
+                            instance.addTransientModifier(entry.getValue());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
 
         if (world.isClientSide)
             return;
 
-        if (player.tickCount % perTickRecoverSpeed == 0 && (Weather.getCurrentWeather(world) == Weather.CLEAR))
+        if (player.tickCount % perTickRecoverSpeed == 0 && getInClear(stack))
             player.heal(recoverAmount);
-    }
-
-    @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional)
-    {
-        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
-
-        world.getMaxLocalRawBrightness(holdingEntity.blockPosition());
-        if (world.isClientSide)
-            return;
-
-        Weather newWeather = Weather.getCurrentWeather(world);
-        DimensionType newDimension = DimensionType.getCurrentDimension(world);
-
-        if (this.weather != newWeather) {
-            this.weather = newWeather;
-            stack.setTag(stack.getTag());
-        }
-        if (this.dimension != newDimension) {
-            this.dimension = newDimension;
-            stack.setTag(stack.getTag());
-        }
     }
 }

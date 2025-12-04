@@ -1,7 +1,9 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
+import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
 import com.titanhex.goldupgrades.item.custom.CustomEffectArmor;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -21,7 +23,7 @@ import net.minecraft.world.World;
 import java.util.Map;
 import java.util.UUID;
 
-public class ScubaEffectArmorItem extends CustomEffectArmor {
+public class ScubaEffectArmorItem extends ScubaEffectAttributeArmor {
     int drainFactor;
     int cooldown = 0;
 
@@ -29,7 +31,7 @@ public class ScubaEffectArmorItem extends CustomEffectArmor {
             UUID.fromString("6d7b5d12-6804-45e0-9e62-421f421f421f");
 
     public ScubaEffectArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, int drainFactor, Properties builderIn) {
-        super(materialIn, slot, effects, builderIn);
+        super(materialIn, slot, effects, HashMultimap.create(), drainFactor, builderIn);
         this.drainFactor = drainFactor;
     }
 

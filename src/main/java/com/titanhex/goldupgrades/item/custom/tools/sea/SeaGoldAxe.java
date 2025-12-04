@@ -38,6 +38,11 @@ public class SeaGoldAxe extends EffectAxe {
     }
 
     @Override
+    public float getDestroySpeed(ItemStack p_150893_1_, BlockState p_150893_2_) {
+        return super.getDestroySpeed(p_150893_1_, p_150893_2_);
+    }
+
+    @Override
     public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
 

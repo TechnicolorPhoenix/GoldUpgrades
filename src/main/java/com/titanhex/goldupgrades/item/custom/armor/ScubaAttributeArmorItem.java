@@ -1,9 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.GoldUpgrades;
-import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
-import com.titanhex.goldupgrades.item.custom.CustomEffectArmor;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -12,17 +9,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
 
-import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
-public class ScubaAttributeArmorItem extends CustomAttributeArmor {
+public class ScubaAttributeArmorItem extends ScubaEffectAttributeArmor {
     int drainFactor;
     int cooldown = 0;
 
@@ -30,7 +24,7 @@ public class ScubaAttributeArmorItem extends CustomAttributeArmor {
             UUID.fromString("6d7b5d12-6804-45e0-9e62-421f421f421f");
 
     public ScubaAttributeArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, int drainFactor, Properties builderIn) {
-        super(materialIn, slot, attributeBonuses, builderIn);
+        super(materialIn, slot, new HashMap<>(), attributeBonuses, drainFactor, builderIn);
         this.drainFactor = drainFactor;
     }
 
