@@ -30,7 +30,7 @@ public class FireArmorItem extends ArmorItem {
     protected float damageBonus = 0F;
     protected int perTickRecoverSpeed = 20;
 
-    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
+    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("7A12B68D-F0C6-44D1-A12A-14C2D8397E9C");
 
     private Weather weather = Weather.CLEAR;
     private DimensionType dimension = DimensionType.OVERWORLD;
@@ -72,9 +72,9 @@ public class FireArmorItem extends ArmorItem {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
         // Read the synchronized NBT state for display
-        boolean isRainActive = weather == Weather.RAIN;
-        boolean isOverworldActive = dimension == DimensionType.OVERWORLD;
-        boolean isDamageBonusActive = isRainActive || isOverworldActive;
+        boolean isClearWeather = weather == Weather.CLEAR;
+        boolean isNetherActive = dimension == DimensionType.NETHER;
+        boolean isDamageBonusActive = isClearWeather || isNetherActive;
 
         if (isDamageBonusActive) {
             tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+" + this.damageBonus + " Attack Damage)"));
@@ -82,7 +82,7 @@ public class FireArmorItem extends ArmorItem {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
-        if (isRainActive) {
+        if (isClearWeather) {
             tooltip.add(new StringTextComponent("§aActive: Regen Bonus (+" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Clear Skies)"));
