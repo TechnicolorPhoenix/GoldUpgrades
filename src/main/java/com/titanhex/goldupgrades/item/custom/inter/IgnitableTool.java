@@ -2,6 +2,7 @@ package com.titanhex.goldupgrades.item;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -18,7 +19,7 @@ public interface IgnitableTool {
      *
      * @param target The LivingEntity to ignite.
      */
-    void igniteEntity(LivingEntity target);
+    void igniteEntity(LivingEntity target, ItemStack stack);
 
     /**
      * Attempts to ignite a block, similar to a Flint and Steel.

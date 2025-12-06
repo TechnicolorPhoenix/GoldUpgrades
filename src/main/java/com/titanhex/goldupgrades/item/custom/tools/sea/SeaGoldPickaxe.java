@@ -5,7 +5,11 @@ import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
@@ -18,14 +22,23 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 
 public class SeaGoldPickaxe extends EffectPickaxe {
 
     int durabilityCost;
+    private static final String NBT_SUBMERGED = "ArmorSubmerged";
+    private static final String NBT_IN_RAIN = "ArmorInRain";
+
     /**
      * Constructor for the AuraPickaxe.
      * * @param tier The material tier of the pickaxe.
@@ -41,6 +54,74 @@ public class SeaGoldPickaxe extends EffectPickaxe {
     public SeaGoldPickaxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
         this.durabilityCost = durabilityCost;
+    }
+
+    private boolean getSubmerged(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_SUBMERGED);
+    }
+    private void setSubmerged(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_SUBMERGED, value);
+    }
+
+    private boolean getInRain(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_IN_RAIN);
+    }
+    private void setInRain(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_IN_RAIN, value);
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+        if (world.isClientSide) return;
+
+        if (!(holdingEntity instanceof LivingEntity)) return;
+
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
+
+        boolean isSubmergedNow = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
+        boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
+        boolean isInRainNow = isInRainOrWaterNow && !isSubmergedNow;
+
+        boolean oldSubmerged = this.getSubmerged(stack);
+        boolean oldInRain = this.getInRain(stack);
+
+        if (isInRainNow != oldInRain || isSubmergedNow != oldSubmerged) {
+            setInRain(stack, isInRainNow);
+            setSubmerged(stack, isSubmergedNow);
+        }
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
+
+        boolean inRain = this.getInRain(stack);
+        boolean submerged = this.getSubmerged(stack);
+
+        if (inRain && submerged) {
+            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
+        } else if (inRain || submerged) {
+            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +12%."));
+        } else {
+            tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
+        }
+    }
+
+    @Override
+    public float getDestroySpeed(ItemStack stack, BlockState state) {
+        float baseSpeed = super.getDestroySpeed(stack, state);
+        float bonusSpeed = getInRain(stack) ? getSubmerged(stack) ? 20.0F : 12.0F : getSubmerged(stack) ? 12.0F : 0F;
+
+        if (baseSpeed > 1.0F) {
+
+            float speedMultiplier = 1.0F + bonusSpeed;
+
+            return baseSpeed * speedMultiplier;
+        }
+
+        return baseSpeed;
     }
 
     @Override

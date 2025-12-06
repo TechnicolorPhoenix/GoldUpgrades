@@ -45,7 +45,7 @@ public class FireArmorItem extends ArmorItem {
             UUID.fromString("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d")  // HELMET
     };
 
-    public FireArmorItem(IArmorMaterial materialIn, float recoverAmount, int perTickRecoverSpeed, EquipmentSlotType slot, float damageBonus, Properties builderIn) {
+    public FireArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, float recoverAmount, int perTickRecoverSpeed, float damageBonus, Properties builderIn) {
         super(materialIn, slot, builderIn);
         this.recoverAmount = recoverAmount;
         this.perTickRecoverSpeed = perTickRecoverSpeed;
@@ -101,13 +101,13 @@ public class FireArmorItem extends ArmorItem {
         boolean isDamageBonusActive = isClearWeather || isNetherActive;
 
         if (isDamageBonusActive) {
-            tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+" + this.damageBonus + " Attack Damage)"));
+            tooltip.add(new StringTextComponent("§aActive: +" + this.damageBonus + " Attack Damage"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
         if (isClearWeather) {
-            tooltip.add(new StringTextComponent("§aActive: Regen Bonus (+" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
+            tooltip.add(new StringTextComponent("§aActive: +" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Clear Skies)"));
         }
@@ -124,9 +124,6 @@ public class FireArmorItem extends ArmorItem {
 
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
-
-        Weather newWeather = Weather.getCurrentWeather(world);
-        DimensionType newDimension = DimensionType.getCurrentDimension(world);
 
         boolean isNetherNow = DimensionType.NETHER == DimensionType.getCurrentDimension(world);
         boolean isInClearNow = Weather.CLEAR == Weather.getCurrentWeather(world);
@@ -147,13 +144,10 @@ public class FireArmorItem extends ArmorItem {
             }
 
         } else {
-            // Crucial: If unequipped, force the NBT state to INACTIVE.
-            // This ensures the attribute modifiers map will be empty for dynamic bonuses.
             if (oldInClear || oldNether) {
                 setInClear(stack, false);
                 setNether(stack, false);
-                // When an item is unequipped, the game engine usually handles attribute removal,
-                // but forcing the state to false is a good guard.
+
                 shouldRefresh = true;
             }
         }

@@ -28,6 +28,12 @@ public class SeaArmorItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, GoldUpgrades.MOD_ID);
 
+    private static Multimap<Attribute, Double> createBaseArmorBonuses() {
+        Multimap<Attribute, Double> bonuses = HashMultimap.create();
+        bonuses.put(Attributes.LUCK, 0.2D);
+        bonuses.put(Attributes.ATTACK_SPEED, 1.00D);
+        return bonuses;
+    }
     private static Multimap<Attribute, Double> createUpgradedArmorBonuses() {
         Multimap<Attribute, Double> bonuses = HashMultimap.create();
         bonuses.put(Attributes.LUCK, 0.5D);
@@ -36,25 +42,30 @@ public class SeaArmorItems {
     }
     private static Map<Effect, Integer> createPowerArmorBonuses() {
         Map<Effect, Integer> bonuses = new HashMap<>();
-        bonuses.put(Effects.WATER_BREATHING, 1);
-        bonuses.put(Effects.DOLPHINS_GRACE, 1);
+        bonuses.put(Effects.WATER_BREATHING, 0);
+        bonuses.put(Effects.DOLPHINS_GRACE, 0);
         return bonuses;
     }
 
     private static final Multimap<Attribute, Double> SEA_UPGRADED_ARMOR_BONUSES = createUpgradedArmorBonuses();
+    private static final Multimap<Attribute, Double> SEA_BASE_ARMOR_BONUSES = createUpgradedArmorBonuses();
     private static final Map<Effect, Integer> SEA_POWER_ARMOR_BONUSES = createPowerArmorBonuses();
 
     public static final RegistryObject<Item> SEA_BASE_GOLD_BOOTS = ITEMS.register("sea_base_gold_boots",
-            () -> new ArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.FEET,
+            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.FEET,
+                    SEA_BASE_ARMOR_BONUSES, 15,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_BASE_GOLD_LEGGINGS = ITEMS.register("sea_base_gold_leggings",
-            () -> new ArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.LEGS,
+            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.LEGS,
+                    SEA_BASE_ARMOR_BONUSES, 15,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_BASE_GOLD_CHESTPLATE = ITEMS.register("sea_base_gold_chestplate",
-            () -> new ArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.CHEST,
+            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.CHEST,
+                    SEA_BASE_ARMOR_BONUSES, 15,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_BASE_GOLD_HELMET = ITEMS.register("sea_base_gold_helmet",
-            () -> new ArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.HEAD,
+            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.HEAD,
+                    SEA_BASE_ARMOR_BONUSES, 15,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
 
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_BOOTS = ITEMS.register("sea_upgraded_gold_boots",

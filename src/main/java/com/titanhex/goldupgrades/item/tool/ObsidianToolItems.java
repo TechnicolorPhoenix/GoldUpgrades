@@ -17,19 +17,19 @@ public class ObsidianToolItems {
     
     // BASE
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_SWORD = ITEMS.register("obsidian_base_gold_sword",
-            () -> new SwordItem(ModItemTier.OBSIDIAN_BASE_GOLD, 4, -2.4F,
+            () -> new ObsidianGoldSword(ModItemTier.OBSIDIAN_BASE_GOLD, 4, -2.4F, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_SHOVEL = ITEMS.register("obsidian_base_gold_shovel",
-            () -> new ShovelItem(ModItemTier.OBSIDIAN_BASE_GOLD, 2.5F, -3.0F,
+            () -> new ObsidianGoldShovel(ModItemTier.OBSIDIAN_BASE_GOLD, 2.5F, -3.0F, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_PICKAXE = ITEMS.register("obsidian_base_gold_pickaxe",
-            () -> new PickaxeItem(ModItemTier.OBSIDIAN_BASE_GOLD, 2, -2.8F,
+            () -> new ObsidianGoldPickaxe(ModItemTier.OBSIDIAN_BASE_GOLD, 2, -2.8F, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_AXE = ITEMS.register("obsidian_base_gold_axe",
-            () -> new AxeItem(ModItemTier.OBSIDIAN_BASE_GOLD, 7.0F, -3.0F,
+            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_BASE_GOLD, 7.0F, -3.0F, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_HOE = ITEMS.register("obsidian_base_gold_hoe",
-            () -> new HoeItem(ModItemTier.OBSIDIAN_BASE_GOLD, 1, -3.0F,
+            () -> new ObsidianGoldHoe(ModItemTier.OBSIDIAN_BASE_GOLD, 1, -3.0F, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
 
     //UPGRADED

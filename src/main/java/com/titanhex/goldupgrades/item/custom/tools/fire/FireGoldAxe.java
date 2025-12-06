@@ -14,6 +14,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
@@ -29,15 +30,17 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class FireGoldAxe extends AxeItem implements IgnitableTool
 {
     int burnTicks;
     int durabilityUse;
-    protected int lightLevel = 15;
-    protected Weather weather = Weather.CLEAR;
-    protected DimensionType dimension = DimensionType.OVERWORLD;
+
+    private static final String NBT_NETHER = "WeaponInNether";
+    private static final String NBT_IN_CLEAR = "WeaponInClearWeather";
+    private static final String NBT_LIGHT_LEVEL = "WeaponLightLevel";
 
     private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
 
@@ -47,41 +50,95 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         this.durabilityUse = durabilityUse;
     }
 
+    private boolean getNether(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_NETHER);
+    }
+    private void setNether(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_NETHER, value);
+    }
+
+    private boolean getInClear(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_IN_CLEAR);
+    }
+    private void setInClear(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_IN_CLEAR, value);
+    }
+
+    private int getLightLevel(ItemStack stack) {
+        return stack.getOrCreateTag().getInt(NBT_LIGHT_LEVEL);
+    }
+    private void setLightLevel(ItemStack stack, int value) {
+        stack.getOrCreateTag().putInt(NBT_LIGHT_LEVEL, value);
+    }
+
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        int currentBrightness = Math.max(world.getBrightness(LightType.BLOCK, holdingEntity.blockPosition()), world.getBrightness(LightType.SKY, holdingEntity.blockPosition()));
+        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
 
-        if (this.lightLevel != currentBrightness) {
-            this.lightLevel = currentBrightness;
-            stack.setTag(stack.getTag());
+        int oldBrightness = getLightLevel(stack);
+
+        if (oldBrightness != currentBrightness) {
+            setLightLevel(stack, currentBrightness);
         }
 
         if (world.isClientSide)
             return;
 
-        Weather newWeather = Weather.getCurrentWeather(world);
-        DimensionType newDimension = DimensionType.getCurrentDimension(world);
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        if (this.weather != newWeather) {
-            this.weather = newWeather;
+        boolean shouldRefresh = false;
+
+        boolean weatherIsClear = Weather.getCurrentWeather(world) == Weather.CLEAR;
+        boolean dimensionIsNether = DimensionType.getCurrentDimension(world) == DimensionType.NETHER;
+
+        boolean oldNether = this.getNether(stack);
+        boolean oldInClear = this.getInClear(stack);
+
+        if (oldInClear != weatherIsClear || oldNether != dimensionIsNether) {
+            setInClear(stack, weatherIsClear);
+            setNether(stack, dimensionIsNether);
+
             stack.setTag(stack.getTag());
+            if (isEquipped) {
+                shouldRefresh = true;
+            }
         }
-        if (this.dimension != newDimension) {
-            this.dimension = newDimension;
-            stack.setTag(stack.getTag());
+
+        ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
+
+        if (!isEquipped && attackInstance != null)
+            if (attackInstance.getModifier(SUN_DAMAGE_MODIFIER) != null)
+                shouldRefresh = true;
+
+        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
+
+            Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
+
+            if (attackInstance != null) {
+                attackInstance.removeModifier(SUN_DAMAGE_MODIFIER);
+            }
+
+            if (isEquipped) {
+                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
+                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
+                    if (instance != null) {
+                        if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER))
+                        {
+                            instance.addTransientModifier(entry.getValue());
+                        }
+                    }
+                }
+            }
         }
 
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
-    private boolean bonusConditionsMet(){
-        return this.weather == Weather.CLEAR || this.dimension == DimensionType.NETHER;
-    }
-
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = this.lightLevel * 0.01F;
+        float bonusSpeed = getLightLevel(stack) * 0.01F;
 
         if (baseSpeed > 1.0F) {
 
@@ -100,8 +157,8 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
      * @param target The LivingEntity to ignite.
      */
     @Override
-    public void igniteEntity(LivingEntity target) {
-        target.setSecondsOnFire(2);
+    public void igniteEntity(LivingEntity target, ItemStack stack) {
+        target.setSecondsOnFire(burnTicks);
     }
 
     /**
@@ -147,7 +204,7 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
      */
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        igniteEntity(target);
+        igniteEntity(target, stack);
 
         return true;
     }
@@ -160,7 +217,7 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             // Check the synchronized NBT state
-            if (weather == Weather.CLEAR || dimension == DimensionType.NETHER) {
+            if (getInClear(stack) || getNether(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
@@ -179,18 +236,13 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
     public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        // Read the synchronized NBT state for display
-        boolean isClearSkyActive = weather == Weather.CLEAR;
-        boolean isNetherActive = dimension == DimensionType.NETHER;
-        boolean isDamageBonusActive = isClearSkyActive || isNetherActive;
+        int lightLevel = getLightLevel(stack);
 
-        if (isDamageBonusActive) {
-            tooltip.add(new StringTextComponent("§aActive: Damage Bonus (+1)"));
-        } else {
+        if (!getNether(stack) && !getInClear(stack)) {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
-        tooltip.add(new StringTextComponent("§eHarvest Speed +" + this.lightLevel + "%."));
+        tooltip.add(new StringTextComponent((lightLevel > 0 ? "§9" : "§c") + "+" + lightLevel + "% Harvest Speed"));
     }
 
     /**

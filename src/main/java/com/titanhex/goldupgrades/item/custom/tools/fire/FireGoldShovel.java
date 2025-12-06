@@ -34,52 +34,71 @@ public class FireGoldShovel extends ShovelItem implements IgnitableTool
     protected DimensionType dimension = DimensionType.OVERWORLD;
     protected int lightLevel = 0;
 
+    private static final String NBT_NETHER = "WeaponInNether";
+    private static final String NBT_IN_CLEAR = "WeaponInClearWeather";
+    private static final String NBT_LIGHT_LEVEL = "WeaponLightLevel";
+
     public FireGoldShovel(IItemTier tier, float atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
     }
 
+    private boolean getNether(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_NETHER);
+    }
+    private void setNether(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_NETHER, value);
+    }
+
+    private boolean getInClear(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_IN_CLEAR);
+    }
+    private void setInClear(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_IN_CLEAR, value);
+    }
+
+    private int getLightLevel(ItemStack stack) {
+        return stack.getOrCreateTag().getInt(NBT_LIGHT_LEVEL);
+    }
+    private void setLightLevel(ItemStack stack, int value) {
+        stack.getOrCreateTag().putInt(NBT_LIGHT_LEVEL, value);
+    }
+
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        int currentBrightness = Math.max(world.getBrightness(LightType.BLOCK, holdingEntity.blockPosition()), world.getBrightness(LightType.SKY, holdingEntity.blockPosition()));
+        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
 
-        if (this.lightLevel != currentBrightness) {
-            this.lightLevel = currentBrightness;
-            stack.setTag(stack.getTag());
+        int oldBrightness = getLightLevel(stack);
+
+        if (oldBrightness != currentBrightness) {
+            setLightLevel(stack, currentBrightness);
         }
 
         if (world.isClientSide)
             return;
 
-        Weather newWeather = Weather.getCurrentWeather(world);
-        DimensionType newDimension = DimensionType.getCurrentDimension(world);
+        boolean weatherIsClear = Weather.getCurrentWeather(world) == Weather.CLEAR;
+        boolean dimensionIsNether = DimensionType.getCurrentDimension(world) == DimensionType.NETHER;
 
-        if (this.weather != newWeather) {
-            this.weather = newWeather;
+        boolean oldNether = this.getNether(stack);
+        boolean oldInClear = this.getInClear(stack);
+
+        if (oldInClear != weatherIsClear) {
+            setInClear(stack, weatherIsClear);
             stack.setTag(stack.getTag());
-        }
-        if (this.dimension != newDimension) {
-            this.dimension = newDimension;
+        } else if (oldNether != dimensionIsNether) {
+            setNether(stack, dimensionIsNether);
             stack.setTag(stack.getTag());
         }
 
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
-    // --- Tooltip Display (Reads state from NBT) ---
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        super.appendHoverText(stack, worldIn, tooltip, flagIn);
-
-        tooltip.add(new StringTextComponent("§eHarvest Speed +" + this.lightLevel + "%."));
-    }
-
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = this.lightLevel * 0.01F;
+        float bonusSpeed = getLightLevel(stack) * 0.01F;
 
         if (baseSpeed > 1.0F) {
             float speedMultiplier = 1.0F + bonusSpeed;
@@ -90,6 +109,16 @@ public class FireGoldShovel extends ShovelItem implements IgnitableTool
         return baseSpeed;
     }
 
+    // --- Tooltip Display (Reads state from NBT) ---
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        float bonusSpeed = getLightLevel(stack);
+
+        tooltip.add(new StringTextComponent( (bonusSpeed > 0 ? "§9" : "§c" ) + "+" + bonusSpeed + "% Harvest Speed ."));
+    }
+
     /**
      * Ignites a target LivingEntity for a short duration when hit.
      * This logic is typically called from the Item's hitEntity method.
@@ -97,7 +126,7 @@ public class FireGoldShovel extends ShovelItem implements IgnitableTool
      * @param target The LivingEntity to ignite.
      */
     @Override
-    public void igniteEntity(LivingEntity target) {
+    public void igniteEntity(LivingEntity target, ItemStack stack) {
         target.setSecondsOnFire(2);
     }
 
@@ -140,7 +169,7 @@ public class FireGoldShovel extends ShovelItem implements IgnitableTool
      */
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        igniteEntity(target);
+        igniteEntity(target, stack);
 
         stack.hurtAndBreak(1, attacker, (e) -> e.broadcastBreakEvent(attacker.getUsedItemHand()));
 

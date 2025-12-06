@@ -174,13 +174,9 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor {
                 stack.getOrCreateTag().putString(ARMOR_WEATHER, currentWeather.name());
             }
         } else {
-            // Crucial: If unequipped, force the NBT state to INACTIVE.
-            // This ensures the attribute modifiers map will be empty for dynamic bonuses.
             if (oldInRain || oldSubmerged) {
                 setInRain(stack, false);
                 setSubmerged(stack, false);
-                // When an item is unequipped, the game engine usually handles attribute removal,
-                // but forcing the state to false is a good guard.
                 shouldRefresh = true;
             }
         }
