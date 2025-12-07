@@ -1,7 +1,6 @@
 package com.titanhex.goldupgrades.item.armor;
 
 import com.titanhex.goldupgrades.GoldUpgrades;
-import com.titanhex.goldupgrades.item.ModArmorItems;
 import com.titanhex.goldupgrades.item.ModArmorMaterial;
 import com.titanhex.goldupgrades.item.ModItemGroup;
 import com.titanhex.goldupgrades.item.custom.CustomEffectJumpArmor;

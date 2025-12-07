@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -16,9 +19,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT; // <-- REQUIRED NEW IMPORT
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -30,13 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FireArmorItem extends ArmorItem {
+public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, IDimensionInfluencedItem, IDayInfluencedItem {
     protected float recoverAmount;
     protected float damageBonus;
     protected int perTickRecoverSpeed;
-
-    private static final String NBT_NETHER = "ArmorInNether";
-    private static final String NBT_IN_CLEAR = "ArmorInClearWeather";
 
     private static final UUID[] SUN_DAMAGE_MODIFIER = new UUID[]{
             UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
@@ -52,30 +49,15 @@ public class FireArmorItem extends ArmorItem {
         this.damageBonus = damageBonus;
     }
 
-    private boolean getNether(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_NETHER);
-    }
-    private void setNether(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_NETHER, value);
-    }
-
-    private boolean getInClear(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IN_CLEAR);
-    }
-    private void setInClear(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IN_CLEAR, value);
-    }
-
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
         if (equipmentSlot == this.slot) {
-            boolean inNether = this.getNether(stack);
-            boolean inClear = this.getInClear(stack);
+            boolean inNether = getDimension(stack) == DimensionType.NETHER;
+            boolean inClear = getWeather(stack) == Weather.CLEAR;
 
-            // Check the synchronized NBT state
             if (inClear || inNether) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER[this.slot.getIndex()],
@@ -89,16 +71,14 @@ public class FireArmorItem extends ArmorItem {
         return builder.build();
     }
 
-    // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        // Read the synchronized NBT state for display
-        boolean isClearWeather = getInClear(stack);
-        boolean isNetherActive = getNether(stack);
-        boolean isDamageBonusActive = isClearWeather || isNetherActive;
+        boolean inNether = getDimension(stack) == DimensionType.NETHER;
+        boolean inClear = getWeather(stack) == Weather.CLEAR;
+        boolean isDamageBonusActive = inClear || inNether;
 
         if (isDamageBonusActive) {
             tooltip.add(new StringTextComponent("§aActive: +" + this.damageBonus + " Attack Damage"));
@@ -106,10 +86,10 @@ public class FireArmorItem extends ArmorItem {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
-        if (isClearWeather) {
+        if (inClear) {
             tooltip.add(new StringTextComponent("§aActive: +" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
         } else {
-            tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Clear Skies)"));
+            tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Day)"));
         }
     }
 
@@ -120,55 +100,40 @@ public class FireArmorItem extends ArmorItem {
 
         if (world.isClientSide) return;
 
-        if (!(holdingEntity instanceof LivingEntity)) return;
+        int slotIndex = this.slot.getIndex();
 
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
 
-        boolean isNetherNow = DimensionType.NETHER == DimensionType.getCurrentDimension(world);
-        boolean isInClearNow = Weather.CLEAR == Weather.getCurrentWeather(world);
+        DimensionType currentDimension = DimensionType.getCurrentDimension(world);
+        Weather currentWeather = Weather.getCurrentWeather(world);
 
-        boolean oldNether = this.getNether(stack);
-        boolean oldInClear = this.getInClear(stack);
+        DimensionType oldDimension = getDimension(stack);
+        Weather oldWeather = getWeather(stack);
 
         boolean shouldRefresh = false;
 
-        if (isEquipped) {
-            if (isInClearNow != oldInClear) {
-                this.setInClear(stack, isInClearNow);
-                shouldRefresh = true;
-            }
-            if (isNetherNow != oldNether) {
-                this.setNether(stack, isNetherNow);
-                shouldRefresh = true;
-            }
+        ModifiableAttributeInstance toughnessInstance = livingEntity.getAttribute(Attributes.ARMOR_TOUGHNESS);
 
-        } else {
-            if (oldInClear || oldNether) {
-                setInClear(stack, false);
-                setNether(stack, false);
+        if (isEquipped && toughnessInstance != null)
+            if (toughnessInstance.getModifier(SUN_DAMAGE_MODIFIER[slotIndex]) != null)
+                shouldRefresh = oldDimension != currentDimension || oldWeather != currentWeather;
 
-                shouldRefresh = true;
-            }
+        if (currentWeather != oldWeather || currentDimension != oldDimension) {
+            this.setWeather(stack, currentWeather);
+            this.setDimension(stack, currentDimension);
         }
 
         if (shouldRefresh && holdingEntity instanceof LivingEntity) {
 
             Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
+            toughnessInstance.removeModifier(SUN_DAMAGE_MODIFIER[this.slot.getIndex()]);
 
-            ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
-            if (attackInstance != null) {
-                attackInstance.removeModifier(SUN_DAMAGE_MODIFIER[this.slot.getIndex()]);
-            }
-
-            if (isEquipped) {
-                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                    if (instance != null) {
-                        if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER[this.slot.getIndex()]))
-                        {
-                            instance.addTransientModifier(entry.getValue());
-                        }
+            for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
+                ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
+                if (instance != null) {
+                    if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER[this.slot.getIndex()])) {
+                        instance.addTransientModifier(entry.getValue());
                     }
                 }
             }
@@ -182,7 +147,7 @@ public class FireArmorItem extends ArmorItem {
         if (world.isClientSide)
             return;
 
-        if (player.tickCount % perTickRecoverSpeed == 0 && getInClear(stack))
+        if (player.tickCount % perTickRecoverSpeed == 0 && getIsDay(stack))
             player.heal(recoverAmount);
     }
 }

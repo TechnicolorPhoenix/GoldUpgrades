@@ -5,9 +5,14 @@ import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.IgnitableTool;
+import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.WallTorchBlock;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -23,26 +28,22 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FireGoldAxe extends AxeItem implements IgnitableTool
+public class FireGoldAxe extends AxeItem implements IgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, ILightInfluencedItem, IDayInfluencedItem
 {
     int burnTicks;
     int durabilityUse;
 
-    private static final String NBT_NETHER = "WeaponInNether";
-    private static final String NBT_IN_CLEAR = "WeaponInClearWeather";
-    private static final String NBT_LIGHT_LEVEL = "WeaponLightLevel";
-
-    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
+    private static final UUID SUN_DAMAGE_MODIFIER = UUID.randomUUID();
 
     public FireGoldAxe(IItemTier tier, float atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
@@ -50,29 +51,8 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         this.durabilityUse = durabilityUse;
     }
 
-    private boolean getNether(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_NETHER);
-    }
-    private void setNether(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_NETHER, value);
-    }
-
-    private boolean getInClear(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IN_CLEAR);
-    }
-    private void setInClear(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IN_CLEAR, value);
-    }
-
-    private int getLightLevel(ItemStack stack) {
-        return stack.getOrCreateTag().getInt(NBT_LIGHT_LEVEL);
-    }
-    private void setLightLevel(ItemStack stack, int value) {
-        stack.getOrCreateTag().putInt(NBT_LIGHT_LEVEL, value);
-    }
-
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
 
         int oldBrightness = getLightLevel(stack);
@@ -87,46 +67,39 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        boolean shouldRefresh = false;
+        boolean currentIsDay = world.isDay();
+        boolean oldIsDay = getIsDay(stack);
 
-        boolean weatherIsClear = Weather.getCurrentWeather(world) == Weather.CLEAR;
-        boolean dimensionIsNether = DimensionType.getCurrentDimension(world) == DimensionType.NETHER;
+        Weather currentWeather = Weather.getCurrentWeather(world);
+        DimensionType currentDimension = DimensionType.getCurrentDimension(world);
 
-        boolean oldNether = this.getNether(stack);
-        boolean oldInClear = this.getInClear(stack);
-
-        if (oldInClear != weatherIsClear || oldNether != dimensionIsNether) {
-            setInClear(stack, weatherIsClear);
-            setNether(stack, dimensionIsNether);
-
-            stack.setTag(stack.getTag());
-            if (isEquipped) {
-                shouldRefresh = true;
-            }
-        }
+        DimensionType oldDimension = getDimension(stack);
+        Weather oldWeather = getWeather(stack);
 
         ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
-        if (!isEquipped && attackInstance != null)
+        boolean shouldRefresh = false;
+
+        if (isEquipped && attackInstance != null)
             if (attackInstance.getModifier(SUN_DAMAGE_MODIFIER) != null)
-                shouldRefresh = true;
+                shouldRefresh = oldDimension != currentDimension || oldWeather != currentWeather || currentIsDay != oldIsDay;
+
+        if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
+            setWeather(stack, currentWeather);
+            setDimension(stack, currentDimension);
+        }
 
         if (shouldRefresh && holdingEntity instanceof LivingEntity) {
 
             Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
 
-            if (attackInstance != null) {
-                attackInstance.removeModifier(SUN_DAMAGE_MODIFIER);
-            }
+            attackInstance.removeModifier(SUN_DAMAGE_MODIFIER);
 
-            if (isEquipped) {
-                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                    if (instance != null) {
-                        if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER))
-                        {
-                            instance.addTransientModifier(entry.getValue());
-                        }
+            for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
+                ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
+                if (instance != null) {
+                    if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER)) {
+                        instance.addTransientModifier(entry.getValue());
                     }
                 }
             }
@@ -167,12 +140,11 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
      *
      * @param player The player performing the action.
      * @param world  The world the action is taking place in.
-     * @param pos    The BlockPos of the block being targeted.
+     * @param firePos    The BlockPos of the block being targeted.
      * @return ActionResultType.SUCCESS if fire was placed, ActionResultType.PASS otherwise.
      */
     @Override
-    public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos pos) {
-        BlockPos firePos = pos;
+    public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos firePos) {
 
         if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
 
@@ -214,14 +186,15 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
+        boolean isDay = getIsDay(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             // Check the synchronized NBT state
-            if (getInClear(stack) || getNether(stack)) {
+            if (getWeather(stack) == Weather.CLEAR || getDimension(stack) == DimensionType.NETHER) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        1,
+                        isDay ? 2 : 1,
                         AttributeModifier.Operation.ADDITION
                 ));
             }
@@ -238,7 +211,7 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
 
         int lightLevel = getLightLevel(stack);
 
-        if (!getNether(stack) && !getInClear(stack)) {
+        if (getDimension(stack) != DimensionType.NETHER && getWeather(stack) != Weather.CLEAR) {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
@@ -248,51 +221,59 @@ public class FireGoldAxe extends AxeItem implements IgnitableTool
     /**
      * Handles the block use event (Right Click) and contains the corrected Flint and Steel logic.
      */
+    @NotNull
     @Override
     public ActionResultType useOn(ItemUseContext context) {
-        PlayerEntity player = context.getPlayer();
         World world = context.getLevel();
+        if (world.isClientSide) {
+            return ActionResultType.SUCCESS;
+        }
+        PlayerEntity player = context.getPlayer();
+        if (player == null)
+            return super.useOn(context);
+
         Direction face = context.getClickedFace();
         ItemStack stack = context.getItemInHand(); // Get the ItemStack directly from the context
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
         if (clickedState.is(BlockTags.LOGS)) {
-            if (!world.isClientSide) {
-                world.removeBlock(clickedPos, false);
+            world.removeBlock(clickedPos, false);
 
-                Block.popResource(world, clickedPos, new ItemStack(Items.CHARCOAL));
+            Block.popResource(world, clickedPos, new ItemStack(Items.CHARCOAL));
 
-                if (player != null) {
-                    player.giveExperiencePoints(1);
-                    world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
-                }
+            player.giveExperiencePoints(1);
+            world.playSound(null, clickedPos, SoundEvents.WOOD_BREAK, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
-                stack.hurtAndBreak(durabilityUse*2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
+            stack.hurtAndBreak(durabilityUse*2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
-                return ActionResultType.SUCCESS;
-            }
-            return ActionResultType.SUCCESS;
-        }
-
-        if (world.isClientSide) {
             return ActionResultType.SUCCESS;
         }
 
         BlockPos facePos = clickedPos.relative(face);
 
-        if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
-            world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);
-            stack.hurtAndBreak(5, player, (e) -> e.broadcastBreakEvent(context.getHand()));
-            player.giveExperiencePoints(1);
-
-            return ActionResultType.SUCCESS;
-        } else if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
+        if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
             world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
             setDamage(stack, getDamage(stack) + 2);
             player.giveExperiencePoints(1);
 
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
+
+            return ActionResultType.SUCCESS;
+        } else if (clickedState.getBlock() == Blocks.TORCH || world.getBlockState(facePos).getBlock() == Blocks.TORCH) {
+            return ActionResultType.PASS;
+        } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
+            if (context.getClickedFace() == Direction.UP) {
+                world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);
+            } else if (face.getAxis().isHorizontal()) {
+                Block wallTorch = Blocks.WALL_TORCH;
+                BlockState torchState = wallTorch.defaultBlockState().setValue(WallTorchBlock.FACING, face);
+                world.setBlock(facePos, torchState, 1);
+            } else
+                return ActionResultType.PASS;
+
+            stack.hurtAndBreak(5, player, (e) -> e.broadcastBreakEvent(context.getHand()));
+            player.giveExperiencePoints(1);
 
             return ActionResultType.SUCCESS;
         }

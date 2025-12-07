@@ -7,6 +7,7 @@ import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
+import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor {
+public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor implements IWeatherInfluencedItem {
     int drainFactor;
     int cooldown = 0;
     private static final String ARMOR_WEATHER = "ArmorLastWeather";
@@ -166,7 +167,7 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor {
 
                 if (currentWeather != lastWeather) {
                     if (currentWeather == Weather.RAIN) {
-                        livingEntity.setAbsorptionAmount(6F);
+                        livingEntity.setAbsorptionAmount(Math.min(16F, livingEntity.getAbsorptionAmount()));
                     }
                     stack.getOrCreateTag().putString(ARMOR_WEATHER, currentWeather.name());
                 }

@@ -3,6 +3,9 @@ package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.MoonPhase;
+import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IMoonPhaseInfluencedItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
@@ -15,9 +18,7 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
@@ -36,38 +37,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ObsidianGoldSword extends SwordItem
+public class ObsidianGoldSword extends SwordItem implements IDayInfluencedItem, IMoonPhaseInfluencedItem, ILightInfluencedItem
 {
-    // Defines the amount of durability to restore when absorbing lava
     private final int repairAmount;
-    private static final String NBT_LIGHT_LEVEL = "WeaponLightLevel";
-    private static final String NBT_IS_NIGHT = "WeaponNight";
-    private static final String NBT_MOON_PHASE = "WeaponMoonPhase";
     public static final UUID NIGHT_DAMAGE_UUID = UUID.fromString("f2d3d9e0-3e3a-4a8f-9a4a-3b6b6b6b6b6b");
 
     public ObsidianGoldSword(IItemTier tier, int atkDamage, float atkSpeed, int repairAmount, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.repairAmount = repairAmount;
-    }
-
-    private int getLightLevel(ItemStack stack) {
-        return stack.getOrCreateTag().getInt(NBT_LIGHT_LEVEL);
-    }
-    private void setLightLevel(ItemStack stack, int value) {
-        stack.getOrCreateTag().putInt(NBT_LIGHT_LEVEL, value);
-    }
-
-    private boolean getNight(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IS_NIGHT);
-    }
-    private void setNight(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IS_NIGHT, value);
-    }
-    private MoonPhase getMoonPhase(ItemStack stack) {
-        return MoonPhase.getMoonPhaseByString(stack.getOrCreateTag().getString(NBT_MOON_PHASE));
-    }
-    private void setMoonPhase(ItemStack stack, MoonPhase value) {
-        stack.getOrCreateTag().putString(NBT_MOON_PHASE, value.name());
     }
 
     @Override
@@ -80,11 +57,11 @@ public class ObsidianGoldSword extends SwordItem
 
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentNight = world.isNight() ;
+        boolean currentIsDay = world.isNight() ;
 
         int oldBrightness = getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldNight = getNight(stack);
+        boolean oldIsDay = getIsDay(stack);
 
         boolean shouldRefresh = false;
 
@@ -94,10 +71,10 @@ public class ObsidianGoldSword extends SwordItem
             if (attackInstance.getModifier(NIGHT_DAMAGE_UUID) != null)
                 shouldRefresh = oldMoonPhase != currentMoonPhase;
 
-        if (currentNight != oldNight || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
+        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
             setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
-            setNight(stack, currentNight);
+            setIsDay(stack, currentIsDay);
 
             stack.setTag(stack.getTag());
         }
@@ -124,7 +101,7 @@ public class ObsidianGoldSword extends SwordItem
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getNight(stack) ? 0.15F : 0;
+        float bonusSpeed = getIsDay(stack) ? 0 : 0.15F;
 
         if (getLightLevel(stack) == 0) {
             baseSpeed = 1.25F;
@@ -186,7 +163,7 @@ public class ObsidianGoldSword extends SwordItem
         if (getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
-        if (getNight(stack))
+        if (!getIsDay(stack))
             tooltip.add(new StringTextComponent("§a+15% Harvest Speed ."));
         else
             tooltip.add(new StringTextComponent("§cInactive: Harvest Speed Bonus (Requires Night)"));
@@ -203,16 +180,18 @@ public class ObsidianGoldSword extends SwordItem
     /**
      * Handles the block use event (Right Click) with custom Pickaxe and Fire functionality.
      */
+    @NotNull
     @Override
     public ActionResultType useOn(ItemUseContext context) {
-        PlayerEntity player = context.getPlayer();
         World world = context.getLevel();
+        if (world.isClientSide) return super.useOn(context);
+        PlayerEntity player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
         BlockPos clickedPos = context.getClickedPos();
 
-        if (!world.isClientSide && player != null && world.dimension() != World.NETHER) {
+        if (player != null) {
 
-            RayTraceResult hitResult = world.clip(
+            BlockRayTraceResult hitResult = world.clip(
                     new RayTraceContext(
                             player.getEyePosition(1.0F),
                             player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
@@ -222,26 +201,23 @@ public class ObsidianGoldSword extends SwordItem
                     )
             );
 
-            // Check 2: Block is Lava source block
             if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
-                BlockRayTraceResult blockHit = (BlockRayTraceResult) hitResult;
-                BlockPos rayHitPos = blockHit.getBlockPos();
+                BlockPos rayHitPos = hitResult.getBlockPos();
                 BlockState rayHitState = world.getBlockState(rayHitPos);
 
-                // 1. Check for Water -> Ice conversion (Priority 1)
                 if (rayHitState.getBlock() == Blocks.LAVA) {
 
-                    // Remove Lava by setting it to air (or block if desired, but air removes the source)
-                    world.setBlock(rayHitPos, Blocks.AIR.defaultBlockState(), 3);
+                    world.setBlock(rayHitPos, Blocks.OBSIDIAN.defaultBlockState(), 3);
 
-                    // Repair Tool by LAVA_REPAIR_AMOUNT
-                    int currentDamage = stack.getDamageValue();
-                    stack.setDamageValue(Math.max(0, currentDamage - repairAmount)); // Sets damage to a lower value, max 0.
+                    if (world.dimension() == World.NETHER) {
+                        stack.hurtAndBreak((4-repairAmount)*3, player, (entity) -> entity.broadcastBreakEvent(context.getHand()));
+                    } else {
+                        int currentDamage = stack.getDamageValue();
+                        stack.setDamageValue(Math.max(0, currentDamage - repairAmount));
+                    }
 
-                    // Give EXP
                     player.giveExperiencePoints(1);
 
-                    // Play sound (Extinguish)
                     world.playSound(null, clickedPos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
 
                     return ActionResultType.SUCCESS;
