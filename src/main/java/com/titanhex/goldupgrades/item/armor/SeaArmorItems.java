@@ -5,8 +5,8 @@ import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.item.ModArmorMaterial;
 import com.titanhex.goldupgrades.item.ModItemGroup;
-import com.titanhex.goldupgrades.item.custom.armor.ScubaAttributeArmorItem;
-import com.titanhex.goldupgrades.item.custom.armor.ScubaEffectAttributeArmor;
+import com.titanhex.goldupgrades.item.custom.armor.ScubaAttributeArmorItemItem;
+import com.titanhex.goldupgrades.item.custom.armor.SeaArmorItem;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -50,53 +50,53 @@ public class SeaArmorItems {
     private static final Map<Effect, Integer> SEA_POWER_ARMOR_BONUSES = createPowerArmorBonuses();
 
     public static final RegistryObject<Item> SEA_BASE_GOLD_BOOTS = ITEMS.register("sea_base_gold_boots",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.FEET,
-                    SEA_BASE_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.FEET,
+                    SEA_BASE_ARMOR_BONUSES, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_BASE_GOLD_LEGGINGS = ITEMS.register("sea_base_gold_leggings",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.LEGS,
-                    SEA_BASE_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.LEGS,
+                    SEA_BASE_ARMOR_BONUSES, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_BASE_GOLD_CHESTPLATE = ITEMS.register("sea_base_gold_chestplate",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.CHEST,
-                    SEA_BASE_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.CHEST,
+                    SEA_BASE_ARMOR_BONUSES, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_BASE_GOLD_HELMET = ITEMS.register("sea_base_gold_helmet",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.HEAD,
-                    SEA_BASE_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_BASE_GOLD, EquipmentSlotType.HEAD,
+                    SEA_BASE_ARMOR_BONUSES, 1,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
 
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_BOOTS = ITEMS.register("sea_upgraded_gold_boots",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.FEET,
-                    SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.FEET,
+                    SEA_UPGRADED_ARMOR_BONUSES, 2,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_LEGGINGS = ITEMS.register("sea_upgraded_gold_leggings",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.LEGS,
-                    SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.LEGS,
+                    SEA_UPGRADED_ARMOR_BONUSES, 2,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_CHESTPLATE = ITEMS.register("sea_upgraded_gold_chestplate",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.CHEST,
-                    SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.CHEST,
+                    SEA_UPGRADED_ARMOR_BONUSES, 2,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_UPGRADED_GOLD_HELMET = ITEMS.register("sea_upgraded_gold_helmet",
-            () -> new ScubaAttributeArmorItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.HEAD,
-                    SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new ScubaAttributeArmorItemItem(ModArmorMaterial.SEA_UPGRADED_GOLD, EquipmentSlotType.HEAD,
+                    SEA_UPGRADED_ARMOR_BONUSES, 2,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
 
     public static final RegistryObject<Item> SEA_POWER_GOLD_BOOTS = ITEMS.register("sea_power_gold_boots",
-            () -> new ScubaEffectAttributeArmor(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.FEET,
-                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new SeaArmorItem(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.FEET,
+                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_LEGGINGS = ITEMS.register("sea_power_gold_leggings",
-            () -> new ScubaEffectAttributeArmor(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.LEGS,
-                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new SeaArmorItem(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.LEGS,
+                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_CHESTPLATE = ITEMS.register("sea_power_gold_chestplate",
-            () -> new ScubaEffectAttributeArmor(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.CHEST,
-                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new SeaArmorItem(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.CHEST,
+                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> SEA_POWER_GOLD_HELMET = ITEMS.register("sea_power_gold_helmet",
-            () -> new ScubaEffectAttributeArmor(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.HEAD,
-                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 15,
+            () -> new SeaArmorItem(ModArmorMaterial.SEA_POWER_GOLD, EquipmentSlotType.HEAD,
+                    SEA_POWER_ARMOR_BONUSES, SEA_UPGRADED_ARMOR_BONUSES, 3,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
 }

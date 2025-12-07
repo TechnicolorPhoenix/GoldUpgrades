@@ -1,11 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
-import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
-import com.titanhex.goldupgrades.item.custom.CustomEffectArmor;
-import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
@@ -14,8 +9,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
@@ -23,14 +16,14 @@ import net.minecraft.world.World;
 import java.util.Map;
 import java.util.UUID;
 
-public class ScubaEffectArmorItem extends ScubaEffectAttributeArmor {
+public class ScubaEffectArmorItemItem extends SeaArmorItem {
     int drainFactor;
     int cooldown = 0;
 
     private static final UUID RAIN_SPEED_MODIFIER_UUID =
             UUID.fromString("6d7b5d12-6804-45e0-9e62-421f421f421f");
 
-    public ScubaEffectArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, int drainFactor, Properties builderIn) {
+    public ScubaEffectArmorItemItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, int drainFactor, Properties builderIn) {
         super(materialIn, slot, effects, HashMultimap.create(), drainFactor, builderIn);
         this.drainFactor = drainFactor;
     }

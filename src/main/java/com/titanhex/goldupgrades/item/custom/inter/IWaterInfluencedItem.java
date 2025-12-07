@@ -10,7 +10,7 @@ public interface IWaterInfluencedItem {
         return stack.getOrCreateTag().getBoolean(NBT_IS_IN_RAIN);
     }
     default void setIsInRain(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IS_SUBMERGED, value);
+        stack.getOrCreateTag().putBoolean(NBT_IS_IN_RAIN, value);
     }
     default boolean getIsSubmerged(ItemStack stack) {
         return stack.getOrCreateTag().getBoolean(NBT_IS_SUBMERGED);

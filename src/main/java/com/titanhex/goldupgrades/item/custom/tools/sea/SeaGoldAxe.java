@@ -2,6 +2,9 @@ package com.titanhex.goldupgrades.item.custom.tools.sea;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectAxe;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -34,33 +37,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class SeaGoldAxe extends EffectAxe {
+public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeatherInfluencedItem
+{
 
     int durabilityCost;
-    private static final String NBT_SUBMERGED = "ArmorSubmerged";
-    private static final String NBT_IN_RAIN = "ArmorInRain";
 
-    private static final UUID SEA_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
-
-    private boolean getSubmerged(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_SUBMERGED);
-    }
-    private void setSubmerged(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_SUBMERGED, value);
-    }
-
-    private boolean getInRain(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IN_RAIN);
-    }
-    private void setInRain(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IN_RAIN, value);
-    }
+    private static final UUID SEA_DAMAGE_MODIFIER = UUID.randomUUID();
 
     /**
      * Constructor for the Sea Gold Pickaxe.
      * * @param tier The material tier of the pickaxe.
      *
-     * @param tier
      * @param attackDamage         The base attack damage of the tool.
      * @param attackSpeed          The attack speed modifier of the tool.
      * @param effectAmplifications A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
@@ -78,9 +65,8 @@ public class SeaGoldAxe extends EffectAxe {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
-        // Check the synchronized NBT state
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            if (getInRain(stack) || getSubmerged(stack)) {
+            if (getIsInRain(stack) || getIsSubmerged(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SEA_DAMAGE_MODIFIER,
                         "Weapon modifier",
@@ -102,46 +88,40 @@ public class SeaGoldAxe extends EffectAxe {
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        boolean isSubmergedNow = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
+        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
         boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
-        boolean isInRainNow = isInRainOrWaterNow && !isSubmergedNow;
+        boolean currentInRain = isInRainOrWaterNow && !currentSubmerged;
 
-        boolean oldSubmerged = this.getSubmerged(stack);
-        boolean oldInRain = this.getInRain(stack);
+        Weather currentWeather = Weather.getCurrentWeather(world);
 
-        boolean shouldRefresh = false;
+        boolean oldSubmerged = this.getIsSubmerged(stack);
+        boolean oldInRain = this.getIsInRain(stack);
+        Weather oldWeather = this.getWeather(stack);
 
-        if (isInRainNow != oldInRain || isSubmergedNow != oldSubmerged) {
-            setInRain(stack, isInRainNow);
-            setSubmerged(stack, isSubmergedNow);
+        boolean environmentalStateChanged = currentInRain != oldInRain || currentSubmerged != oldSubmerged || oldWeather != currentWeather;
 
-            stack.setTag(stack.getTag());
-            if (isEquipped) {
-                shouldRefresh = true;
+        if (environmentalStateChanged) {
+            setIsInRain(stack, currentInRain);
+            setIsSubmerged(stack, currentSubmerged);
+            setWeather(stack, currentWeather);
+
+            if (currentInRain || currentSubmerged) {
+                world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
             }
         }
 
         ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
-        if (!isEquipped && attackInstance != null) {
-            if (attackInstance.getModifier(SEA_DAMAGE_MODIFIER) != null)
-                shouldRefresh = true;
-        }
-
-        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
-
-            Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
+        if (environmentalStateChanged && isEquipped) {
 
             if (attackInstance != null) {
                 attackInstance.removeModifier(SEA_DAMAGE_MODIFIER);
-            }
+                Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
 
-            if (isEquipped) {
                 for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
                     ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
                     if (instance != null) {
-                        if (entry.getValue().getId().equals(SEA_DAMAGE_MODIFIER))
-                        {
+                        if (entry.getValue().getId().equals(SEA_DAMAGE_MODIFIER)) {
                             instance.addTransientModifier(entry.getValue());
                         }
                     }
@@ -157,13 +137,13 @@ public class SeaGoldAxe extends EffectAxe {
     public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        boolean inRain = getInRain(stack);
-        boolean submerged = getSubmerged(stack);
+        boolean inRain = getIsInRain(stack);
+        boolean submerged = getIsSubmerged(stack);
 
         if (inRain && submerged) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
         } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +12%."));
+            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
@@ -172,10 +152,10 @@ public class SeaGoldAxe extends EffectAxe {
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getInRain(stack) ? getSubmerged(stack) ? 20.0F : 12.0F : getSubmerged(stack) ? 12.0F : 0F;
+        boolean isRaining = getWeather(stack) == Weather.RAIN;
+        float bonusSpeed = getIsInRain(stack) ? isRaining ? 0.20F : 0.15F : isRaining ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {
-
             float speedMultiplier = 1.0F + bonusSpeed;
 
             return baseSpeed * speedMultiplier;
@@ -206,7 +186,7 @@ public class SeaGoldAxe extends EffectAxe {
                     hitState.getBlock() == Blocks.ICE ||
                     hitState.getBlock() == Blocks.PACKED_ICE ) {
 
-                if (!getSubmerged(stack))
+                if (!getIsSubmerged(stack))
                     return ActionResult.pass(stack);
             }
         }

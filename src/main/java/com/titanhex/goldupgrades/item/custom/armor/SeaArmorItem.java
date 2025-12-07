@@ -2,11 +2,10 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.GoldUpgrades;
-import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
+import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -20,8 +19,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ITextComponent;
@@ -35,12 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor implements IWeatherInfluencedItem {
-    int drainFactor;
+public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem {
+    int drainFactor = 15;
     int cooldown = 0;
-    private static final String ARMOR_WEATHER = "ArmorLastWeather";
-    private static final String NBT_SUBMERGED = "ArmorSubmerged";
-    private static final String NBT_IN_RAIN = "ArmorInRain";
+    int armorLevel;
 
     private static final UUID[] WATER_ARMOR_MODIFIER_UUID = new UUID[]{
             UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
@@ -56,23 +51,23 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor implem
             UUID.fromString("1f4a9b5f-50d7-4c3e-a7f4-3d7c5b1b4a2e")  // HELMET
     };
 
-    public ScubaEffectAttributeArmor(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, int drainFactor, Properties builderIn) {
+    public SeaArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, int armorLevel, Properties builderIn) {
         super(materialIn, slot, effects, attributeBonuses, builderIn);
-        this.drainFactor = drainFactor;
+        this.armorLevel = armorLevel;
     }
 
     private boolean getSubmerged(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_SUBMERGED);
+        return stack.getOrCreateTag().getBoolean(NBT_IS_SUBMERGED);
     }
     private void setSubmerged(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_SUBMERGED, value);
+        stack.getOrCreateTag().putBoolean(NBT_IS_SUBMERGED, value);
     }
 
     private boolean getInRain(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IN_RAIN);
+        return stack.getOrCreateTag().getBoolean(NBT_IS_IN_RAIN);
     }
     private void setInRain(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IN_RAIN, value);
+        stack.getOrCreateTag().putBoolean(NBT_IS_IN_RAIN, value);
     }
 
     @Override
@@ -129,86 +124,59 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor implem
 
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional) {
-        if (world.isClientSide) return;
+        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
 
+        if (world.isClientSide) return;
         if (!(holdingEntity instanceof LivingEntity)) return;
 
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
 
-        boolean isSubmergedNow = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
-        boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
-        boolean isInRainNow = isInRainOrWaterNow && !isSubmergedNow;
+        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
+        boolean currentRainOrwater = holdingEntity.isInWaterOrRain();
+        boolean currentInRain = currentRainOrwater && !currentSubmerged;
 
         boolean oldSubmerged = this.getSubmerged(stack);
         boolean oldInRain = this.getInRain(stack);
 
-        boolean shouldRefresh = false;
+        boolean environmentalStateChanged = oldInRain != currentInRain || currentSubmerged != oldSubmerged;
 
-        if (isEquipped) {
-            // If equipped, update the item's NBT state to reflect the current world state
-            if (isInRainNow != oldInRain || isSubmergedNow != oldSubmerged) {
-                setInRain(stack, isInRainNow);
-                setSubmerged(stack, isSubmergedNow);
-                shouldRefresh = true;
+        if (environmentalStateChanged) {
+            setInRain(stack, currentInRain);
+            setSubmerged(stack, currentSubmerged);
 
-                // Sound is only played if transitioning to an active state
-                if (isInRainNow || isSubmergedNow) {
-                    world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                }
-            }
-
-            // --- Absorption Logic (Needs its own NBT tracking if using the class field 'weather') ---
-            // For simplicity, let's keep the weather tracking on the ItemStack's NBT too
-            Weather currentWeather = Weather.getCurrentWeather(world);
-            if (stack.getOrCreateTag().contains(ARMOR_WEATHER)) {
-                String lastWeatherStr = stack.getOrCreateTag().getString(ARMOR_WEATHER);
-                Weather lastWeather = Weather.valueOf(lastWeatherStr);
-
-                if (currentWeather != lastWeather) {
-                    if (currentWeather == Weather.RAIN) {
-                        livingEntity.setAbsorptionAmount(Math.min(16F, livingEntity.getAbsorptionAmount()));
-                    }
-                    stack.getOrCreateTag().putString(ARMOR_WEATHER, currentWeather.name());
-                }
-            } else {
-                stack.getOrCreateTag().putString(ARMOR_WEATHER, currentWeather.name());
-            }
-        } else {
-            if (oldInRain || oldSubmerged) {
-                setInRain(stack, false);
-                setSubmerged(stack, false);
-                shouldRefresh = true;
+            if (currentInRain || currentSubmerged) {
+                world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
             }
         }
 
-        // --- Attribute Refresh Logic (ONLY RUN IF EQUIPPED STATE CHANGED) ---
-        // This is the core attribute fix, modified from the previous suggestion.
-        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
+        Weather currentWeather = Weather.getCurrentWeather(world);
+        Weather lastWeather = getWeather(stack);
 
-            // 1. Get the Attribute Map for modification (using the new NBT state)
-            // We get the modifiers based on the *new* state now stored in the ItemStack NBT
-            Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
+        if (currentWeather != lastWeather) {
+            if (currentWeather == Weather.RAIN && lastWeather == Weather.CLEAR) {
+                livingEntity.setAbsorptionAmount(Math.min(16F, livingEntity.getAbsorptionAmount()));
+            }
+            setWeather(stack, currentWeather);
+        }
 
-            // 2. Remove all potential dynamic modifiers (always remove before applying)
+        if (isEquipped && environmentalStateChanged) {
+
             ModifiableAttributeInstance armorInstance = livingEntity.getAttribute(Attributes.ARMOR);
-            if (armorInstance != null) {
-                armorInstance.removeModifier(WATER_ARMOR_MODIFIER_UUID[this.slot.getIndex()]);
-            }
             ModifiableAttributeInstance speedInstance = livingEntity.getAttribute(Attributes.MOVEMENT_SPEED);
-            if (speedInstance != null) {
-                speedInstance.removeModifier(RAIN_SPEED_MODIFIER_UUID[this.slot.getIndex()]);
-            }
 
-            // 3. Re-apply the attributes based on the new NBT state (if the item is equipped)
-            if (isEquipped) {
+            if (armorInstance != null && speedInstance != null) {
+                Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
+
+                int slotIdx = this.slot.getIndex();
+                armorInstance.removeModifier(WATER_ARMOR_MODIFIER_UUID[slotIdx]);
+                speedInstance.removeModifier(RAIN_SPEED_MODIFIER_UUID[slotIdx]);
+
                 for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
                     ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
                     if (instance != null) {
-                        // Check if it's one of the dynamic modifiers to re-add
-                        if (entry.getValue().getId().equals(RAIN_SPEED_MODIFIER_UUID[this.slot.getIndex()]) ||
-                                entry.getValue().getId().equals(WATER_ARMOR_MODIFIER_UUID[this.slot.getIndex()]))
-                        {
+                        if (entry.getValue().getId().equals(RAIN_SPEED_MODIFIER_UUID[slotIdx]) ||
+                                entry.getValue().getId().equals(WATER_ARMOR_MODIFIER_UUID[slotIdx])) {
                             instance.addTransientModifier(entry.getValue());
                         }
                     }
@@ -241,5 +209,10 @@ public class ScubaEffectAttributeArmor extends CustomAttributeEffectArmor implem
                 this.cooldown = 120;
             }
         }
+    }
+
+    @Override
+    public int getItemLevel() {
+        return this.armorLevel;
     }
 }
