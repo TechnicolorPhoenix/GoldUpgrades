@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IMoonPhaseInfluencedItem;
 import net.minecraft.block.BlockState;
@@ -37,9 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, IDayInfluencedItem, IMoonPhaseInfluencedItem
+public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, IDayInfluencedItem, IMoonPhaseInfluencedItem, ILevelableItem
 {
-    // Defines the amount of durability to restore when absorbing lava
     private final int repairAmount;
     public static final UUID NIGHT_DAMAGE_UUID = UUID.randomUUID();
 

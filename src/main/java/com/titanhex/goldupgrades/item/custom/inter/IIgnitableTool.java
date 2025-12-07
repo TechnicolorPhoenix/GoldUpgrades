@@ -1,4 +1,4 @@
-package com.titanhex.goldupgrades.item;
+package com.titanhex.goldupgrades.item.custom.inter;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -11,7 +11,7 @@ import net.minecraft.world.World;
  * Interface defining the required ignition capabilities for a tool.
  * This can be implemented by any Item class (e.g., a Sword or a Custom Tool).
  */
-public interface IgnitableTool {
+public interface IIgnitableTool {
 
     /**
      * Ignites a target LivingEntity for a short duration when hit.

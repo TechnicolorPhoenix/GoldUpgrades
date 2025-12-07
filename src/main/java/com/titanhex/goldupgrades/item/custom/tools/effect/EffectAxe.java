@@ -25,7 +25,7 @@ public class EffectAxe extends AxeItem
     private final int effectDuration;
 
     // The durability cost incurred each time the aura is activated.
-    private final int baseDurabilityCost;
+    protected final int baseDurabilityCost;
 
     /**
      * Constructor for the AuraPickaxe.

@@ -2,11 +2,7 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.IgnitableTool;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -24,7 +20,6 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -32,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class FireGoldShovel extends ShovelItem implements IgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
+public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
 {
     int burnTicks;
     int durabilityUse;

@@ -1,22 +1,20 @@
 package com.titanhex.goldupgrades.item.custom.tools.sea;
 
-import com.titanhex.goldupgrades.item.custom.tools.effect.EffectAxe;
+import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.IGrowable;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
-import net.minecraft.item.PickaxeItem;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
-import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -28,22 +26,20 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 
-public class SeaGoldPickaxe extends EffectPickaxe {
-
-    int durabilityCost;
-    private static final String NBT_SUBMERGED = "ArmorSubmerged";
-    private static final String NBT_IN_RAIN = "ArmorInRain";
+public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedItem, IWeatherInfluencedItem, ILevelableItem
+{
 
     /**
      * Constructor for the AuraPickaxe.
      * * @param tier The material tier of the pickaxe.
      *
-     * @param tier
+     * @param tier                  The tier enum for the armor type.
      * @param attackDamage         The base attack damage of the tool.
      * @param attackSpeed          The attack speed modifier of the tool.
      * @param effectAmplifications A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
@@ -53,66 +49,57 @@ public class SeaGoldPickaxe extends EffectPickaxe {
      */
     public SeaGoldPickaxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
-        this.durabilityCost = durabilityCost;
-    }
-
-    private boolean getSubmerged(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_SUBMERGED);
-    }
-    private void setSubmerged(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_SUBMERGED, value);
-    }
-
-    private boolean getInRain(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IN_RAIN);
-    }
-    private void setInRain(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IN_RAIN, value);
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
         if (world.isClientSide) return;
 
-        if (!(holdingEntity instanceof LivingEntity)) return;
-
-        LivingEntity livingEntity = (LivingEntity) holdingEntity;
-        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
-
-        boolean isSubmergedNow = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
+        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
         boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
-        boolean isInRainNow = isInRainOrWaterNow && !isSubmergedNow;
+        boolean currentInRain = isInRainOrWaterNow && !currentSubmerged;
+        Weather currentWeather = Weather.getCurrentWeather(world);
 
-        boolean oldSubmerged = this.getSubmerged(stack);
-        boolean oldInRain = this.getInRain(stack);
+        boolean oldSubmerged = this.getIsSubmerged(stack);
+        boolean oldInRain = this.getIsInRain(stack);
+        Weather oldWeather = this.getWeather(stack);
 
-        if (isInRainNow != oldInRain || isSubmergedNow != oldSubmerged) {
-            setInRain(stack, isInRainNow);
-            setSubmerged(stack, isSubmergedNow);
+        boolean environmentalStateChanged = currentInRain != oldInRain || currentSubmerged != oldSubmerged || oldWeather != currentWeather;
+
+        if (environmentalStateChanged) {
+            setIsInRain(stack, currentInRain);
+            setIsSubmerged(stack, currentSubmerged);
+            setWeather(stack, currentWeather);
+
+            if (currentInRain || currentSubmerged) {
+                world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
+            }
         }
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        boolean inRain = this.getInRain(stack);
-        boolean submerged = this.getSubmerged(stack);
+        boolean inRain = this.getIsInRain(stack);
+        boolean submerged = this.getIsSubmerged(stack);
+        boolean weatherIsRain = this.getWeather(stack) == Weather.RAIN;
 
-        if (inRain && submerged) {
+        if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
         } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +12%."));
+            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getInRain(stack) ? getSubmerged(stack) ? 20.0F : 12.0F : getSubmerged(stack) ? 12.0F : 0F;
+        boolean weatherIsRain = this.getWeather(stack) == Weather.RAIN;
+        float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {
 
@@ -124,11 +111,12 @@ public class SeaGoldPickaxe extends EffectPickaxe {
         return baseSpeed;
     }
 
+    @NotNull
     @Override
-    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        RayTraceResult hitResult = world.clip(
+        BlockRayTraceResult hitResult = world.clip(
                 new RayTraceContext(
                         player.getEyePosition(1.0F),
                         player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
@@ -139,7 +127,7 @@ public class SeaGoldPickaxe extends EffectPickaxe {
         );
 
         if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
-            BlockPos hitPos = ((BlockRayTraceResult) hitResult).getBlockPos();
+            BlockPos hitPos = hitResult.getBlockPos();
             BlockState hitState = world.getBlockState(hitPos);
 
             if (hitState.getBlock() == Blocks.WATER ||
@@ -185,96 +173,57 @@ public class SeaGoldPickaxe extends EffectPickaxe {
         PlayerEntity player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
 
-        // --- Server-side Logic ---
-        if (!world.isClientSide) {
+        if (world.isClientSide || player == null)
+            return super.useOn(context);
 
-            RayTraceResult hitResult = world.clip(
-                    new RayTraceContext(
-                            player.getEyePosition(1.0F),             // Start position (player's eyes)
-                            player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)), // End position (5 blocks away)
-                            RayTraceContext.BlockMode.OUTLINE,       // Only hit blocks with an outline
-                            RayTraceContext.FluidMode.SOURCE_ONLY,           // Crucially, hit ANY fluid block
-                            player
-                    )
-            );
+        BlockRayTraceResult hitResult = world.clip(
+                new RayTraceContext(
+                        player.getEyePosition(1.0F),             // Start position (player's eyes)
+                        player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)), // End position (5 blocks away)
+                        RayTraceContext.BlockMode.OUTLINE,       // Only hit blocks with an outline
+                        RayTraceContext.FluidMode.SOURCE_ONLY,           // Crucially, hit ANY fluid block
+                        player
+                )
+        );
 
-            // 1. Check for Water -> Ice conversion (Priority 1)
-            if (state.getBlock() == Blocks.WATER) {
+        int toolLevel = getItemLevel();
 
-                // Set the block state to Ice
-                world.setBlock(pos, Blocks.ICE.defaultBlockState(), 11);
+        if (state.getBlock() == Blocks.SNOW) {
+            world.setBlock(pos, Blocks.ICE.defaultBlockState(), 11);
 
-                // Play a freezing sound
-                world.playSound(null, pos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
+            world.playSound(null, pos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
 
-                // Damage the tool by a small amount (1 point for block conversion)
-                if (player != null) {
-                    stack.hurtAndBreak(durabilityCost/2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                }
+            stack.hurtAndBreak(super.baseDurabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
-                return ActionResultType.SUCCESS;
-            } else if (state.getBlock() == Blocks.ICE) {
+            return ActionResultType.SUCCESS;
+        } else if (state.getBlock() == Blocks.ICE && toolLevel > 1) {
+            world.setBlock(pos, Blocks.PACKED_ICE.defaultBlockState(), 11);
 
-                // Set the block state to Packed Ice
-                world.setBlock(pos, Blocks.PACKED_ICE.defaultBlockState(), 11);
+            world.playSound(null, pos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 0.8F);
 
-                // Play a sound to indicate the hardening/packing
-                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
+            stack.hurtAndBreak(super.baseDurabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
-                // Damage the tool by a small amount (1 point for block conversion)
-                if (player != null) {
-                    stack.hurtAndBreak(durabilityCost/2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                }
+            return ActionResultType.SUCCESS;
+        } else if (state.getBlock() == Blocks.PACKED_ICE && toolLevel > 2) {
+            world.setBlock(pos, Blocks.BLUE_ICE.defaultBlockState(), 11);
 
-                return ActionResultType.SUCCESS;
-//            } else if (state.getBlock() == Blocks.PACKED_ICE) {
-//
-//                // Set the block state to Packed Ice
-//                world.setBlock(pos, Blocks.BLUE_ICE.defaultBlockState(), 11);
-//
-//                // Play a sound to indicate the hardening/packing
-//                world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 0.8F);
-//
-//                // Damage the tool by a small amount (1 point for block conversion)
-//                if (player != null) {
-//                    stack.hurtAndBreak(durabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-//                }
-//
-//                return ActionResultType.SUCCESS;
-            } else if (state.getBlock() == Blocks.STONE) {
+            world.playSound(null, pos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 0.8F);
 
-                // Set the block state to Packed Ice
-                world.setBlock(pos, Blocks.WATER.defaultBlockState(), 11);
+            stack.hurtAndBreak(super.baseDurabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
-                // Play a sound to indicate the hardening/packing
-                world.playSound(null, pos, SoundEvents.AMBIENT_UNDERWATER_ENTER, SoundCategory.BLOCKS, 1.0F, 0.8F);
+            return ActionResultType.SUCCESS;
+        } else if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
+            BlockPos rayHitPos = hitResult.getBlockPos();
+            BlockState rayHitState = world.getBlockState(rayHitPos);
 
-                // Damage the tool by a small amount (1 point for block conversion)
-                if (player != null) {
-                    stack.hurtAndBreak(durabilityCost/3, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                }
+            if (rayHitState.getBlock() == Blocks.WATER) {
+                world.setBlock(rayHitPos, Blocks.ICE.defaultBlockState(), 11);
+
+                world.playSound(null, rayHitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
+
+                stack.hurtAndBreak(super.baseDurabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
                 return ActionResultType.SUCCESS;
-            } else if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
-                BlockRayTraceResult blockHit = (BlockRayTraceResult) hitResult;
-                BlockPos rayHitPos = blockHit.getBlockPos();
-                BlockState rayHitState = world.getBlockState(rayHitPos);
-
-                // 1. Check for Water -> Ice conversion (Priority 1)
-                if (rayHitState.getBlock() == Blocks.WATER) {
-                    // Set the block state to Ice
-                    world.setBlock(rayHitPos, Blocks.ICE.defaultBlockState(), 11);
-
-                    // Play a freezing sound
-                    world.playSound(null, rayHitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
-
-                    // Damage the tool by a small amount (1 point for block conversion)
-                    if (player != null) {
-                        stack.hurtAndBreak(durabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-                    }
-
-                    return ActionResultType.SUCCESS;
-                }
             }
         }
         return ActionResultType.PASS;

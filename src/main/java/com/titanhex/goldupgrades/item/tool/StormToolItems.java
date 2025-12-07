@@ -5,6 +5,8 @@ import com.titanhex.goldupgrades.item.ModItemGroup;
 import com.titanhex.goldupgrades.item.ModItemTier;
 import com.titanhex.goldupgrades.item.ModToolItems;
 import com.titanhex.goldupgrades.item.custom.tools.effect.*;
+import com.titanhex.goldupgrades.item.custom.tools.storm.StormGoldAxe;
+import com.titanhex.goldupgrades.item.custom.tools.storm.StormGoldPickaxe;
 import net.minecraft.item.*;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.Effects;
@@ -36,6 +38,7 @@ public class StormToolItems {
         return bonuses;
     }
 
+    static Map<Effect, Integer> empty = new HashMap<>();
     static Map<Effect, Integer> upgradedToolBonus = createUpgradedBonuses();
     static Map<Effect, Integer> powerToolBonus = createPowerBonuses();
     
@@ -47,10 +50,12 @@ public class StormToolItems {
             () -> new ShovelItem(ModItemTier.STORM_BASE_GOLD, 2.5F, -3.0F,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_BASE_GOLD_PICKAXE = ITEMS.register("storm_base_gold_pickaxe",
-            () -> new PickaxeItem(ModItemTier.STORM_BASE_GOLD, 2, -2.8F,
+            () -> new StormGoldPickaxe(ModItemTier.STORM_BASE_GOLD, 2, -2.8F,
+                    empty, 0, 0,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_BASE_GOLD_AXE = ITEMS.register("storm_base_gold_axe",
-            () -> new AxeItem(ModItemTier.STORM_BASE_GOLD, 7.0F, -3.0F,
+            () -> new StormGoldAxe(ModItemTier.STORM_BASE_GOLD, 7, -3.0F,
+                    empty, 0, 0,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_BASE_GOLD_HOE = ITEMS.register("storm_base_gold_hoe",
             () -> new HoeItem(ModItemTier.STORM_BASE_GOLD, 1, -3.0F,

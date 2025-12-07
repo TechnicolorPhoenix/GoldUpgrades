@@ -4,11 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.IgnitableTool;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -38,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FireGoldAxe extends AxeItem implements IgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, ILightInfluencedItem, IDayInfluencedItem
+public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, ILightInfluencedItem, IDayInfluencedItem
 {
     int burnTicks;
     int durabilityUse;

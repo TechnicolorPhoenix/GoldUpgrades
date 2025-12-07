@@ -3,6 +3,7 @@ package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IMoonPhaseInfluencedItem;
 import net.minecraft.block.BlockState;
@@ -35,7 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Random;
 
-public class ObsidianGoldPickaxe extends PickaxeItem implements IDayInfluencedItem, IMoonPhaseInfluencedItem, ILightInfluencedItem
+public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, IDayInfluencedItem, IMoonPhaseInfluencedItem, ILightInfluencedItem
 {
     private final int repairAmount;
     private final Random RANDOM = new Random();

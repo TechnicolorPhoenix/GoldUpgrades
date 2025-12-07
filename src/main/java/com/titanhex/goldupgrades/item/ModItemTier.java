@@ -9,7 +9,7 @@ import net.minecraft.util.LazyValue;
 import java.util.function.Supplier;
 
 public enum ModItemTier implements IItemTier {
-    OBSIDIAN_BASE_GOLD(0, 150, 12.0F, 0.0F, 22, () -> {
+    OBSIDIAN_BASE_GOLD(1, 150, 12.0F, 0.0F, 22, () -> {
         return Ingredient.of(Items.OBSIDIAN);
     }),
     OBSIDIAN_UPGRADED_GOLD(2, 350, 11.0F, 0.0F, 25, () -> {

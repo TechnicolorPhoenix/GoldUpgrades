@@ -4,11 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.IgnitableTool;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -28,7 +24,6 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -39,12 +34,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FireGoldSword extends SwordItem implements IgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
+public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
 {
     int burnTicks;
     int durabilityUse;
 
-    private static final UUID SUN_DAMAGE_MODIFIER = UUID.fromString("6F21A77E-F0C6-44D1-A12A-14C2D8397E9C");
+    private static final UUID SUN_DAMAGE_MODIFIER = UUID.randomUUID();
 
     public FireGoldSword(IItemTier tier, int atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);

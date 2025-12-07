@@ -2,11 +2,7 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.IgnitableTool;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -28,9 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Random;
 
-public class FireGoldHoe extends HoeItem implements IgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem, ILightInfluencedItem
+public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem, ILightInfluencedItem
 {
     int burnTicks;
     int durabilityUse;
