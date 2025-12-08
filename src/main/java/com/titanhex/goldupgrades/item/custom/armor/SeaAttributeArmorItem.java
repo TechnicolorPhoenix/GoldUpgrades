@@ -16,16 +16,16 @@ import net.minecraft.world.World;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class ScubaAttributeArmorItemItem extends SeaArmorItem {
+public class SeaAttributeArmorItem extends SeaArmorItem {
     int drainFactor;
     int cooldown = 0;
 
     private static final UUID RAIN_SPEED_MODIFIER_UUID =
             UUID.fromString("6d7b5d12-6804-45e0-9e62-421f421f421f");
 
-    public ScubaAttributeArmorItemItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, int armorLevel, Properties builderIn) {
-        super(materialIn, slot, new HashMap<>(), attributeBonuses, armorLevel, builderIn);
-        this.drainFactor = armorLevel;
+    public SeaAttributeArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
+        super(materialIn, slot, new HashMap<>(), attributeBonuses, builderIn);
+        this.drainFactor = itemLevel;
     }
 
     @Override

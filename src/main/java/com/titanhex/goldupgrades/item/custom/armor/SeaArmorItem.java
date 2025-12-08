@@ -35,7 +35,7 @@ import java.util.UUID;
 public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem {
     int drainFactor = 15;
     int cooldown = 0;
-    int armorLevel;
+    int itemLevel;
 
     private static final UUID[] WATER_ARMOR_MODIFIER_UUID = new UUID[]{
             UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
@@ -51,9 +51,9 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
             UUID.fromString("1f4a9b5f-50d7-4c3e-a7f4-3d7c5b1b4a2e")  // HELMET
     };
 
-    public SeaArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, int armorLevel, Properties builderIn) {
+    public SeaArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, effects, attributeBonuses, builderIn);
-        this.armorLevel = armorLevel;
+        this.itemLevel = getItemLevel();
     }
 
     private boolean getSubmerged(ItemStack stack) {
@@ -209,10 +209,5 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
                 this.cooldown = 120;
             }
         }
-    }
-
-    @Override
-    public int getItemLevel() {
-        return this.armorLevel;
     }
 }

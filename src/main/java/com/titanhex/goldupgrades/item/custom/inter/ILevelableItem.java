@@ -31,7 +31,7 @@ public interface ILevelableItem {
                 ItemStack stack = livingEntity.getItemBySlot(slot);
                 if (stack.getItem() instanceof ILevelableItem) {
                     ILevelableItem armorItem = (ILevelableItem) stack.getItem();
-                    // armorItem.armorLevel is available via the getItemLevel() method
+                    // armorItem.itemLevel is available via the getItemLevel() method
                     totalLevel += armorItem.getItemLevel();
                 }
             }

@@ -30,7 +30,7 @@ import java.util.UUID;
 
 public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelableItem, ILightInfluencedItem, IMoonPhaseInfluencedItem, IDayInfluencedItem {
 
-    protected final int armorLevel;
+    protected final int itemLevel;
     private final UUID[] LIGHT_LEVEL_TOUGHNESS_UUID = new UUID[]{
             UUID.randomUUID(), // BOOTS
             UUID.randomUUID(), // LEGGINGS
@@ -38,14 +38,14 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
             UUID.randomUUID()  // HELMET
     };
 
-    public ObsidianArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, int armorLevel, Properties builderIn) {
+    public ObsidianArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, int itemLevel, Properties builderIn) {
         super(materialIn, slot, attributeBonuses, builderIn);
-        this.armorLevel = armorLevel;
+        this.itemLevel = itemLevel;
     }
 
     @Override
     public int getItemLevel() {
-        return this.armorLevel;
+        return this.itemLevel;
     }
 
     @Override
@@ -151,7 +151,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
                 return;
 
         if (totalSetLevel > 0 && world.isNight()) {
-            final float maxAbsorption = 0.1F*armorLevel;
+            final float maxAbsorption = 0.1F*itemLevel;
             float currentAbsorptionAmount = player.getAbsorptionAmount();
             final int MAX_CAP = 20;
             float maxAllowedAbsorption = Math.min(
