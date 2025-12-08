@@ -3,6 +3,7 @@ package com.titanhex.goldupgrades.item.custom.tools.storm;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public class StormGoldPickaxe extends EffectPickaxe implements ILevelableItem, IWeatherInfluencedItem {
+public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherInfluencedItem {
     /**
      * Constructor for the AuraPickaxe.
      * * @param tier The material tier of the pickaxe.
@@ -36,7 +37,7 @@ public class StormGoldPickaxe extends EffectPickaxe implements ILevelableItem, I
      * @param durabilityCost        The number of durability points to subtract on each use.
      * @param properties            Item properties.
      */
-    public StormGoldPickaxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
+    public StormGoldHoe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed + 1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
     }
 

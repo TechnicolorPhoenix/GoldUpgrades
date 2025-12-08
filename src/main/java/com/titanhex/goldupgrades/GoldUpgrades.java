@@ -48,6 +48,7 @@ public class GoldUpgrades
         eventBus.addListener(this::doClientStuff);
 
         // Register ourselves for server and other game events we are interested in
+        MinecraftForge.EVENT_BUS.register(new FallDamageHandler());
         MinecraftForge.EVENT_BUS.register(this);
 
         // Register the event handler instance on the FORGE bus

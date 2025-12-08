@@ -1,8 +1,12 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
+import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.IJumpBoostArmor;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
+import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
@@ -18,46 +22,64 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevelableItem {
-    double jumpBoost;
+public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevelableItem, IWeatherInfluencedItem {
     int armorLevel;
 
-    public StormArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, float jumpBoost, Properties builderIn) {
+    public StormArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
-        this.jumpBoost = jumpBoost;
         this.armorLevel = getItemLevel();
+    }
+    @Override
+    public float getFallDamageReductionFraction() {
+        return 0.1F + 0.5f * armorLevel;
+    }
+    @Override
+    public double getJumpBoostModifier() {
+        double term1 = 0.1666 * this.armorLevel * this.armorLevel;
+        double term2 = -0.333 * this.armorLevel;
+
+        return (term1 + term2 + 0.5)/5;
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        float jumpHeight = 0;
+        double jumpHeight = getJumpBoostModifier() / 0.33;
 
-        if (this.armorLevel == 1)
-            jumpHeight = 1;
-        if (this.armorLevel == 2)
-            jumpHeight = 1.5F;
-        if (this.armorLevel == 3)
-            jumpHeight = 2;
+        tooltip.add(new StringTextComponent("§9+" + String.format("%.1f", jumpHeight) + " Jump Boost"));
+        tooltip.add(new StringTextComponent("§9" + (int) getFallDamageReductionFraction() + "% Fall Damage Reduction    ."));
+    }
 
-        tooltip.add(new StringTextComponent("§9+" + jumpHeight + " Jump Boost"));
-        tooltip.add(new StringTextComponent("§eNo Fall Damage."));
+    @Override
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+
+        if (world.isClientSide)
+            return;
+
+        Weather oldWeather = getWeather(stack);
+
+        Weather currentWeather = Weather.getCurrentWeather(world);
+
+        if (oldWeather != currentWeather) {
+            setWeather(stack, currentWeather);
+        }
     }
 
     @Override
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
 
-        if (this.slot == EquipmentSlotType.FEET) {
-            if (!world.isClientSide) {
-                player.fallDistance = 0.0F;
-            }
+        if (!world.isClientSide) {
+            player.fallDistance *= 0.75F;
         }
     }
 
     @Override
-    public double getJumpBoostModifier() {
-        return this.jumpBoost;
+    public boolean canElytraFly(ItemStack stack, LivingEntity entity) {
+        boolean setRequirementMet = ILevelableItem.getTotalSetLevel(entity) > 5;
+
+        return getWeather(stack) == Weather.THUNDERING && setRequirementMet;
     }
 }

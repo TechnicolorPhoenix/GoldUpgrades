@@ -78,6 +78,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
         if (isEquipped && attackInstance != null)
             if (attackInstance.getModifier(SUN_DAMAGE_MODIFIER) != null)
+
                 shouldRefresh = oldDimension != currentDimension || oldWeather != currentWeather || currentIsDay != oldIsDay;
 
         if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {

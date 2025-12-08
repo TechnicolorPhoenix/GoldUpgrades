@@ -38,6 +38,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
 
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
 
         int oldBrightness = getLightLevel(stack);
@@ -62,8 +64,6 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
             setDimension(stack, currentDimension);
             setIsDay(stack, currentIsDay);
         }
-
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
     @Override

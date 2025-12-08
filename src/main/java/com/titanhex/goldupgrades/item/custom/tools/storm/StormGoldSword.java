@@ -3,10 +3,8 @@ package com.titanhex.goldupgrades.item.custom.tools.storm;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.ModItemTier;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.tools.effect.EffectAxe;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectSword;
 import com.titanhex.goldupgrades.item.tool.StormToolItems;
 import net.minecraft.block.BlockState;
@@ -38,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherInfluencedItem {
+public class StormGoldSword extends EffectSword implements ILevelableItem, IWeatherInfluencedItem {
 
     private static final UUID STORM_DAMAGE_MODIFIER = UUID.randomUUID();
 
@@ -54,8 +52,8 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
      * @param durabilityCost        The number of durability points to subtract on each use.
      * @param properties            Item properties.
      */
-    public StormGoldAxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
-        super(tier, attackDamage, attackSpeed+1.5F, effectAmplifications, effectDuration, durabilityCost, properties);
+    public StormGoldSword(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
+        super(tier, attackDamage, attackSpeed+1.33F, effectAmplifications, effectDuration, durabilityCost, properties);
     }
 
     @Override
@@ -68,7 +66,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
             if (isThundering) {
                 float damageBonus = 0;
 
-                ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_AXE.get());
+                ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_SWORD.get());
                 Multimap<Attribute, AttributeModifier> modifiers = powerItem.getAttributeModifiers(EquipmentSlotType.MAINHAND);
 
                 Attribute attackDamageAttribute = Attributes.ATTACK_DAMAGE;

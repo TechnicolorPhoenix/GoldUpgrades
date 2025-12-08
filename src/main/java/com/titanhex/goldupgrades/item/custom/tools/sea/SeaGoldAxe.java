@@ -64,15 +64,13 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
-        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            if (getIsInRain(stack) || getIsSubmerged(stack)) {
-                builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                        SEA_DAMAGE_MODIFIER,
-                        "Weapon modifier",
-                        getItemLevel(),
-                        AttributeModifier.Operation.ADDITION
-                ));
-            }
+        if (getIsInRain(stack) || getIsSubmerged(stack)) {
+            builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                    SEA_DAMAGE_MODIFIER,
+                    "Weapon modifier",
+                    getItemLevel(),
+                    AttributeModifier.Operation.ADDITION
+            ));
         }
 
         return builder.build();
@@ -80,6 +78,8 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
     @Override
     public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+
         if (world.isClientSide) return;
 
         if (!(holdingEntity instanceof LivingEntity)) return;
@@ -127,8 +127,6 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
                 }
             }
         }
-
-        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
     }
 
     @Override
