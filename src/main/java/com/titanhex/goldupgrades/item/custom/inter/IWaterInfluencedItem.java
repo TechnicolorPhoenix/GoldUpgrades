@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 public interface IWaterInfluencedItem {
     String NBT_IS_SUBMERGED = "ItemSubmerged";
     String NBT_IS_IN_RAIN = "ItemInRain";
+
     default boolean getIsInRain(ItemStack stack) {
         return stack.getOrCreateTag().getBoolean(NBT_IS_IN_RAIN);
     }

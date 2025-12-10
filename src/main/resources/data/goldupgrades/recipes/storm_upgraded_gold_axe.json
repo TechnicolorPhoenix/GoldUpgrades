@@ -1,7 +1,6 @@
 {
   "type": "goldupgrades:environmental_shapeless",
   "weather": "THUNDERING",
-  
   "ingredients": [
     {
       "item": "goldupgrades:storm_base_gold_axe"
