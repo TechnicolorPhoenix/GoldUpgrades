@@ -75,7 +75,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
             if (attackInstance.getModifier(NIGHT_DAMAGE_UUID) != null)
                 shouldRefresh = oldMoonPhase != currentMoonPhase;
 
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
+        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
             setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);

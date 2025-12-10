@@ -57,7 +57,7 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
         boolean oldIsDay = isDay(stack);
 
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
+        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
             setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
@@ -107,10 +107,6 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         return super.getAttributeModifiers(equipmentSlot, stack);
-//        ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
-//        builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
-//
-//        return builder.build();
     }
 
     @Override
@@ -119,9 +115,10 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int itemLevel = getItemLevel();
 
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+itemLevel);
+        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        int poisonChance = phaseValue*(2+itemLevel);
 
-        tooltip.add(new StringTextComponent((phaseValue == 0 ? "§c" : "§a" ) + "Poison Chance: " + phaseValue + "%"));
+        tooltip.add(new StringTextComponent((poisonChance == 0 ? "§c" : "§a" ) + "Poison Chance: " + poisonChance + "%"));
         tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
         if (getLightLevel(stack) == 0)

@@ -3,7 +3,7 @@ package com.titanhex.goldupgrades.data;
 import net.minecraft.world.World;
 
 public enum Weather {
-    ANY, // Added ANY state to signify the condition is not required
+    ANY,
     CLEAR,
     RAIN,
     THUNDERING;
@@ -27,7 +27,6 @@ public enum Weather {
         try {
             return Weather.valueOf(name.toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Default to ANY if the string is invalid or missing
             return ANY;
         }
     }

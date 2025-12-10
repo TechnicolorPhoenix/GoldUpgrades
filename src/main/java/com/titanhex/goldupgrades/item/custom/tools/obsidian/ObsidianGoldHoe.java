@@ -56,7 +56,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
         boolean oldIsDay = isDay(stack);
 
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
+        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
             setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
@@ -113,9 +113,10 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+getItemLevel());
+        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        int slowChance = phaseValue*(2+getItemLevel());
 
-        tooltip.add(new StringTextComponent((phaseValue == 0 ? "§c" : "§a" ) + "Slow Chance: " + phaseValue + "%"));
+        tooltip.add(new StringTextComponent((slowChance == 0 ? "§c" : "§a" ) + "Slow Chance: " + slowChance + "%"));
         tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
         if (getLightLevel(stack) == 0)

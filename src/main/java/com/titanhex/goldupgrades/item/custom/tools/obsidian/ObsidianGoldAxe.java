@@ -77,7 +77,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
             if (attackInstance.getModifier(NIGHT_DAMAGE_UUID) != null)
                 shouldRefresh = oldMoonPhase != currentMoonPhase;
 
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
+        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
             setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
@@ -159,7 +159,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
         if (isNight)
-            tooltip.add(new StringTextComponent("§a+15% Harvest Speed."));
+            tooltip.add(new StringTextComponent("§9+15% Harvest Speed."));
     }
 
     @Override

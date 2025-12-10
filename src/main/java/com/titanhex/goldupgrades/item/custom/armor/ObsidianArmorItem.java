@@ -128,7 +128,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         MoonPhase moonPhase = getMoonPhase(stack);
         int itemLevel = getItemLevel();
-        int phaseValue = getMoonPhaseValue(moonPhase)*(2+itemLevel);
+        int phaseValue = getMoonPhaseValue(moonPhase);
 
         if (phaseValue < 0)
             tooltip.add(new StringTextComponent("§eEnchantment Level Influenced by Moon."));

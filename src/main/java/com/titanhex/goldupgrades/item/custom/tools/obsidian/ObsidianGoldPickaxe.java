@@ -57,7 +57,7 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
         boolean oldIsDay = isDay(stack);
 
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
+        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
             setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
@@ -110,9 +110,10 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int itemLevel = getItemLevel();
 
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+itemLevel);
+        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        int weaknessChance = phaseValue*(2+itemLevel);
 
-        tooltip.add(new StringTextComponent((phaseValue == 0 ? "§c" : "§a" ) + "Weakness Chance: " + phaseValue + "%"));
+        tooltip.add(new StringTextComponent((weaknessChance == 0 ? "§c" : "§a" ) + "Weakness Chance: " + weaknessChance + "%"));
         tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
         if (getLightLevel(stack) == 0)
