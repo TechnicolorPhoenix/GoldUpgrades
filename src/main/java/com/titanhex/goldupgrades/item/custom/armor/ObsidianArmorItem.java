@@ -2,6 +2,7 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
 import com.titanhex.goldupgrades.item.custom.inter.*;
@@ -16,6 +17,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -38,14 +40,11 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
             UUID.randomUUID()  // HELMET
     };
 
-    public ObsidianArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, int itemLevel, Properties builderIn) {
-        super(materialIn, slot, attributeBonuses, builderIn);
-        this.itemLevel = itemLevel;
-    }
+    private static final String NBT_ARMOR_TIMER_KEY = "ArmorTimer";
 
-    @Override
-    public int getItemLevel() {
-        return this.itemLevel;
+    public ObsidianArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
+        super(materialIn, slot, attributeBonuses, builderIn);
+        this.itemLevel = getItemLevel();
     }
 
     @Override
@@ -60,11 +59,11 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
 
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentIsDay = world.isDay() ;
+        boolean currentIsDay = isDay(stack, world);
 
         int oldBrightness = getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         boolean shouldRefresh = false;
 
@@ -109,15 +108,16 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
         int lightLevel = getLightLevel(stack);
-        int toughnessBonus = (15 - lightLevel)/5;
+        float toughnessBonus = (float) (15 - lightLevel) / 5;
 
-        builder.put(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(
-                LIGHT_LEVEL_TOUGHNESS_UUID[this.slot.getIndex()],
-                "Obsidian Armor Toughness Bonus",
-                toughnessBonus,
-                AttributeModifier.Operation.ADDITION
-                )
-        );
+        if (equipmentSlot == this.slot)
+            builder.put(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(
+                    LIGHT_LEVEL_TOUGHNESS_UUID[this.slot.getIndex()],
+                    "Obsidian Armor Toughness Bonus",
+                    (-0.5 + itemLevel) + toughnessBonus,
+                    AttributeModifier.Operation.ADDITION
+                    )
+            );
 
         return builder.build();
     }
@@ -127,41 +127,45 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         MoonPhase moonPhase = getMoonPhase(stack);
-        int phaseValue = getMoonPhaseValue(moonPhase);
-        boolean isNight = !getIsDay(stack);
-        int lightLevel = getLightLevel(stack);
+        int itemLevel = getItemLevel();
+        int phaseValue = getMoonPhaseValue(moonPhase)*(2+itemLevel);
 
-        tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
-        tooltip.add(new StringTextComponent("§9+" + ((15 - lightLevel)/5) + " Armor Toughness" ));
+        if (phaseValue < 0)
+            tooltip.add(new StringTextComponent("§eEnchantment Level Influenced by Moon."));
+        else
+            tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
-        if (isNight)
-            tooltip.add(new StringTextComponent("§eActive: Absorption Generation."));
+        if (isNight(stack, worldIn))
+            tooltip.add(new StringTextComponent("§aActive: Absorption Generation."));
         else
             tooltip.add(new StringTextComponent("§cInactive: Absorption Regeneration."));
-
     }
 
     @Override
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
+
         if (!world.isClientSide)
             return;
+        CompoundNBT nbt = stack.getOrCreateTag();
+        int timer = nbt.getInt(NBT_ARMOR_TIMER_KEY);
         int totalSetLevel = ILevelableItem.getTotalSetLevel(player);
-        if (player.tickCount % ((20*60) - totalSetLevel*4) != 0)
-                return;
 
-        if (totalSetLevel > 0 && world.isNight()) {
-            final float maxAbsorption = 0.1F*itemLevel;
-            float currentAbsorptionAmount = player.getAbsorptionAmount();
-            final int MAX_CAP = 20;
-            float maxAllowedAbsorption = Math.min(
-                    (float)totalSetLevel * maxAbsorption,
-                    (float)MAX_CAP
-            );
+        if (timer <= 0) {
+            if (isNight(stack, world)) {
+                float toAdd = 0.1F*itemLevel;
+                float currentAbsorptionAmount = player.getAbsorptionAmount();
+                final int MAX_CAP = 20;
 
-            if (currentAbsorptionAmount > maxAllowedAbsorption) {
-                player.setAbsorptionAmount(maxAllowedAbsorption);
+                GoldUpgrades.LOGGER.debug("TO ADD: {}", toAdd);
+
+                if (currentAbsorptionAmount < MAX_CAP) {
+                    player.setAbsorptionAmount(Math.min(MAX_CAP, currentAbsorptionAmount + toAdd));
+                }
             }
-        }
+
+            nbt.putInt(NBT_ARMOR_TIMER_KEY, (20*60) - totalSetLevel*4);
+        } else
+            nbt.putInt(NBT_ARMOR_TIMER_KEY, timer - 1);
     }
 }

@@ -3,6 +3,8 @@ package com.titanhex.goldupgrades.data;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
+import javax.annotation.Nullable;
+
 public enum MoonPhase {
     ANY(-1), // Added ANY to signify the condition is not required
     FULL_MOON(0),
@@ -20,7 +22,10 @@ public enum MoonPhase {
         this.phaseIndex = phaseIndex;
     }
 
-    public static MoonPhase getCurrentMoonPhase(World world) {
+    public static MoonPhase getCurrentMoonPhase(@Nullable World world) {
+
+        if (world == null)
+            return MoonPhase.NEW_MOON;
 
         long worldTime = world.getGameTime();
 

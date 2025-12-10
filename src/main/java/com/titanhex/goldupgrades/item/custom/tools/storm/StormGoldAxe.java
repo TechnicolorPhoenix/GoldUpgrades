@@ -55,7 +55,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
      * @param properties            Item properties.
      */
     public StormGoldAxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
-        super(tier, attackDamage, attackSpeed+1.5F, effectAmplifications, effectDuration, durabilityCost, properties);
+        super(tier, attackDamage, attackSpeed+1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
     }
 
     @Override

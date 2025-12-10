@@ -19,6 +19,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -34,6 +35,8 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
     protected float recoverAmount;
     protected float damageBonus;
     protected int perTickRecoverSpeed;
+
+    private static final String NBT_ARMOR_TIMER_KEY = "ArmorTimer";
 
     private static final UUID[] SUN_DAMAGE_MODIFIER = new UUID[]{
             UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
@@ -77,6 +80,7 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
         boolean inNether = getDimension(stack) == DimensionType.NETHER;
+        boolean isDay = isDay(stack);
         boolean inClear = getWeather(stack) == Weather.CLEAR;
         boolean isDamageBonusActive = inClear || inNether;
 
@@ -86,7 +90,7 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
-        if (inClear) {
+        if (isDay) {
             tooltip.add(new StringTextComponent("§aActive: +" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Day)"));
@@ -111,20 +115,20 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
         DimensionType oldDimension = getDimension(stack);
         Weather oldWeather = getWeather(stack);
 
-        boolean shouldRefresh = false;
+        boolean environmentChanged = false;
 
         ModifiableAttributeInstance toughnessInstance = livingEntity.getAttribute(Attributes.ARMOR_TOUGHNESS);
 
         if (isEquipped && toughnessInstance != null)
             if (toughnessInstance.getModifier(SUN_DAMAGE_MODIFIER[slotIndex]) != null)
-                shouldRefresh = oldDimension != currentDimension || oldWeather != currentWeather;
+                environmentChanged = oldDimension != currentDimension || oldWeather != currentWeather;
 
         if (currentWeather != oldWeather || currentDimension != oldDimension) {
             this.setWeather(stack, currentWeather);
             this.setDimension(stack, currentDimension);
         }
 
-        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
+        if (environmentChanged && holdingEntity instanceof LivingEntity) {
 
             Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
             toughnessInstance.removeModifier(SUN_DAMAGE_MODIFIER[this.slot.getIndex()]);
@@ -147,7 +151,16 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
         if (world.isClientSide)
             return;
 
-        if (player.tickCount % perTickRecoverSpeed == 0 && getIsDay(stack))
-            player.heal(recoverAmount);
-    }
+        CompoundNBT nbt = stack.getOrCreateTag();
+        int timer = nbt.getInt(NBT_ARMOR_TIMER_KEY);
+
+        if (timer <= 0) {
+            if (isDay(stack)) {
+                player.heal(this.recoverAmount);
+            }
+
+            nbt.putInt(NBT_ARMOR_TIMER_KEY, this.perTickRecoverSpeed);
+        } else {
+            nbt.putInt(NBT_ARMOR_TIMER_KEY, timer - 1);
+        }    }
 }

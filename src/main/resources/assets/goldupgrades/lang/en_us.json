@@ -111,6 +111,8 @@
   "item.goldupgrades.storm_power_gold_shovel": "Storm Gold Shovel",
   "item.goldupgrades.storm_power_gold_pickaxe": "Storm Gold Pickaxe",
 
+  "enchantment.goldupgrades.day_and_night_enchantment": "Always Day, Always Night",
+
   "itemGroup.goldBaseArmorTab": "Gold Base Equipment",
   "itemGroup.goldUpgradedArmorTab": "Gold Upgraded Equipment",
   "itemGroup.goldPowerArmorTab": "Gold Power Equipment"

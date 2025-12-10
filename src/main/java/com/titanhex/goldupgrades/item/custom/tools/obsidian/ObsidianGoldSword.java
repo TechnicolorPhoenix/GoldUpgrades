@@ -40,12 +40,15 @@ import java.util.UUID;
 
 public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDayInfluencedItem, IMoonPhaseInfluencedItem, ILightInfluencedItem
 {
-    private final int repairAmount;
-    public static final UUID NIGHT_DAMAGE_UUID = UUID.fromString("f2d3d9e0-3e3a-4a8f-9a4a-3b6b6b6b6b6b");
+    public static final UUID NIGHT_DAMAGE_UUID = UUID.randomUUID();
 
-    public ObsidianGoldSword(IItemTier tier, int atkDamage, float atkSpeed, int repairAmount, Properties itemProperties) {
+    public ObsidianGoldSword(IItemTier tier, int atkDamage, float atkSpeed, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
-        this.repairAmount = repairAmount;
+    }
+
+    @Override
+    public int getItemEnchantability(ItemStack stack) {
+        return super.getItemEnchantability(stack) + getMoonPhaseValue(getMoonPhase(stack));
     }
 
     @Override
@@ -58,11 +61,11 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
 
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentIsDay = world.isNight() ;
+        boolean currentIsDay = isDay(stack, world);
 
         int oldBrightness = getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         boolean shouldRefresh = false;
 
@@ -102,7 +105,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getIsDay(stack) ? 0 : 0.15F;
+        float bonusSpeed = isNight(stack) ? 0 : 0.15F;
 
         if (getLightLevel(stack) == 0) {
             baseSpeed = 1.25F;
@@ -120,32 +123,17 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
+        int itemLevel = this.getItemLevel();
+        float phaseValue = getMoonPhaseValue(getMoonPhase(stack));
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            float damage = 0F;
-            switch (getMoonPhase(stack)){
-                case FULL_MOON:
-                    damage = 1F * this.repairAmount;
-                    break;
-                case WAXING_GIBBOUS:
-                case WANING_GIBBOUS:
-                    damage = 0.75F * this.repairAmount;
-                    break;
-                case FIRST_QUARTER:
-                case LAST_QUARTER:
-                    damage = 0.5F * this.repairAmount;
-                    break;
-                case WANING_CRESCENT:
-                case WAXING_CRESCENT:
-                    damage = 0.25F * this.repairAmount;
-                    break;
-                case NEW_MOON:
-                    return builder.build();
-            }
+            float damage = phaseValue / 4;
+            if (damage == 0)
+                return builder.build();
             builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                     NIGHT_DAMAGE_UUID,
                     "Weapon modifier",
-                    damage,
+                    damage * itemLevel,
                     AttributeModifier.Operation.ADDITION
             ));
         }
@@ -157,15 +145,21 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        int phaseValue = getMoonPhaseValue(MoonPhase.getCurrentMoonPhase(worldIn));
 
         if (getMoonPhase(stack) == MoonPhase.NEW_MOON )
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Due to New Moon)"));
 
+        if (phaseValue < 0)
+            tooltip.add(new StringTextComponent("§aEnchantment Boost from Moon"));
+        else
+            tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
+
         if (getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
-        if (!getIsDay(stack))
-            tooltip.add(new StringTextComponent("§a+15% Harvest Speed ."));
+        if (isNight(stack))
+            tooltip.add(new StringTextComponent("§9+15% Harvest Speed ."));
         else
             tooltip.add(new StringTextComponent("§cInactive: Harvest Speed Bonus (Requires Night)"));
     }
@@ -189,6 +183,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
         PlayerEntity player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
         BlockPos clickedPos = context.getClickedPos();
+        int itemLevel = getItemLevel();
 
         if (player != null) {
 
@@ -211,10 +206,10 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
                     world.setBlock(rayHitPos, Blocks.OBSIDIAN.defaultBlockState(), 3);
 
                     if (world.dimension() == World.NETHER) {
-                        stack.hurtAndBreak((4-repairAmount)*3, player, (entity) -> entity.broadcastBreakEvent(context.getHand()));
+                        stack.hurtAndBreak((4-itemLevel)*3, player, (entity) -> entity.broadcastBreakEvent(context.getHand()));
                     } else {
                         int currentDamage = stack.getDamageValue();
-                        stack.setDamageValue(Math.max(0, currentDamage - repairAmount));
+                        stack.setDamageValue(Math.max(0, currentDamage - itemLevel));
                     }
 
                     player.giveExperiencePoints(1);

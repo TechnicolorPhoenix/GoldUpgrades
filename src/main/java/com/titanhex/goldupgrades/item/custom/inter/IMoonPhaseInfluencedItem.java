@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.MoonPhase;
 import net.minecraft.item.ItemStack;
 

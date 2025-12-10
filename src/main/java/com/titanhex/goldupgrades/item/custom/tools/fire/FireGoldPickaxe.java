@@ -54,11 +54,11 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
 
         DimensionType oldDimension = getDimension(stack);
         Weather oldWeather = getWeather(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         DimensionType currentDimension = DimensionType.getCurrentDimension(world);
         Weather currentWeather = Weather.getCurrentWeather(world);
-        boolean currentIsDay = world.isDay();
+        boolean currentIsDay = isDay(stack, world);
 
         if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
             setWeather(stack, currentWeather);

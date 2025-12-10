@@ -53,11 +53,11 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
 
         DimensionType oldDimension = getDimension(stack);
         Weather oldWeather = getWeather(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         DimensionType currentDimension = DimensionType.getCurrentDimension(world);
         Weather currentWeather = Weather.getCurrentWeather(world);
-        boolean currentIsDay = world.isDay();
+        boolean currentIsDay = isDay(stack, world);
 
         if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
             setWeather(stack, currentWeather);
@@ -99,7 +99,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
      */
     @Override
     public void igniteEntity(LivingEntity target, ItemStack stack) {
-        target.setSecondsOnFire(2 + (getIsDay(stack) ? 2 : 0));
+        target.setSecondsOnFire(2 + (isDay(stack) ? 2 : 0));
     }
 
     /**

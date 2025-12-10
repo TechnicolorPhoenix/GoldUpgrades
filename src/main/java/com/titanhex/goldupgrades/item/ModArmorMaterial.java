@@ -17,15 +17,15 @@ import java.util.function.Supplier;
 
 public enum ModArmorMaterial implements IArmorMaterial {
     OBSIDIAN_BASE_GOLD("obsidian_base_gold", 15, new int[]{2, 4, 5, 1}, 20, 1,
-            SoundEvents.ARMOR_EQUIP_GOLD, 0.5F, 0.0F, () -> {
+            SoundEvents.ARMOR_EQUIP_GOLD, 0.0F, 0.0F, () -> {
         return Ingredient.of(Items.OBSIDIAN);
     }),
     OBSIDIAN_UPGRADED_GOLD("obsidian_upgraded_gold", 19, new int[]{2, 5, 6, 2}, 20, 2,
-            SoundEvents.ARMOR_EQUIP_GOLD, 1.5F, 0.0F, () -> {
+            SoundEvents.ARMOR_EQUIP_GOLD, 0.0F, 0.0F, () -> {
         return Ingredient.of(Items.CRYING_OBSIDIAN);
     }),
     OBSIDIAN_POWER_GOLD("obsidian_power_gold", 33, new int[]{3, 6, 8, 3}, 20, 3,
-            SoundEvents.ARMOR_EQUIP_GOLD, 2.5F, 0.0F, () -> {
+            SoundEvents.ARMOR_EQUIP_GOLD, 0.0F, 0.0F, () -> {
         return Ingredient.of(Items.GILDED_BLACKSTONE);
     }),
     FIRE_BASE_GOLD("fire_base_gold", 13, new int[]{2, 4, 5, 1}, 28, 1,

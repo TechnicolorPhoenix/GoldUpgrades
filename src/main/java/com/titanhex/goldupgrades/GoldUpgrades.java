@@ -1,6 +1,7 @@
 package com.titanhex.goldupgrades;
 
 import com.titanhex.goldupgrades.data.recipes.ModRecipeTypes;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.event.*;
 import com.titanhex.goldupgrades.item.ModToolItems;
 import com.titanhex.goldupgrades.item.ModArmorItems;
@@ -38,6 +39,7 @@ public class GoldUpgrades
 
         ModArmorItems.register(eventBus);
         ModToolItems.register(eventBus);
+        ModEnchantments.register(eventBus);
 
         eventBus.addListener(this::setup);
         // Register the enqueueIMC method for modloading

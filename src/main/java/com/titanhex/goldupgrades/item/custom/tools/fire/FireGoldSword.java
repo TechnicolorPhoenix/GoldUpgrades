@@ -63,8 +63,8 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        boolean currentIsDay = world.isDay();
-        boolean oldIsDay = getIsDay(stack);
+        boolean currentIsDay = isDay(stack, world);
+        boolean oldIsDay = isDay(stack);
 
         Weather currentWeather = Weather.getCurrentWeather(world);
         DimensionType currentDimension = DimensionType.getCurrentDimension(world);
@@ -125,7 +125,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
-        boolean isDay = getIsDay(stack);
+        boolean isDay = isDay(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             // Check the synchronized NBT state

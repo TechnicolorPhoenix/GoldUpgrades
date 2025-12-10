@@ -38,11 +38,9 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 {
 
     private static final Random RANDOM = new Random();
-    private int repairAmount;
 
-    public ObsidianGoldHoe(IItemTier tier, int atkDamage, float atkSpeed, int repairAmount, Properties itemProperties) {
+    public ObsidianGoldHoe(IItemTier tier, int atkDamage, float atkSpeed, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
-        this.repairAmount = repairAmount;
     }
 
     @Override
@@ -52,11 +50,11 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentIsDay = world.isDay() ;
+        boolean currentIsDay = isDay(stack, world);
 
         int oldBrightness = getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
             setLightLevel(stack, currentBrightness);
@@ -70,7 +68,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getIsDay(stack) ? 0 : 0.15F;
+        float bonusSpeed = isDay(stack) ? 0 : 0.15F;
 
         if (getLightLevel(stack) == 0) {
             baseSpeed = 1.1F;
@@ -91,7 +89,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity enemy) {
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+repairAmount);
+        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+getItemLevel());
         int chance = RANDOM.nextInt(100)+1;
 
         if (super.hurtEnemy(stack, target, enemy) && chance < phaseValue) {
@@ -115,7 +113,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+repairAmount);
+        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+getItemLevel());
 
         tooltip.add(new StringTextComponent((phaseValue == 0 ? "§c" : "§a" ) + "Slow Chance: " + phaseValue + "%"));
         tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
@@ -123,8 +121,8 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
         if (getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
-        if (!getIsDay(stack))
-            tooltip.add(new StringTextComponent("§a+15% Harvest Speed."));
+        if (isNight(stack))
+            tooltip.add(new StringTextComponent("§9+15% Harvest Speed."));
         else
             tooltip.add(new StringTextComponent("§cInactive: Harvest Speed Bonus (Requires Night)"));
     }
@@ -148,6 +146,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
         PlayerEntity player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
         BlockPos clickedPos = context.getClickedPos();
+        int itemLevel = getItemLevel();
 
         if (player != null) {
 
@@ -170,10 +169,10 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
                     world.setBlock(rayHitPos, Blocks.OBSIDIAN.defaultBlockState(), 3);
 
                     if (world.dimension() == World.NETHER) {
-                        stack.hurtAndBreak((4-repairAmount)*3, player, (entity) -> entity.broadcastBreakEvent(context.getHand()));
+                        stack.hurtAndBreak((4-itemLevel)*3, player, (entity) -> entity.broadcastBreakEvent(context.getHand()));
                     } else {
                         int currentDamage = stack.getDamageValue();
-                        stack.setDamageValue(Math.max(0, currentDamage - repairAmount));
+                        stack.setDamageValue(Math.max(0, currentDamage - itemLevel));
                     }
 
                     player.giveExperiencePoints(1);

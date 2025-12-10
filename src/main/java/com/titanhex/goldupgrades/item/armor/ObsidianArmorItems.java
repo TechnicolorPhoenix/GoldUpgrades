@@ -34,29 +34,29 @@ public class ObsidianArmorItems {
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_BOOTS = ITEMS.register(
             "obsidian_base_gold_boots",
             () -> new ObsidianArmorItem(ModArmorMaterial.OBSIDIAN_BASE_GOLD, EquipmentSlotType.FEET,
-                    OBSIDIAN_BASE_ARMOR_BONUSES, 1,
+                    OBSIDIAN_BASE_ARMOR_BONUSES,
                                 new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_LEGGINGS = ITEMS.register(
             "obsidian_base_gold_leggings",
             () -> new ObsidianArmorItem(ModArmorMaterial.OBSIDIAN_BASE_GOLD, EquipmentSlotType.LEGS,
-                    OBSIDIAN_BASE_ARMOR_BONUSES, 1,
+                    OBSIDIAN_BASE_ARMOR_BONUSES,
                                 new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_CHESTPLATE = ITEMS.register(
             "obsidian_base_gold_chestplate",
             () -> new ObsidianArmorItem(ModArmorMaterial.OBSIDIAN_BASE_GOLD, EquipmentSlotType.CHEST,
-                    OBSIDIAN_BASE_ARMOR_BONUSES, 1,
+                    OBSIDIAN_BASE_ARMOR_BONUSES,
                                 new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_HELMET = ITEMS.register(
             "obsidian_base_gold_helmet",
             () -> new ObsidianArmorItem(ModArmorMaterial.OBSIDIAN_BASE_GOLD, EquipmentSlotType.HEAD,
-                    OBSIDIAN_BASE_ARMOR_BONUSES, 1,
+                    OBSIDIAN_BASE_ARMOR_BONUSES,
                                 new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
 
     public static final RegistryObject<Item> OBSIDIAN_UPGRADED_GOLD_BOOTS = ITEMS.register(
             "obsidian_upgraded_gold_boots",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_UPGRADED_GOLD, EquipmentSlotType.FEET,
-                    OBSIDIAN_UPGRADED_ARMOR_BONUSES, 2,
+                    OBSIDIAN_UPGRADED_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -64,7 +64,7 @@ public class ObsidianArmorItems {
             "obsidian_upgraded_gold_leggings",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_UPGRADED_GOLD, EquipmentSlotType.LEGS,
-                    OBSIDIAN_UPGRADED_ARMOR_BONUSES, 2,
+                    OBSIDIAN_UPGRADED_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -72,14 +72,14 @@ public class ObsidianArmorItems {
             "obsidian_upgraded_gold_chestplate",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_UPGRADED_GOLD, EquipmentSlotType.CHEST,
-                    OBSIDIAN_UPGRADED_ARMOR_BONUSES, 2,
+                    OBSIDIAN_UPGRADED_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
     public static final RegistryObject<Item> OBSIDIAN_UPGRADED_GOLD_HELMET = ITEMS.register(
             "obsidian_upgraded_gold_helmet",
             () -> new ObsidianArmorItem(ModArmorMaterial.OBSIDIAN_UPGRADED_GOLD, EquipmentSlotType.HEAD,
-                    OBSIDIAN_UPGRADED_ARMOR_BONUSES, 2,
+                    OBSIDIAN_UPGRADED_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)
             )
     );
@@ -88,7 +88,7 @@ public class ObsidianArmorItems {
             "obsidian_power_gold_boots",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_POWER_GOLD, EquipmentSlotType.FEET,
-                    OBSIDIAN_POWER_ARMOR_BONUSES, 3,
+                    OBSIDIAN_POWER_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
@@ -96,7 +96,7 @@ public class ObsidianArmorItems {
             "obsidian_power_gold_leggings",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_POWER_GOLD, EquipmentSlotType.LEGS,
-                    OBSIDIAN_POWER_ARMOR_BONUSES, 3,
+                    OBSIDIAN_POWER_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
@@ -104,7 +104,7 @@ public class ObsidianArmorItems {
             "obsidian_power_gold_chestplate",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_POWER_GOLD, EquipmentSlotType.CHEST,
-                    OBSIDIAN_POWER_ARMOR_BONUSES, 3,
+                    OBSIDIAN_POWER_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );
@@ -112,7 +112,7 @@ public class ObsidianArmorItems {
             "obsidian_power_gold_helmet",
             () -> new ObsidianArmorItem(
                     ModArmorMaterial.OBSIDIAN_POWER_GOLD, EquipmentSlotType.HEAD,
-                    OBSIDIAN_POWER_ARMOR_BONUSES, 3,
+                    OBSIDIAN_POWER_ARMOR_BONUSES,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)
             )
     );

@@ -1,6 +1,8 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 
 public interface IWeatherInfluencedItem {
@@ -13,4 +15,11 @@ public interface IWeatherInfluencedItem {
         stack.getOrCreateTag().putString(NBT_WEATHER, value.name());
     }
 
+    static int getEnchantmentLevel(ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WEATHER_ENCHANTMENT.get(), stack);
+    }
+
+    static boolean hasEnchantment(ItemStack stack) {
+        return getEnchantmentLevel(stack) > 0;
+    }
 }

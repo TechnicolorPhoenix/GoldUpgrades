@@ -53,7 +53,7 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
      * @param properties            Item properties.
      */
     public StormGoldSword(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
-        super(tier, attackDamage, attackSpeed+1.33F, effectAmplifications, effectDuration, durabilityCost, properties);
+        super(tier, attackDamage, attackSpeed+1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
     }
 
     @Override

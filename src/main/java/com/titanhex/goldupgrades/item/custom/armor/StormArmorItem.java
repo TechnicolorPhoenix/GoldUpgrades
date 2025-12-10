@@ -46,9 +46,13 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         double jumpHeight = getJumpBoostModifier() / 0.33;
+        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+
+        if (isThundering)
+            tooltip.add(new StringTextComponent("§eCan Fly"));
 
         tooltip.add(new StringTextComponent("§9+" + String.format("%.1f", jumpHeight) + " Jump Boost"));
-        tooltip.add(new StringTextComponent("§9" + (int) getFallDamageReductionFraction() + "% Fall Damage Reduction    ."));
+        tooltip.add(new StringTextComponent("§9" + (int) getFallDamageReductionFraction() + "% Fall Damage Reduction"));
     }
 
     @Override
@@ -81,5 +85,13 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
         boolean setRequirementMet = ILevelableItem.getTotalSetLevel(entity) > 5;
 
         return getWeather(stack) == Weather.THUNDERING && setRequirementMet;
+    }
+
+    @Override
+    public boolean elytraFlightTick(ItemStack stack, LivingEntity entity, int flightTicks) {
+        if (!entity.level.isClientSide && (flightTicks + 1) % 20 == 0) {
+            stack.hurtAndBreak(1, entity, e -> e.broadcastBreakEvent(this.slot));
+        }
+        return true;
     }
 }

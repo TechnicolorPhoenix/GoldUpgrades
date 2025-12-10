@@ -53,11 +53,11 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
 
         DimensionType oldDimension = getDimension(stack);
         Weather oldWeather = getWeather(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         DimensionType currentDimension = DimensionType.getCurrentDimension(world);
         Weather currentWeather = Weather.getCurrentWeather(world);
-        boolean currentIsDay = world.isDay();
+        boolean currentIsDay = isDay(stack, world);
 
         if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
             setWeather(stack, currentWeather);
@@ -184,6 +184,14 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
 
         if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
             world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) + 2);
+            player.giveExperiencePoints(1);
+
+            world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
+
+            return ActionResultType.SUCCESS;
+        } else if (clickedState.getBlock() == Blocks.SAND) {
+            world.setBlock(facePos, Blocks.GLASS.getBlock().defaultBlockState(), 11);
             setDamage(stack, getDamage(stack) + 2);
             player.giveExperiencePoints(1);
 

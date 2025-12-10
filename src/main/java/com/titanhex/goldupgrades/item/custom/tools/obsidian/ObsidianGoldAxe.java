@@ -49,6 +49,11 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     }
 
     @Override
+    public int getItemEnchantability(ItemStack stack) {
+        return super.getItemEnchantability(stack) + getMoonPhaseValue(getMoonPhase(stack));
+    }
+
+    @Override
     public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
         if (world.isClientSide)
             return;
@@ -58,11 +63,11 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
 
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentIsDay = world.isNight() ;
+        boolean currentIsDay = isDay(stack, world);
 
         int oldBrightness = getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldIsDay = getIsDay(stack);
+        boolean oldIsDay = isDay(stack);
 
         boolean shouldRefresh = false;
 
@@ -102,10 +107,10 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getIsDay(stack) ? 0 : 0.15F;
+        float bonusSpeed = isNight(stack) ? 0.15F : 0F;
 
         if (getLightLevel(stack) == 0) {
-            baseSpeed = 1.25F;
+            baseSpeed = 1.1F + bonusSpeed;
         }
 
         if (baseSpeed > 1.0F) {
@@ -120,16 +125,17 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        float phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        int itemLevel = this.getItemLevel();
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            float damage = (float) phaseValue / 4;
+            float damage = phaseValue / 4;
             if (damage == 0)
                 return builder.build();
             builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                     NIGHT_DAMAGE_UUID,
                     "Weapon modifier",
-                    damage *= this.repairAmount,
+                    damage * itemLevel,
                     AttributeModifier.Operation.ADDITION
             ));
         }
@@ -141,19 +147,19 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+repairAmount);
+        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        boolean isNight = isNight(stack, worldIn);
 
-        if (getMoonPhase(stack) == MoonPhase.NEW_MOON )
-            tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Due to New Moon)"));
-        tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
+        if (phaseValue < 0)
+            tooltip.add(new StringTextComponent("§aEnchantment Boost from Moon"));
+        else
+            tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
         if (getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
-        if (!getIsDay(stack))
+        if (isNight)
             tooltip.add(new StringTextComponent("§a+15% Harvest Speed."));
-        else
-            tooltip.add(new StringTextComponent("§cInactive: Harvest Speed Bonus (Requires Night)"));
     }
 
     @Override
