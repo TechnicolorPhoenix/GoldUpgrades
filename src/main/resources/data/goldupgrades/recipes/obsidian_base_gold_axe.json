@@ -1,5 +1,7 @@
 {
   "type": "goldupgrades:environmental_shapeless",
+  "min_time": 10000,
+  "max_time": 1000,
   "ingredients": [
     {
       "item": "minecraft:golden_axe"

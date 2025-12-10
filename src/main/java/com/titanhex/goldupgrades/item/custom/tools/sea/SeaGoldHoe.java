@@ -86,7 +86,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAIN;
+        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
@@ -100,7 +100,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAIN;
+        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
         float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {

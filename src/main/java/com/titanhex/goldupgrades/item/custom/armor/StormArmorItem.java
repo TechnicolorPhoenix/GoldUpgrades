@@ -22,21 +22,33 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevelableItem, IWeatherInfluencedItem {
-    int armorLevel;
+public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevelableItem, IWeatherInfluencedItem
+{
+    String NBT_FLIGHT_REQUIREMENT_MET = "FlightRequirementMet";
 
     public StormArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
-        this.armorLevel = getItemLevel();
     }
+
+    private boolean getFlightRequirement(LivingEntity livingEntity) {
+        return getTotalSetLevel(livingEntity) > 5;
+    }
+    private boolean getFlightRequirement(ItemStack stack) {
+        return stack.getOrCreateTag().getBoolean(NBT_FLIGHT_REQUIREMENT_MET);
+    }
+    private void setFlightRequirement(ItemStack stack, boolean value) {
+        stack.getOrCreateTag().putBoolean(NBT_FLIGHT_REQUIREMENT_MET, value);
+    }
+
     @Override
     public float getFallDamageReductionFraction() {
-        return 0.1F + 0.5f * armorLevel;
+        return 0.1F + 0.5f * getItemLevel();
     }
     @Override
     public double getJumpBoostModifier() {
-        double term1 = 0.1666 * this.armorLevel * this.armorLevel;
-        double term2 = -0.333 * this.armorLevel;
+        int armorLevel = getItemLevel();
+        double term1 = 0.1666 * armorLevel * armorLevel;
+        double term2 = -0.333 * armorLevel;
 
         return (term1 + term2 + 0.5)/5;
     }
@@ -47,8 +59,9 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         double jumpHeight = getJumpBoostModifier() / 0.33;
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        boolean flightRequirementsMet = getFlightRequirement(stack);
 
-        if (isThundering)
+        if (isThundering && flightRequirementsMet)
             tooltip.add(new StringTextComponent("§eCan Fly"));
 
         tooltip.add(new StringTextComponent("§9+" + String.format("%.1f", jumpHeight) + " Jump Boost"));
@@ -75,6 +88,12 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
 
+        boolean currentRequirementsMet = getFlightRequirement(player);
+        boolean previousRequirementsMet = getFlightRequirement(stack);
+
+        if (currentRequirementsMet != previousRequirementsMet)
+            setFlightRequirement(stack, currentRequirementsMet);
+
         if (!world.isClientSide) {
             player.fallDistance *= 0.75F;
         }
@@ -82,7 +101,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
 
     @Override
     public boolean canElytraFly(ItemStack stack, LivingEntity entity) {
-        boolean setRequirementMet = ILevelableItem.getTotalSetLevel(entity) > 5;
+        boolean setRequirementMet = getTotalSetLevel(entity) > 5;
 
         return getWeather(stack) == Weather.THUNDERING && setRequirementMet;
     }

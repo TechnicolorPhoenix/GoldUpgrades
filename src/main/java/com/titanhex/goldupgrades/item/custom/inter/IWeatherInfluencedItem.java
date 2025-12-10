@@ -36,13 +36,13 @@ public interface IWeatherInfluencedItem {
     }
 
     default boolean isRain(ItemStack stack) {
-        return getWeather(stack) == Weather.RAIN;
+        return getWeather(stack) == Weather.RAINING;
     }
     default boolean isRain(ItemStack stack, World world) {
         if (world == null) {
             return isRain(stack);
         } else {
-            return Weather.getCurrentWeather(world) == Weather.RAIN;
+            return Weather.getCurrentWeather(world) == Weather.RAINING;
         }
     }
 

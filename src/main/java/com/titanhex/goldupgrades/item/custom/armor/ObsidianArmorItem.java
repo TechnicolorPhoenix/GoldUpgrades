@@ -149,7 +149,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
             return;
         CompoundNBT nbt = stack.getOrCreateTag();
         int timer = nbt.getInt(NBT_ARMOR_TIMER_KEY);
-        int totalSetLevel = ILevelableItem.getTotalSetLevel(player);
+        int totalSetLevel = getTotalSetLevel(player);
 
         if (timer <= 0) {
             if (isNight(stack, world)) {

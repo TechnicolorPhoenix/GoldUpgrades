@@ -1,5 +1,8 @@
 {
   "type": "goldupgrades:environmental_shapeless",
+  "weather": "CLEAR",
+  "min_time": 0,
+  "max_time": 13000,
   "ingredients": [
     {
       "item": "minecraft:golden_boots"

@@ -39,10 +39,10 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
     private static final String NBT_ARMOR_TIMER_KEY = "ArmorTimer";
 
     private static final UUID[] SUN_DAMAGE_MODIFIER = new UUID[]{
-            UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
-            UUID.fromString("b9a5f1e8-6e7e-40d0-8b6a-9a0f0d2b7c6c"), // LEGGINGS
-            UUID.fromString("730a9e1d-4f5d-4f3b-8c1a-7e0f8b1c4d2e"), // CHESTPLATE
-            UUID.fromString("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d")  // HELMET
+            UUID.randomUUID(), // BOOTS (Existing)
+            UUID.randomUUID(), // LEGGINGS
+            UUID.randomUUID(), // CHESTPLATE
+            UUID.randomUUID()  // HELMET
     };
 
     public FireArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, float recoverAmount, int perTickRecoverSpeed, float damageBonus, Properties builderIn) {

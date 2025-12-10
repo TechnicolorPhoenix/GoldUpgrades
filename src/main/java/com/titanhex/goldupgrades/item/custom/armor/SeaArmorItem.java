@@ -154,7 +154,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
         Weather lastWeather = getWeather(stack);
 
         if (currentWeather != lastWeather) {
-            if (currentWeather == Weather.RAIN && lastWeather == Weather.CLEAR) {
+            if (currentWeather == Weather.RAINING && lastWeather == Weather.CLEAR) {
                 livingEntity.setAbsorptionAmount(Math.min(16F, livingEntity.getAbsorptionAmount()));
             }
             setWeather(stack, currentWeather);

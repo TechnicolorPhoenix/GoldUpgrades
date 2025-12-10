@@ -23,15 +23,14 @@ public interface ILevelableItem {
         return -1;
     }
 
-    static int getTotalSetLevel(LivingEntity livingEntity) {
+    default int getTotalSetLevel(LivingEntity livingEntity) {
         int totalLevel = 0;
-        // EquipmentSlotType.values() will give us HEAD, CHEST, LEGS, FEET
+        Class<?> containingClass = this.getClass();
         for (EquipmentSlotType slot : EquipmentSlotType.values()) {
             if (slot.getType() == EquipmentSlotType.Group.ARMOR) {
                 ItemStack stack = livingEntity.getItemBySlot(slot);
-                if (stack.getItem() instanceof ILevelableItem) {
+                if (stack.getItem() instanceof ILevelableItem && stack.getItem().getClass() == containingClass) {
                     ILevelableItem armorItem = (ILevelableItem) stack.getItem();
-                    // armorItem.itemLevel is available via the getItemLevel() method
                     totalLevel += armorItem.getItemLevel();
                 }
             }

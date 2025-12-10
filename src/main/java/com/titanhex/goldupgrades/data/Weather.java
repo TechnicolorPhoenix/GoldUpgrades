@@ -5,7 +5,7 @@ import net.minecraft.world.World;
 public enum Weather {
     ANY,
     CLEAR,
-    RAIN,
+    RAINING,
     THUNDERING;
 
     /**
@@ -15,7 +15,7 @@ public enum Weather {
         if (world.isThundering()) {
             return THUNDERING;
         } else if (world.isRaining()) {
-            return RAIN;
+            return RAINING;
         }
         return CLEAR;
     }

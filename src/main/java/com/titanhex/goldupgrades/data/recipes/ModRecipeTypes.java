@@ -18,6 +18,9 @@ public class ModRecipeTypes {
     public static final RegistryObject<EnvironmentalShapelessRecipe.Serializer> ENVIRONMENTAL_SHAPELESS_SERIALIZER =
             RECIPE_SERIALIZER.register("environmental_shapeless", EnvironmentalShapelessRecipe.Serializer::new);
 
+    public static final RegistryObject<EnvironmentalSmithingRecipe.Serializer> ENVIRONMENTAL_SMITHING_SERIALIZER =
+            RECIPE_SERIALIZER.register("environmental_smithing", EnvironmentalSmithingRecipe.Serializer::new);
+
     public static void register(IEventBus eventBus){
         RECIPE_SERIALIZER.register(eventBus);
     }

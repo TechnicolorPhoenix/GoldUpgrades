@@ -153,7 +153,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean isRaining = getWeather(stack) == Weather.RAIN;
+        boolean isRaining = getWeather(stack) == Weather.RAINING;
         float bonusSpeed = getIsInRain(stack) ? isRaining ? 0.20F : 0.15F : isRaining ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {

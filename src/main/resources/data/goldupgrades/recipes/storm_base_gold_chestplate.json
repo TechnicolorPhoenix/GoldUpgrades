@@ -1,5 +1,6 @@
 {
   "type": "goldupgrades:environmental_shapeless",
+  "weather": "THUNDERING",
   "ingredients": [
     {
       "item": "minecraft:golden_chestplate"

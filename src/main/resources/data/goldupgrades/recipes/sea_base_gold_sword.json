@@ -1,5 +1,6 @@
 {
   "type": "goldupgrades:environmental_shapeless",
+  "weather": "RAINING",
   "ingredients": [
     {
       "item": "minecraft:golden_sword"

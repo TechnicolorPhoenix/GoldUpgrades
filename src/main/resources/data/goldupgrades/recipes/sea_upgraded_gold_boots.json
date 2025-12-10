@@ -1,6 +1,6 @@
 {
   "type": "goldupgrades:environmental_shapeless",
-  "weather": "RAIN",
+  "weather": "RAINING",
   "ingredients": [
     {
       "item": "goldupgrades:sea_base_gold_boots"
