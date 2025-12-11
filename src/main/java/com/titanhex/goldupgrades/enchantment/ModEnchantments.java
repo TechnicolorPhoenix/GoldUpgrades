@@ -20,7 +20,7 @@ public class ModEnchantments {
     );
 
     public static final RegistryObject<Enchantment> LIGHT_LEVEL_ENCHANTMENT = ENCHANTMENTS.register(
-            "light_enchantment", LightLevelEnchantment::new
+            "light_enchantment", LightLevelMoonlightEnchantment::new
     );
 
     public static void register(IEventBus eventBus) {
