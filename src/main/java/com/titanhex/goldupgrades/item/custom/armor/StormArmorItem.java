@@ -44,8 +44,8 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     @Override
     public float getFallDamageReductionFraction() {
         int level = getItemLevel();
-        float perLevelBonus = 0.05F * level;
-        float finalBonus = (0.1F + perLevelBonus);
+        float perLevelBonus = 0.03F * level;
+        float finalBonus = (0.06F + perLevelBonus);
         GoldUpgrades.LOGGER.debug("FINAL BONUS: {}, LEVEL: {}, PER LEVEL BONUS: {}", finalBonus, level, perLevelBonus);
         return finalBonus;
     }
