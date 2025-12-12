@@ -2,6 +2,8 @@ package com.titanhex.goldupgrades.item.custom.inter;
 
 import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.MoonPhase;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 
 public interface IMoonPhaseInfluencedItem {
@@ -32,4 +34,11 @@ public interface IMoonPhaseInfluencedItem {
         }
     }
 
+    static int getEnchantmentLevel(ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.MOON_PHASE_ENCHANTMENT.get(), stack);
+    }
+
+    static boolean hasEnchantment(ItemStack stack) {
+        return getEnchantmentLevel(stack) > 0;
+    }
 }

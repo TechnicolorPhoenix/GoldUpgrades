@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.IJumpBoostArmor;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
@@ -42,30 +43,35 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
 
     @Override
     public float getFallDamageReductionFraction() {
-        return 0.1F + 0.5f * getItemLevel();
+        int level = getItemLevel();
+        float perLevelBonus = 0.05F * level;
+        float finalBonus = (0.1F + perLevelBonus);
+        GoldUpgrades.LOGGER.debug("FINAL BONUS: {}, LEVEL: {}, PER LEVEL BONUS: {}", finalBonus, level, perLevelBonus);
+        return finalBonus;
     }
+
     @Override
     public double getJumpBoostModifier() {
         int armorLevel = getItemLevel();
-        double term1 = 0.1666 * armorLevel * armorLevel;
-        double term2 = -0.333 * armorLevel;
+        double totalDesiredBonus = (armorLevel - 0.5);
 
-        return (term1 + term2 + 0.5)/5;
+        return totalDesiredBonus / (10*4);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        double jumpHeight = getJumpBoostModifier() / 0.33;
+        double jumpHeight = getJumpBoostModifier() * 10;
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
         boolean flightRequirementsMet = getFlightRequirement(stack);
+        int fallDamageReduction = (int) (getFallDamageReductionFraction()*100);
 
         if (isThundering && flightRequirementsMet)
             tooltip.add(new StringTextComponent("§eCan Fly"));
 
         tooltip.add(new StringTextComponent("§9+" + String.format("%.1f", jumpHeight) + " Jump Boost"));
-        tooltip.add(new StringTextComponent("§9" + (int) getFallDamageReductionFraction() + "% Fall Damage Reduction"));
+        tooltip.add(new StringTextComponent("§9" + fallDamageReduction + "% Fall Damage Reduction"));
     }
 
     @Override
@@ -93,10 +99,6 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
 
         if (currentRequirementsMet != previousRequirementsMet)
             setFlightRequirement(stack, currentRequirementsMet);
-
-        if (!world.isClientSide) {
-            player.fallDistance *= 0.75F;
-        }
     }
 
     @Override

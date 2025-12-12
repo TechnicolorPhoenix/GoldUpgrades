@@ -112,6 +112,11 @@
   "item.goldupgrades.storm_power_gold_pickaxe": "Storm Gold Pickaxe",
 
   "enchantment.goldupgrades.day_and_night_enchantment": "Always Day, Always Night",
+  "enchantment.goldupgrades.day_and_night_enchantment.description": "The day and night effects always work.",
+  "enchantment.goldupgrades.moonlight_enchantment": "Moonlight",
+  "enchantment.goldupgrades.moonlight_enchantment.description": "Allows moonlight to count as light.",
+  "enchantment.goldupgrades.moon_phase_enchantment": "Moon Phasing",
+  "enchantment.goldupgrades.moon_phase_enchantment.description": "Allows.",
 
   "itemGroup.goldBaseArmorTab": "Gold Base Equipment",
   "itemGroup.goldUpgradedArmorTab": "Gold Upgraded Equipment",

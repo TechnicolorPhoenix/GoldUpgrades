@@ -16,9 +16,4 @@ public class LightLevelMoonlightEnchantment extends Enchantment {
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
         return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof ILightInfluencedItem;
     }
-
-    @Override
-    public int getMaxLevel() {
-        return 1;
-    }
 }

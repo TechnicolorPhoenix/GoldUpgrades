@@ -77,7 +77,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
         super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
 
         if (world.isClientSide) return;
@@ -161,6 +161,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
         return baseSpeed;
     }
 
+    @NotNull
     @Override
     public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -221,7 +222,6 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
         int toolLevel = getItemLevel();
 
         if (state.getBlock() == Blocks.ICE && toolLevel > 1) {
-
             world.setBlock(hitPos, Blocks.PACKED_ICE.defaultBlockState(), 11);
 
             world.playSound(null, hitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 0.8F);
