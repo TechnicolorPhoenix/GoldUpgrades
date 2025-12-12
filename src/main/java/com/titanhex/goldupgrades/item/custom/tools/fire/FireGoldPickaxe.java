@@ -40,8 +40,8 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = getLightLevel(stack);
 
@@ -70,7 +70,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         float bonusSpeed = getLightLevel(stack) * 0.01F;
 
@@ -86,7 +86,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int bonusSpeed = getLightLevel(stack);
 
@@ -142,7 +142,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
      * Handles the entity hit event (Left Click on Entity).
      */
     @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
         // 1. Call the interface method to apply the custom effect
         igniteEntity(target, stack);
 
@@ -160,15 +160,16 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
-        if (world.isClientSide) {
-            return ActionResultType.SUCCESS;
-        }
+
+        if (world.isClientSide)
+            return super.useOn(context);
+
         PlayerEntity player = context.getPlayer();
         if (player == null)
             return super.useOn(context);
 
         Direction face = context.getClickedFace();
-        ItemStack stack = context.getItemInHand(); // Get the ItemStack directly from the context
+        ItemStack stack = context.getItemInHand();
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
@@ -187,9 +188,9 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
 
         BlockPos facePos = clickedPos.relative(face);
 
-        if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
-            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
-            setDamage(stack, getDamage(stack) + 2);
+        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+            world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
 
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);

@@ -37,16 +37,15 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
 
-        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
+        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = getLightLevel(stack);
 
-        if (oldBrightness != currentBrightness) {
+        if (oldBrightness != currentBrightness)
             setLightLevel(stack, currentBrightness);
-        }
 
         if (world.isClientSide)
             return;
@@ -67,7 +66,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         float bonusSpeed = getLightLevel(stack) * 0.01F;
 
@@ -80,15 +79,14 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         return baseSpeed;
     }
 
-    // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int bonusSpeed = getLightLevel(stack);
 
         if (bonusSpeed > 0)
-        tooltip.add(new StringTextComponent("§9+" + bonusSpeed + "% Harvest Speed ."));
+            tooltip.add(new StringTextComponent("§9+" + bonusSpeed + "% Harvest Speed"));
     }
 
     /**
@@ -114,14 +112,10 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @Override
     public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos firePos) {
         if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
-
-            // Play sound effect
             world.playSound(player, firePos, SoundEvents.FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
 
-            // Set the block to fire
             world.setBlock(firePos, Blocks.FIRE.getBlock().defaultBlockState(), burnTicks);
 
-            // Damage the tool item
             if (player != null) {
                 player.getItemInHand(player.getUsedItemHand()).hurtAndBreak(durabilityUse, player, (p) -> {
                     p.broadcastBreakEvent(player.getUsedItemHand());
@@ -138,11 +132,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
      * Handles the entity hit event (Left Click on Entity).
      */
     @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        // 1. Call the interface method to apply the custom effect
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
         igniteEntity(target, stack);
-
-        // Return true to indicate the attack was successful
         return true;
     }
 
@@ -153,9 +144,9 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
-        if (world.isClientSide) {
+        if (world.isClientSide)
             return ActionResultType.SUCCESS;
-        }
+
         PlayerEntity player = context.getPlayer();
         if (player == null)
             return super.useOn(context);
@@ -180,9 +171,9 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
 
         BlockPos facePos = clickedPos.relative(face);
 
-        if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
-            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
-            setDamage(stack, getDamage(stack) + 2);
+        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+            world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
 
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);

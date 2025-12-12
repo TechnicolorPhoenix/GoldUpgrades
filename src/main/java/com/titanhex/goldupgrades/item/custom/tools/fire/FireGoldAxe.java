@@ -49,7 +49,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
     @Override
     public void inventoryTick(@NotNull ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
+        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = getLightLevel(stack);
 
@@ -74,19 +74,18 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
         ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
-        boolean shouldRefresh = false;
+        boolean environmentChanged = false;
 
         if (isEquipped && attackInstance != null)
             if (attackInstance.getModifier(SUN_DAMAGE_MODIFIER) != null)
-
-                shouldRefresh = oldDimension != currentDimension || oldWeather != currentWeather || currentIsDay != oldIsDay;
+                environmentChanged = oldDimension != currentDimension || oldWeather != currentWeather || currentIsDay != oldIsDay;
 
         if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
             setWeather(stack, currentWeather);
             setDimension(stack, currentDimension);
         }
 
-        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
+        if (environmentChanged && holdingEntity instanceof LivingEntity) {
 
             Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
 
@@ -108,10 +107,9 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getLightLevel(stack) * 0.01F;
+        float bonusSpeed = getLightLevel(stack);
 
         if (baseSpeed > 1.0F) {
-
             float speedMultiplier = 1.0F + bonusSpeed;
 
             return baseSpeed * speedMultiplier;
@@ -178,7 +176,6 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         return true;
     }
 
-    // --- Attribute Modifiers (Reads state from NBT) ---
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
@@ -186,7 +183,6 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         boolean isDay = isDay(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            // Check the synchronized NBT state
             if (getWeather(stack) == Weather.CLEAR || getDimension(stack) == DimensionType.NETHER) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
@@ -208,11 +204,13 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
         int lightLevel = getLightLevel(stack);
 
-        if (getDimension(stack) != DimensionType.NETHER && getWeather(stack) != Weather.CLEAR) {
-            tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
-        }
+        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
 
-        tooltip.add(new StringTextComponent((lightLevel > 0 ? "§9" : "§c") + "+" + lightLevel + "% Harvest Speed"));
+        if (getDimension(stack) != DimensionType.NETHER && getWeather(stack) != Weather.CLEAR)
+            tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
+
+        if (bonus != 0)
+            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
     }
 
     /**
@@ -230,7 +228,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
             return super.useOn(context);
 
         Direction face = context.getClickedFace();
-        ItemStack stack = context.getItemInHand(); // Get the ItemStack directly from the context
+        ItemStack stack = context.getItemInHand();
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
@@ -249,9 +247,9 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
         BlockPos facePos = clickedPos.relative(face);
 
-        if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
-            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
-            setDamage(stack, getDamage(stack) + 2);
+        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+            world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
 
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);

@@ -48,8 +48,8 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = getLightLevel(stack);
 
@@ -106,7 +106,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         float bonusSpeed = getLightLevel(stack) * 0.01F;
 
@@ -145,7 +145,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
         int lightLevel = getLightLevel(stack);
@@ -206,7 +206,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
      * Handles the entity hit event (Left Click on Entity).
      */
     @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
         // 1. Call the interface method to apply the custom effect
         igniteEntity(target, stack);
 
@@ -222,7 +222,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
         if (world.isClientSide) {
-            return ActionResultType.SUCCESS;
+            return super.useOn(context);
         }
         PlayerEntity player = context.getPlayer();
         if (player == null)
@@ -248,9 +248,9 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
 
         BlockPos facePos = clickedPos.relative(face);
 
-        if (world.getBlockState(facePos).getBlock() == Blocks.FIRE) {
-            world.setBlock(facePos, Blocks.AIR.getBlock().defaultBlockState(), 11);
-            setDamage(stack, getDamage(stack) + 2);
+        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+            world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
+            setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
 
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
