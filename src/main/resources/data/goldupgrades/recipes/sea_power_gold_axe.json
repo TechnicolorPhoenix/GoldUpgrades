@@ -1,0 +1,21 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "weather": "RAINING",
+  "ingredients": [
+    {
+      "item": "goldupgrades:sea_upgraded_gold_axe"
+    },
+    {
+      "item": "minecraft:heart_of_the_sea"
+    },
+    {
+      "item": "minecraft:heart_of_the_sea"
+    },
+    {
+      "item": "minecraft:heart_of_the_sea"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:sea_power_gold_axe"
+  }
+}

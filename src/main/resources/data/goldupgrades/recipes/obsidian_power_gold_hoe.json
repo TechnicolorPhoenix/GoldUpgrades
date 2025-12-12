@@ -1,0 +1,19 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+    "min_time": 13000,
+    "max_time": 0,
+ "ingredients": [
+    {
+      "item": "goldupgrades:obsidian_upgraded_gold_hoe"
+    },
+    {
+      "item": "minecraft:gilded_blackstone"
+    },
+    {
+      "item": "minecraft:gilded_blackstone"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:obsidian_powerd_gold_hoe"
+  }
+}
