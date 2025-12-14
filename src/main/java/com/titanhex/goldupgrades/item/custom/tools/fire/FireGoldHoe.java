@@ -2,18 +2,20 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -50,6 +52,13 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         if (world.isClientSide)
             return;
 
+        if (!(holdingEntity instanceof LivingEntity))
+            return;
+
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
+
         DimensionType oldDimension = getDimension(stack);
         Weather oldWeather = getWeather(stack);
         boolean oldIsDay = isDay(stack);
@@ -63,20 +72,41 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
             setDimension(stack, currentDimension);
             setIsDay(stack, currentIsDay);
         }
+
+        int elementalHoeLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack);
+
+        if (isEquipped && elementalHoeLevel > 0 && (isClear(stack) || inValidDimension(stack))) {
+            if (livingEntity.tickCount % 60 == 0)
+                stack.hurtAndBreak(1, livingEntity,
+                        (e) -> {
+                            e.broadcastBreakEvent(EquipmentSlotType.OFFHAND);
+                        }
+                );
+            livingEntity.addEffect(new EffectInstance(
+                    Effects.FIRE_RESISTANCE,
+                    20,
+                    elementalHoeLevel-1,
+                    false,
+                    false
+            ));
+        }
+    }
+
+    private float calculateBonusDestroySpeed(ItemStack stack) {
+        int lightLevel = getLightLevel(stack);
+
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
     }
 
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float lightLevel = getLightLevel(stack);
-
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        float bonusSpeed = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + bonus;
+            float speedMultiplier = 1.0F + bonusSpeed;
 
-            return baseSpeed * speedMultiplier;
-        }
+            return baseSpeed * speedMultiplier;        }
 
         return baseSpeed;
     }
@@ -87,10 +117,15 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int lightLevel = getLightLevel(stack);
 
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        boolean hasElementalHoeEnchantment = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack) > 0;
+
+        float bonus = calculateBonusDestroySpeed(stack)*100;
 
         if (lightLevel > 7)
             tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
+        if (hasElementalHoeEnchantment) {
+            tooltip.add(new StringTextComponent("§eHold for Fire Resistance, use for Strength"));
+        }
     }
 
     /**
@@ -139,6 +174,28 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
         igniteEntity(target, stack);
         return true;
+    }
+
+    @NotNull
+    @Override
+    public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
+        ItemStack stack = player.getItemInHand(hand); // Get the ItemStack directly from the context
+        int elementalHoeLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack);
+        if (elementalHoeLevel > 0) {
+            player.addEffect(new EffectInstance(
+               Effects.DAMAGE_BOOST,
+               30*20,
+               elementalHoeLevel,
+               true,
+               true
+            ));
+
+            stack.hurtAndBreak(15, player, (e) -> {e.broadcastBreakEvent(hand);});
+
+            return ActionResult.consume(stack);
+        }
+
+        return super.use(world, player, hand);
     }
 
     /**

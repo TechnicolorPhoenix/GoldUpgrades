@@ -69,11 +69,16 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
+    private float calculateBonusDestroySpeed(ItemStack stack) {
+        int lightLevel = getLightLevel(stack);
+
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
+    }
+
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float lightLevel = getLightLevel(stack);
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        float bonus = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
             float speedMultiplier = 1.0F + bonus;

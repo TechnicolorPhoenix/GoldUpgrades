@@ -68,11 +68,16 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
+    private float calculateBonusDestroySpeed(ItemStack stack) {
+        int lightLevel = getLightLevel(stack);
+
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
+    }
+
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float lightLevel = getLightLevel(stack);
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        float bonus = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
             float speedMultiplier = 1.0F + bonus;
@@ -89,7 +94,7 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int lightLevel = getLightLevel(stack);
 
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        float bonus = calculateBonusDestroySpeed(stack) * 100;
 
         if (lightLevel > 7)
             tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed ."));

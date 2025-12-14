@@ -26,7 +26,6 @@ public class FallDamageHandler {
 
         if (totalReduction > 0.0f) {
             float newDamageMultiplier = (event.getDamageMultiplier() - totalReduction);
-            GoldUpgrades.LOGGER.debug("FALL REDUCTION: {}, FALL DISTANCE: {}, NEW REDUCTION: {}, NEW DISTANCE: {}", totalReduction, event.getDistance(), newDamageMultiplier, event.getDistance() * newDamageMultiplier);
 
             event.setDistance(event.getDistance() * newDamageMultiplier);
         }

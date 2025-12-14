@@ -48,7 +48,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = getLightLevel(stack);
@@ -104,10 +104,16 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
+    private float calculateBonusDestroySpeed(ItemStack stack) {
+        int lightLevel = getLightLevel(stack);
+
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
+    }
+
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getLightLevel(stack);
+        float bonusSpeed = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
             float speedMultiplier = 1.0F + bonusSpeed;
@@ -170,7 +176,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
      * Handles the entity hit event (Left Click on Entity).
      */
     @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
         igniteEntity(target, stack);
 
         return true;
@@ -183,11 +189,11 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         boolean isDay = isDay(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            if (getWeather(stack) == Weather.CLEAR || inValidDimension(stack)) {
+            if (isClear(stack) || inValidDimension(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        isDay ? 2 : 1,
+                        (isDay ? 2 : 1) + (isClear(stack) ? getWeatherBoosterEnchantment(stack) : 0),
                         AttributeModifier.Operation.ADDITION
                 ));
             }
@@ -199,14 +205,12 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        int lightLevel = getLightLevel(stack);
+        float bonus = calculateBonusDestroySpeed(stack)*100;
 
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
-
-        if (!inValidDimension(stack, worldIn) && getWeather(stack) != Weather.CLEAR)
+        if (!inValidDimension(stack, worldIn) && !isClear(stack))
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
 
         if (bonus != 0)

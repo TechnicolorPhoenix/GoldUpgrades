@@ -6,6 +6,8 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface IDimensionInfluencedItem {
     String NBT_DIMENSION = "ItemDimension";
@@ -19,8 +21,10 @@ public interface IDimensionInfluencedItem {
 
     DimensionType primaryDimension();
 
-    default boolean inValidDimension(ItemStack stack, World world) {
-        return hasEnchantment(stack) || DimensionType.getCurrentDimension(world) == primaryDimension();
+    default boolean inValidDimension(ItemStack stack, @Nullable World world) {
+        if (hasEnchantment(stack)) return true;
+        if (world == null) return false;
+        return DimensionType.getCurrentDimension(world) == primaryDimension();
     }
     default boolean inValidDimension(ItemStack stack) {
         return hasEnchantment(stack) || getDimension(stack) == primaryDimension();

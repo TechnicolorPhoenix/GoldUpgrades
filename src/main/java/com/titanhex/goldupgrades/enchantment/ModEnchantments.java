@@ -44,6 +44,10 @@ public class ModEnchantments {
             "rainless_enchantment", WaterRainlessEnchantment::new
     );
 
+    public static final RegistryObject<Enchantment> ELEMENTAL_HOE_ENCHANTMENT = ENCHANTMENTS.register(
+            "elemental_hoe_enchantment", ElementalHoeEnchantment::new
+    );
+
     public static void register(IEventBus eventBus) {
         ENCHANTMENTS.register(eventBus);
     }

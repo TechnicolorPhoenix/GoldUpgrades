@@ -129,6 +129,8 @@
   "enchantment.goldupgrades.diver_enchantment.description": "While under water, the item takes less damage.",
   "enchantment.goldupgrades.rainless_enchantment": "Rainless",
   "enchantment.goldupgrades.rainless_enchantment.description": "The rain bonus always applies, despite weather.",
+  "enchantment.goldupgrades.elemental_hoe_enchantment": "Elemental Hoe",
+  "enchantment.goldupgrades.elemental_hoe_enchantment.description": "Gives the hoe special effects when held or used.",
 
   "itemGroup.goldBaseArmorTab": "Gold Base Equipment",
   "itemGroup.goldUpgradedArmorTab": "Gold Upgraded Equipment",

@@ -36,7 +36,7 @@ public interface IWeatherInfluencedItem {
     }
 
     default boolean isRain(ItemStack stack) {
-        return getWeather(stack) == Weather.RAINING;
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WATER_RAINLESS_ENCHANTMENT.get(), stack) > 0 || getWeather(stack) == Weather.RAINING;
     }
     default boolean isRain(ItemStack stack, World world) {
         if (world == null) {

@@ -105,10 +105,16 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
+    private float calculateBonusDestroySpeed(ItemStack stack) {
+        int lightLevel = getLightLevel(stack);
+
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
+    }
+
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getLightLevel(stack) * 0.01F;
+        float bonusSpeed = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
 
@@ -120,7 +126,6 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         return baseSpeed;
     }
 
-    // --- Attribute Modifiers (Reads state from NBT) ---
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
@@ -128,7 +133,6 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         boolean isDay = isDay(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            // Check the synchronized NBT state
             if (getWeather(stack) == Weather.CLEAR || inValidDimension(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
@@ -142,14 +146,13 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         return builder.build();
    }
 
-    // --- Tooltip Display (Reads state from NBT) ---
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int lightLevel = getLightLevel(stack);
 
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        float bonus = calculateBonusDestroySpeed(stack)*100;
 
         if (!inValidDimension(stack, worldIn) && getWeather(stack) != Weather.CLEAR) {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
