@@ -1,6 +1,5 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
-import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.IJumpBoostArmor;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
@@ -68,7 +67,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
         boolean isThundering = isThundering(stack, worldIn);
         boolean flightRequirementsMet = getFlightRequirement(stack);
         int fallDamageReduction = (int) (getFallDamageReductionFraction()*100);
-        int weatherBoosterLevel = getWeatherBoosterEnchantment(stack);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         if (isThundering && flightRequirementsMet)
             if (weatherBoosterLevel > 0) {
@@ -117,7 +116,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
 
     @Override
     public boolean elytraFlightTick(ItemStack stack, LivingEntity entity, int flightTicks) {
-        if (!entity.level.isClientSide && (flightTicks + 1) % (BASE_TICK + getWeatherBoosterEnchantment(stack)*TICK_INCREASE_PER_LEVEL) == 0) {
+        if (!entity.level.isClientSide && (flightTicks + 1) % (BASE_TICK + getWeatherBoosterEnchantmentLevel(stack)*TICK_INCREASE_PER_LEVEL) == 0) {
             stack.hurtAndBreak(1, entity, e -> e.broadcastBreakEvent(this.slot));
         }
         return true;

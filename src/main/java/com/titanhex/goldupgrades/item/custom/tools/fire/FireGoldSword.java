@@ -108,7 +108,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     private float calculateBonusDestroySpeed(ItemStack stack) {
         int lightLevel = getLightLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantmentLevel(stack))/100;
     }
 
     @Override

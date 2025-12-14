@@ -107,7 +107,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     private float calculateBonusDestroySpeed(ItemStack stack) {
         int lightLevel = getLightLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantment(stack))/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantmentLevel(stack))/100;
     }
 
     @Override
@@ -193,7 +193,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        (isDay ? 2 : 1) + (isClear(stack) ? getWeatherBoosterEnchantment(stack) : 0),
+                        (isDay ? 2 : 1) + (isClear(stack) ? getWeatherBoosterEnchantmentLevel(stack) : 0),
                         AttributeModifier.Operation.ADDITION
                 ));
             }

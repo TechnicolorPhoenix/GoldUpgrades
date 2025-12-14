@@ -1,7 +1,7 @@
 package com.titanhex.goldupgrades.item.custom.tools.sea;
 
-import com.google.gson.internal.bind.JsonTreeReader;
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -115,8 +116,12 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
-        float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
+        boolean weatherIsRain = isRain(stack);
+        int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
+        float bonusSpeed = getIsSubmerged(stack) ? 0.15F : getIsInRain(stack) ? 0.15F : 0F;
+
+        if (weatherIsRain)
+            bonusSpeed += 0.03F * weatherBoostLevel;
 
         if (baseSpeed > 1.0F) {
 
@@ -149,7 +154,8 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
 
             if (hitState.getBlock() == Blocks.WATER ||
                     hitState.getBlock() == Blocks.ICE ||
-                    hitState.getBlock() == Blocks.PACKED_ICE) {
+                    hitState.getBlock() == Blocks.PACKED_ICE ||
+                    hitState.getBlock() == Blocks.BLUE_ICE) {
 
                 return ActionResult.pass(stack);
             }
@@ -205,6 +211,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         );
 
         int toolLevel = getItemLevel();
+        int elementalHoeLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack);
 
         if (state.getBlock() == Blocks.SNOW) {
             world.setBlock(pos, Blocks.ICE.defaultBlockState(), 11);

@@ -20,7 +20,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -65,7 +64,7 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER[this.slot.getIndex()],
                         "Armor modifier",
-                        this.damageBonus + (double) getWeatherBoosterEnchantment(stack)/2,
+                        this.damageBonus + (double) getWeatherBoosterEnchantmentLevel(stack)/2,
                         AttributeModifier.Operation.ADDITION
                 ));
             }

@@ -2,7 +2,6 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.google.gson.internal.bind.JsonTreeReader;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
 import com.titanhex.goldupgrades.item.custom.inter.IArmorCooldown;
@@ -20,7 +19,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
@@ -160,7 +158,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
         if (currentWeather != lastWeather) {
             if (currentWeather == Weather.RAINING && lastWeather == Weather.CLEAR) {
-                float weatherBoosterAmount = getWeatherBoosterEnchantment(stack);
+                float weatherBoosterAmount = getWeatherBoosterEnchantmentLevel(stack);
                 livingEntity.setAbsorptionAmount(
                         Math.min(
                                 16F + weatherBoosterAmount,
