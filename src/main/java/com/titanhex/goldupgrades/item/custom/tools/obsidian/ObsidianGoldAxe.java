@@ -50,7 +50,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
 
     @Override
     public int getItemEnchantability(ItemStack stack) {
-        return super.getItemEnchantability(stack) + getMoonPhaseValue(getMoonPhase(stack));
+        return super.getItemEnchantability(stack) + getMoonPhaseValue(stack);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
-        float phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        float phaseValue = getMoonPhaseValue(stack);
         int itemLevel = this.getItemLevel();
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
@@ -147,7 +147,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        int phaseValue = getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
         boolean isNight = isNight(stack, worldIn);
 
         if (phaseValue < 0)
@@ -218,5 +218,10 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public boolean isDayInfluenced() {
+        return false;
     }
 }

@@ -17,7 +17,7 @@ public interface IWeatherInfluencedItem {
     }
 
     static int getEnchantmentLevel(ItemStack stack) {
-        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WEATHER_ENCHANTMENT.get(), stack);
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WEATHER_BOOSTER_ENCHANTMENT.get(), stack);
     }
 
     static boolean hasEnchantment(ItemStack stack) {
@@ -55,5 +55,12 @@ public interface IWeatherInfluencedItem {
         } else {
             return Weather.getCurrentWeather(world) == Weather.THUNDERING;
         }
+    }
+
+    default int getWeatherBoosterEnchantment(ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WEATHER_BOOSTER_ENCHANTMENT.get(), stack);
+    }
+    default boolean hasWeatherBoosterEnchantment(ItemStack stack) {
+        return getWeatherBoosterEnchantment(stack) > 0;
     }
 }

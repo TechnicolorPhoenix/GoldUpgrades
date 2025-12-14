@@ -129,7 +129,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             // Check the synchronized NBT state
-            if (getWeather(stack) == Weather.CLEAR || getDimension(stack) == DimensionType.NETHER) {
+            if (getWeather(stack) == Weather.CLEAR || inValidDimension(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
@@ -147,15 +147,16 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-
         int lightLevel = getLightLevel(stack);
 
-        if (getDimension(stack) != DimensionType.NETHER && getWeather(stack) != Weather.CLEAR) {
+        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+
+        if (!inValidDimension(stack, worldIn) && getWeather(stack) != Weather.CLEAR) {
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
         }
 
-        if (lightLevel > 0)
-            tooltip.add(new StringTextComponent("§9+" + lightLevel + "% Harvest Speed"));
+        if (lightLevel > 7)
+            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
     }
 
     /**
@@ -233,6 +234,8 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
+        Block clickedBlock = clickedState.getBlock();
+
         if (clickedState.is(BlockTags.LOGS)) {
             world.removeBlock(clickedPos, false);
 
@@ -247,8 +250,9 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         }
 
         BlockPos facePos = clickedPos.relative(face);
+        Block faceBlock = world.getBlockState(facePos).getBlock();
 
-        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+        if (clickedBlock == Blocks.FIRE) {
             world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
             setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
@@ -256,7 +260,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
             return ActionResultType.SUCCESS;
-        } else if (clickedState.getBlock() == Blocks.TORCH || world.getBlockState(facePos).getBlock() == Blocks.TORCH) {
+        } else if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {
             return ActionResultType.PASS;
         } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
             if (context.getClickedFace() == Direction.UP) {
@@ -275,5 +279,10 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public DimensionType primaryDimension() {
+        return DimensionType.NETHER;
     }
 }

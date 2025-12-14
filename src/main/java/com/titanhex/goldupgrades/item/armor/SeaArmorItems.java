@@ -35,7 +35,7 @@ public class SeaArmorItems {
     private static Multimap<Attribute, Double> createUpgradedArmorBonuses() {
         Multimap<Attribute, Double> bonuses = HashMultimap.create();
         bonuses.put(Attributes.LUCK, 0.5D);
-        bonuses.put(Attributes.ATTACK_SPEED, 3.00D);
+        bonuses.put(Attributes.ATTACK_SPEED, 0.30D);
         return bonuses;
     }
     private static Map<Effect, Integer> createPowerArmorBonuses() {

@@ -183,7 +183,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         boolean isDay = isDay(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            if (getWeather(stack) == Weather.CLEAR || getDimension(stack) == DimensionType.NETHER) {
+            if (getWeather(stack) == Weather.CLEAR || inValidDimension(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
@@ -206,7 +206,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
         float bonus = lightLevel > 7 ? 0.15F : 0.00F;
 
-        if (getDimension(stack) != DimensionType.NETHER && getWeather(stack) != Weather.CLEAR)
+        if (!inValidDimension(stack, worldIn) && getWeather(stack) != Weather.CLEAR)
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
 
         if (bonus != 0)
@@ -232,6 +232,8 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
+        Block clickedBlock = world.getBlockState(clickedPos).getBlock();
+
         if (clickedState.is(BlockTags.LOGS)) {
             world.removeBlock(clickedPos, false);
 
@@ -246,8 +248,9 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         }
 
         BlockPos facePos = clickedPos.relative(face);
+        Block faceBlock = world.getBlockState(facePos).getBlock();
 
-        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+        if (clickedBlock == Blocks.FIRE) {
             world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
             setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
@@ -255,7 +258,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
             return ActionResultType.SUCCESS;
-        } else if (clickedState.getBlock() == Blocks.TORCH || world.getBlockState(facePos).getBlock() == Blocks.TORCH) {
+        } else if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {
             return ActionResultType.PASS;
         } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
             if (context.getClickedFace() == Direction.UP) {
@@ -267,12 +270,17 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
             } else
                 return ActionResultType.PASS;
 
-            stack.hurtAndBreak(5, player, (e) -> e.broadcastBreakEvent(context.getHand()));
+            stack.hurtAndBreak(8, player, (e) -> e.broadcastBreakEvent(context.getHand()));
             player.giveExperiencePoints(1);
 
             return ActionResultType.SUCCESS;
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public DimensionType primaryDimension() {
+        return DimensionType.NETHER;
     }
 }

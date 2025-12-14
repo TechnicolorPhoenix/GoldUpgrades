@@ -100,7 +100,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
 
     @Override
     public int getItemEnchantability(ItemStack stack) {
-        return super.getItemEnchantability(stack) + getMoonPhaseValue(getMoonPhase(stack));
+        return super.getItemEnchantability(stack) + getMoonPhaseValue(stack);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         MoonPhase moonPhase = getMoonPhase(stack);
         int itemLevel = getItemLevel();
-        int phaseValue = getMoonPhaseValue(moonPhase);
+        int phaseValue = getMoonPhaseValue(stack, moonPhase);
 
         if (phaseValue < 0)
             tooltip.add(new StringTextComponent("§eEnchantment Level Influenced by Moon."));
@@ -167,5 +167,10 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
             nbt.putInt(NBT_ARMOR_TIMER_KEY, (20*60) - totalSetLevel*4);
         } else
             nbt.putInt(NBT_ARMOR_TIMER_KEY, timer - 1);
+    }
+
+    @Override
+    public boolean isDayInfluenced() {
+        return false;
     }
 }

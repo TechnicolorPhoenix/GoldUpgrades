@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.custom.inter.IArmorCooldown;
 import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IDimensionInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
@@ -31,12 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, IDimensionInfluencedItem, IDayInfluencedItem {
+public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, IDimensionInfluencedItem, IDayInfluencedItem, IArmorCooldown {
     protected float recoverAmount;
     protected float damageBonus;
     protected int perTickRecoverSpeed;
-
-    private static final String NBT_ARMOR_TIMER_KEY = "ArmorTimer";
 
     private static final UUID[] SUN_DAMAGE_MODIFIER = new UUID[]{
             UUID.randomUUID(), // BOOTS (Existing)
@@ -58,14 +57,14 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
         if (equipmentSlot == this.slot) {
-            boolean inNether = getDimension(stack) == DimensionType.NETHER;
-            boolean inClear = getWeather(stack) == Weather.CLEAR;
+            boolean inNether = inValidDimension(stack);
+            boolean inClear = isClear(stack);
 
             if (inClear || inNether) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER[this.slot.getIndex()],
                         "Armor modifier",
-                        this.damageBonus,
+                        this.damageBonus + (double) getWeatherBoosterEnchantment(stack)/2,
                         AttributeModifier.Operation.ADDITION
                 ));
             }
@@ -79,7 +78,7 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
     public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        boolean inNether = getDimension(stack) == DimensionType.NETHER;
+        boolean inNether = inValidDimension(stack, worldIn);
         boolean isDay = isDay(stack);
         boolean inClear = getWeather(stack) == Weather.CLEAR;
         boolean isDamageBonusActive = inClear || inNether;
@@ -150,16 +149,20 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
         if (world.isClientSide)
             return;
 
-        CompoundNBT nbt = stack.getOrCreateTag();
-        int timer = nbt.getInt(NBT_ARMOR_TIMER_KEY);
-
+        int timer = getArmorCooldown(stack);
         if (timer <= 0) {
             if (isDay(stack)) {
                 player.heal(this.recoverAmount);
             }
 
-            nbt.putInt(NBT_ARMOR_TIMER_KEY, this.perTickRecoverSpeed);
+            setArmorCooldown(stack, this.perTickRecoverSpeed);
         } else {
-            nbt.putInt(NBT_ARMOR_TIMER_KEY, timer - 1);
-        }    }
+            reduceArmorCooldown(stack);
+        }
+    }
+
+    @Override
+    public DimensionType primaryDimension() {
+        return DimensionType.NETHER;
+    }
 }

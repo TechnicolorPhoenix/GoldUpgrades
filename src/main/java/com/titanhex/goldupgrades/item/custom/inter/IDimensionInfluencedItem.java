@@ -1,10 +1,11 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
 import com.titanhex.goldupgrades.data.DimensionType;
-import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 public interface IDimensionInfluencedItem {
     String NBT_DIMENSION = "ItemDimension";
@@ -16,8 +17,17 @@ public interface IDimensionInfluencedItem {
         stack.getOrCreateTag().putString(NBT_DIMENSION, value.name());
     }
 
+    DimensionType primaryDimension();
+
+    default boolean inValidDimension(ItemStack stack, World world) {
+        return hasEnchantment(stack) || DimensionType.getCurrentDimension(world) == primaryDimension();
+    }
+    default boolean inValidDimension(ItemStack stack) {
+        return hasEnchantment(stack) || getDimension(stack) == primaryDimension();
+    }
+
     static int getEnchantmentLevel(ItemStack stack) {
-        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.DAY_AND_NIGHT_ENCHANTMENT.get(), stack);
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.DIMENSION_MARAUDER_ENCHANTMENT.get(), stack);
     }
 
     static boolean hasEnchantment(ItemStack stack) {

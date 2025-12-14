@@ -72,10 +72,11 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getLightLevel(stack) * 0.01F;
+        float lightLevel = getLightLevel(stack);
+        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + bonusSpeed;
+            float speedMultiplier = 1.0F + bonus;
 
             return baseSpeed * speedMultiplier;
         }
@@ -88,10 +89,11 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int bonusSpeed = getLightLevel(stack);
+        int lightLevel = getLightLevel(stack);
+        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
 
-        if (bonusSpeed > 0)
-            tooltip.add(new StringTextComponent("§9+" + bonusSpeed + "% Harvest Speed ."));
+        if (lightLevel > 7)
+            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed ."));
     }
 
     /**
@@ -173,6 +175,8 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
 
+        Block clickedBlock = clickedState.getBlock();
+
         if (clickedState.is(BlockTags.LOGS)) {
             world.removeBlock(clickedPos, false);
 
@@ -187,8 +191,9 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
         }
 
         BlockPos facePos = clickedPos.relative(face);
+        Block faceBlock = world.getBlockState(facePos).getBlock();
 
-        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+        if (clickedBlock == Blocks.FIRE) {
             world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
             setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
@@ -196,7 +201,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
             return ActionResultType.SUCCESS;
-        } else if (clickedState.getBlock() == Blocks.TORCH || world.getBlockState(facePos).getBlock() == Blocks.TORCH) {
+        } else if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {
             return ActionResultType.PASS;
         } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
             if (context.getClickedFace() == Direction.UP) {
@@ -215,5 +220,10 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public DimensionType primaryDimension() {
+        return DimensionType.NETHER;
     }
 }

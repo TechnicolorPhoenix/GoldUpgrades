@@ -68,10 +68,12 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = getLightLevel(stack) * 0.01F;
+        float lightLevel = getLightLevel(stack);
+
+        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + bonusSpeed;
+            float speedMultiplier = 1.0F + bonus;
 
             return baseSpeed * speedMultiplier;
         }
@@ -83,10 +85,12 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int bonusSpeed = getLightLevel(stack);
+        int lightLevel = getLightLevel(stack);
 
-        if (bonusSpeed > 0)
-            tooltip.add(new StringTextComponent("§9+" + bonusSpeed + "% Harvest Speed"));
+        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+
+        if (lightLevel > 7)
+            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
     }
 
     /**
@@ -155,6 +159,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         ItemStack stack = context.getItemInHand(); // Get the ItemStack directly from the context
         BlockPos clickedPos = context.getClickedPos();
         BlockState clickedState = world.getBlockState(clickedPos);
+        Block clickedBlock = clickedState.getBlock();
 
         if (clickedState.is(BlockTags.LOGS)) {
             world.removeBlock(clickedPos, false);
@@ -170,8 +175,9 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         }
 
         BlockPos facePos = clickedPos.relative(face);
+        Block faceBlock = world.getBlockState(facePos).getBlock();
 
-        if (world.getBlockState(clickedPos).getBlock() == Blocks.FIRE) {
+        if (clickedBlock == Blocks.FIRE) {
             world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
             setDamage(stack, getDamage(stack) - 2);
             player.giveExperiencePoints(1);
@@ -179,7 +185,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
             world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
 
             return ActionResultType.SUCCESS;
-        } else if (clickedState.getBlock() == Blocks.TORCH || world.getBlockState(facePos).getBlock() == Blocks.TORCH) {
+        } else if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {
             return ActionResultType.PASS;
         } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
             if (context.getClickedFace() == Direction.UP) {
@@ -198,5 +204,10 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public DimensionType primaryDimension() {
+        return DimensionType.NETHER;
     }
 }

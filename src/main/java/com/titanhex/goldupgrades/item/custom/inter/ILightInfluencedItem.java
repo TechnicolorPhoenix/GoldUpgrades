@@ -6,8 +6,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.Random;
-
 public interface ILightInfluencedItem {
     String NBT_LIGHT_LEVEL = "ItemLightLevel";
 
@@ -21,16 +19,34 @@ public interface ILightInfluencedItem {
         if (world != null) {
             long time = world.getDayTime() % 24000L;
             boolean isNight = time > 13000L && time < 23000L;
-            return world.getRawBrightness(pos, isNight ? hasEnchantment(stack) ? 0 : 15 : 0);
+            int lightLevel;
+            int sunShift = getSunShifterEnchantmentLevel(stack);
+            if (isDayInfluenced()) {
+                lightLevel = world.getRawBrightness(pos, isNight ? hasMoonlightEnchantment(stack) ? 0 : 15 : 0);
+            } else {
+              lightLevel =  world.getRawBrightness(pos, 0);
+              sunShift *= -1;
+            }
+            return Math.max(0, lightLevel + sunShift);
         } else
             return getLightLevel(stack);
     }
 
-    static int getEnchantmentLevel(ItemStack stack) {
-        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.LIGHT_LEVEL_ENCHANTMENT.get(), stack);
+    static int getMoonlightEnchantmentLevel(ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.MOONLIGHT_ENCHANTMENT.get(), stack);
+    }
+    static boolean hasMoonlightEnchantment(ItemStack stack) {
+        return getMoonlightEnchantmentLevel(stack) > 0;
     }
 
-    static boolean hasEnchantment(ItemStack stack) {
-        return getEnchantmentLevel(stack) > 0;
+    static int getSunShifterEnchantmentLevel(ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.SUN_SHIFTER_ENCHANTMENT.get(), stack);
+    }
+    static boolean hasSunShifterEnchantment(ItemStack stack) {
+        return getSunShifterEnchantmentLevel(stack) > 0;
+    }
+
+    default boolean isDayInfluenced() {
+        return true;
     }
 }

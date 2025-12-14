@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.tools.sea;
 
+import com.google.gson.internal.bind.JsonTreeReader;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
@@ -10,6 +11,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
@@ -33,9 +35,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.function.Consumer;
 
 public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem
 {
+
+    private static final Random RANDOM = new Random();
 
     /**
      * Constructor for the AuraPickaxe.
@@ -95,6 +101,15 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
+    }
+
+    @Override
+    public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
+        if (getIsSubmerged(stack) && hasWaterDiverEnchantment(stack)){
+            int lowestValue = RANDOM.nextInt(2);
+            amount = Math.max(lowestValue, amount - getWaterDiverEnchantmentLevel(stack));
+        }
+        return super.damageItem(stack, amount, entity, onBroken);
     }
 
     @Override

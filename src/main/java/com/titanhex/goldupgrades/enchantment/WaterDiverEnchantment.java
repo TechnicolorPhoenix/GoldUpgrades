@@ -1,20 +1,26 @@
 package com.titanhex.goldupgrades.enchantment;
 
 import com.titanhex.goldupgrades.helper.ItemHelper;
+import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentType;
 import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class MoonPhaseEnchantment extends Enchantment {
+public class WaterDiverEnchantment extends Enchantment {
 
-    protected MoonPhaseEnchantment() {
+    protected WaterDiverEnchantment() {
         super(Rarity.UNCOMMON, EnchantmentType.BREAKABLE, ItemHelper.ALL_SLOTS);
     }
 
     @Override
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
-        return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof IWeatherInfluencedItem;
+        return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof IWaterInfluencedItem;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return 4;
     }
 }

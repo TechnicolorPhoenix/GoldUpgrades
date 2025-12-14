@@ -15,16 +15,33 @@ public class ModEnchantments {
             "day_and_night_enchantment", com.titanhex.goldupgrades.enchantment.DayNightEnchantment::new
     );
 
-    public static final RegistryObject<Enchantment> WEATHER_ENCHANTMENT = ENCHANTMENTS.register(
-            "weather_enchantment", WeatherableEnchantment::new
+    public static final RegistryObject<Enchantment> WEATHER_BOOSTER_ENCHANTMENT = ENCHANTMENTS.register(
+            "weather_booster_enchantment", WeatherBoosterEnchantment::new
     );
 
-    public static final RegistryObject<Enchantment> LIGHT_LEVEL_ENCHANTMENT = ENCHANTMENTS.register(
+    public static final RegistryObject<Enchantment> MOONLIGHT_ENCHANTMENT = ENCHANTMENTS.register(
             "moonlight_enchantment", LightLevelMoonlightEnchantment::new
     );
+    public static final RegistryObject<Enchantment> SUN_SHIFTER_ENCHANTMENT = ENCHANTMENTS.register(
+            "sun_shifter_enchantment", LightSunShifterEnchantment::new
+    );
 
-    public static final RegistryObject<Enchantment> MOON_PHASE_ENCHANTMENT = ENCHANTMENTS.register(
-            "moon_phase_enchantment", MoonPhaseEnchantment::new
+    public static final RegistryObject<Enchantment> MOON_MAXING_ENCHANTMENT = ENCHANTMENTS.register(
+            "moon_maxing_enchantment", MoonMaxingEnchantment::new
+    );
+    public static final RegistryObject<Enchantment> MOON_BOOST_ENCHANTMENT = ENCHANTMENTS.register(
+            "moon_boost_enchantment", MoonBoostEnchantment::new
+    );
+
+    public static final RegistryObject<Enchantment> DIMENSION_MARAUDER_ENCHANTMENT = ENCHANTMENTS.register(
+            "dimension_marauder_enchantment", DimensionEnchantment::new
+    );
+
+    public static final RegistryObject<Enchantment> WATER_DIVER_ENCHANTMENT = ENCHANTMENTS.register(
+            "diver_enchantment", WaterDiverEnchantment::new
+    );
+    public static final RegistryObject<Enchantment> WATER_RAINLESS_ENCHANTMENT = ENCHANTMENTS.register(
+            "rainless_enchantment", WaterRainlessEnchantment::new
     );
 
     public static void register(IEventBus eventBus) {

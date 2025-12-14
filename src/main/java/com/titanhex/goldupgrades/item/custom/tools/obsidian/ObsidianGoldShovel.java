@@ -85,12 +85,12 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
 
     @Override
     public int getItemEnchantability(ItemStack stack) {
-        return super.getItemEnchantability(stack) + getMoonPhaseValue(getMoonPhase(stack));
+        return super.getItemEnchantability(stack) + getMoonPhaseValue(stack);
     }
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity enemy) {
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack))*(2+getItemLevel());
+        int phaseValue = getMoonPhaseValue(stack)*(2+getItemLevel());
         int chance = RANDOM.nextInt(100)+1;
 
         if (super.hurtEnemy(stack, target, enemy) && chance < phaseValue) {
@@ -115,7 +115,7 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int itemLevel = getItemLevel();
 
-        int phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        int phaseValue = getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
         int poisonChance = phaseValue*(2+itemLevel);
 
         tooltip.add(new StringTextComponent((poisonChance == 0 ? "§c" : "§a" ) + "Poison Chance: " + poisonChance + "%"));
@@ -189,5 +189,10 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public boolean isDayInfluenced() {
+        return false;
     }
 }

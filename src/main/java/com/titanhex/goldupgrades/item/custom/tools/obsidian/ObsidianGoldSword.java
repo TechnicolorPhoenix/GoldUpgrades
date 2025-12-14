@@ -48,7 +48,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
 
     @Override
     public int getItemEnchantability(ItemStack stack) {
-        return super.getItemEnchantability(stack) + getMoonPhaseValue(getMoonPhase(stack));
+        return super.getItemEnchantability(stack) + getMoonPhaseValue(stack);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
         int itemLevel = this.getItemLevel();
-        float phaseValue = getMoonPhaseValue(getMoonPhase(stack));
+        float phaseValue = getMoonPhaseValue(stack);
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             float damage = phaseValue / 4;
@@ -145,7 +145,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int phaseValue = getMoonPhaseValue(MoonPhase.getCurrentMoonPhase(worldIn));
+        int phaseValue = getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
 
         if (getMoonPhase(stack) == MoonPhase.NEW_MOON )
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Due to New Moon)"));
@@ -222,5 +222,10 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
         }
 
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public boolean isDayInfluenced() {
+        return false;
     }
 }

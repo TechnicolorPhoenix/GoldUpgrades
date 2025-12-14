@@ -11,7 +11,9 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
@@ -33,6 +35,8 @@ public class GoldUpgrades
 
     public GoldUpgrades() {
         // Register the setup method for modloading
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GoldUpgradesConfig.COMMON_SPEC, "goldupgrades-common.toml");
+
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         ModRecipeTypes.register(eventBus);

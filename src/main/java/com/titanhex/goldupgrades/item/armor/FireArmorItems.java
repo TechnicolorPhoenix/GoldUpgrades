@@ -1,17 +1,10 @@
 package com.titanhex.goldupgrades.item.armor;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.GoldUpgrades;
-import com.titanhex.goldupgrades.item.ModArmorItems;
 import com.titanhex.goldupgrades.item.ModArmorMaterial;
 import com.titanhex.goldupgrades.item.ModItemGroup;
-import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
 import com.titanhex.goldupgrades.item.custom.armor.FireArmorItem;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Rarity;
 import net.minecraftforge.fml.RegistryObject;

@@ -2,8 +2,10 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.google.gson.internal.bind.JsonTreeReader;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
+import com.titanhex.goldupgrades.item.custom.inter.IArmorCooldown;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
@@ -18,6 +20,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
@@ -30,26 +33,28 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem {
+public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem, IArmorCooldown {
     int drainFactor = 15;
-    int cooldown = 0;
     int itemLevel;
 
     private static final UUID[] WATER_ARMOR_MODIFIER_UUID = new UUID[]{
-            UUID.fromString("6d8b6c38-1456-37c0-9b62-421f421f421d"), // BOOTS (Existing)
-            UUID.fromString("b9a5f1e8-6e7e-40d0-8b6a-9a0f0d2b7c6c"), // LEGGINGS
-            UUID.fromString("730a9e1d-4f5d-4f3b-8c1a-7e0f8b1c4d2e"), // CHESTPLATE
-            UUID.fromString("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d")  // HELMET
+            UUID.randomUUID(), // BOOTS (Existing)
+            UUID.randomUUID(), // LEGGINGS
+            UUID.randomUUID(), // CHESTPLATE
+            UUID.randomUUID()  // HELMET
     };
 
     private static final UUID[] RAIN_SPEED_MODIFIER_UUID = new UUID[]{
-            UUID.fromString("6d7b5d12-6804-45e0-9e62-421f421f421f"), // BOOTS (Existing)
-            UUID.fromString("87e5c942-8356-4c4f-96a9-4672f7d9c02d"), // LEGGINGS
-            UUID.fromString("8c12a02b-9e4a-4e2a-8c5e-8e5f24213d21"), // CHESTPLATE
-            UUID.fromString("1f4a9b5f-50d7-4c3e-a7f4-3d7c5b1b4a2e")  // HELMET
+            UUID.randomUUID(), // BOOTS (Existing)
+            UUID.randomUUID(), // LEGGINGS
+            UUID.randomUUID(), // CHESTPLATE
+            UUID.randomUUID()  // HELMET
     };
+    private Random RANDOM = new Random();
 
     public SeaArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, effects, attributeBonuses, builderIn);
@@ -155,7 +160,13 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
         if (currentWeather != lastWeather) {
             if (currentWeather == Weather.RAINING && lastWeather == Weather.CLEAR) {
-                livingEntity.setAbsorptionAmount(Math.min(16F, livingEntity.getAbsorptionAmount()));
+                float weatherBoosterAmount = getWeatherBoosterEnchantment(stack);
+                livingEntity.setAbsorptionAmount(
+                        Math.min(
+                                16F + weatherBoosterAmount,
+                                livingEntity.getAbsorptionAmount() + weatherBoosterAmount + itemLevel
+                        )
+                );
             }
             setWeather(stack, currentWeather);
         }
@@ -191,23 +202,34 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
         if (world.isClientSide) return;
 
-        if (cooldown > 0) {
-            this.cooldown = Math.max(0, this.cooldown - 1);
-            return;
-        }
-
         if (getSubmerged(stack)) {
+            int timer = getArmorCooldown(stack);
+
+            if (timer > 0) {
+                reduceArmorCooldown(stack);
+                return;
+            }
+
             int currentOxygen = player.getAirSupply();
             int maxOxygen = player.getMaxAirSupply();
             int oxygenDifference = maxOxygen - currentOxygen;
 
             int toRestore = Math.min(oxygenDifference, 30);
 
-            if (!player.isSprinting() && currentOxygen <= 60 && this.cooldown == 0) {
+            if (currentOxygen <= 60 && timer == 0) {
                 stack.hurtAndBreak(toRestore / this.drainFactor, player, (p) -> p.broadcastBreakEvent(stack.getEquipmentSlot()));
                 player.setAirSupply(currentOxygen + toRestore);
-                this.cooldown = 120;
+                setArmorCooldown(stack, 120);
             }
         }
+    }
+
+    @Override
+    public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
+        if (getIsSubmerged(stack) && hasWaterDiverEnchantment(stack)){
+            int lowestValue = RANDOM.nextInt(2);
+            amount = Math.max(lowestValue, amount - getWaterDiverEnchantmentLevel(stack));
+        }
+        return super.damageItem(stack, amount, entity, onBroken);
     }
 }

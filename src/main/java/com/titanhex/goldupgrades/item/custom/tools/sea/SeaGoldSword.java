@@ -2,6 +2,7 @@ package com.titanhex.goldupgrades.item.custom.tools.sea;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.google.gson.internal.bind.JsonTreeReader;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
@@ -39,11 +40,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem
 {
     private static final UUID SEA_DAMAGE_MODIFIER = UUID.randomUUID();
+    private static final Random RANDOM = new Random();
 
     /**
      * Constructor for the AuraPickaxe.
@@ -148,6 +152,15 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
+    }
+
+    @Override
+    public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
+        if (getIsSubmerged(stack) && hasWaterDiverEnchantment(stack)){
+            int lowestValue = RANDOM.nextInt(2);
+            amount = Math.max(lowestValue, amount - getWaterDiverEnchantmentLevel(stack));
+        }
+        return super.damageItem(stack, amount, entity, onBroken);
     }
 
     @Override

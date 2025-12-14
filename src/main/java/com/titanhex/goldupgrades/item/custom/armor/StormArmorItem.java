@@ -26,6 +26,8 @@ import java.util.List;
 public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevelableItem, IWeatherInfluencedItem
 {
     String NBT_FLIGHT_REQUIREMENT_MET = "FlightRequirementMet";
+    int BASE_TICK = 20;
+    int TICK_INCREASE_PER_LEVEL = 5;
 
     public StormArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
@@ -62,13 +64,19 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        int itemLevel = getItemLevel();
         double jumpHeight = getJumpBoostModifier() * 10;
-        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        boolean isThundering = isThundering(stack, worldIn);
         boolean flightRequirementsMet = getFlightRequirement(stack);
         int fallDamageReduction = (int) (getFallDamageReductionFraction()*100);
+        int weatherBoosterLevel = getWeatherBoosterEnchantment(stack);
 
         if (isThundering && flightRequirementsMet)
-            tooltip.add(new StringTextComponent("§eCan Fly"));
+            if (weatherBoosterLevel > 0) {
+                float ratio = (float) (itemLevel * TICK_INCREASE_PER_LEVEL) / BASE_TICK * 100F;
+                tooltip.add(new StringTextComponent("§eCan Fly, Durability Drained " + ratio + "% Slower"));
+            } else
+                tooltip.add(new StringTextComponent("§eCan Fly"));
 
         tooltip.add(new StringTextComponent("§9+" + String.format("%.1f", jumpHeight) + " Jump Boost"));
         tooltip.add(new StringTextComponent("§9" + fallDamageReduction + "% Fall Damage Reduction"));
@@ -105,12 +113,12 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     public boolean canElytraFly(ItemStack stack, LivingEntity entity) {
         boolean setRequirementMet = getTotalSetLevel(entity) > 5;
 
-        return getWeather(stack) == Weather.THUNDERING && setRequirementMet;
+        return isThundering(stack) && setRequirementMet;
     }
 
     @Override
     public boolean elytraFlightTick(ItemStack stack, LivingEntity entity, int flightTicks) {
-        if (!entity.level.isClientSide && (flightTicks + 1) % 20 == 0) {
+        if (!entity.level.isClientSide && (flightTicks + 1) % (BASE_TICK + getWeatherBoosterEnchantment(stack)*TICK_INCREASE_PER_LEVEL) == 0) {
             stack.hurtAndBreak(1, entity, e -> e.broadcastBreakEvent(this.slot));
         }
         return true;
