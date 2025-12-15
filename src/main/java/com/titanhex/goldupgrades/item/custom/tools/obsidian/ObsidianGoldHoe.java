@@ -76,7 +76,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
                         }
                 );
             livingEntity.addEffect(new EffectInstance(
-                    Effects.DIG_SPEED,
+                    Effects.LUCK,
                     duration,
                     elementalHoeLevel-1,
                     false,
@@ -145,7 +145,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
         if (hasElementalHoeEnchantment)
-            tooltip.add(new StringTextComponent("§eHold for Dig Speed, use for Night Vision"));
+            tooltip.add(new StringTextComponent("§eHold for Luck, use for Night Vision"));
 
         if (isNight(stack))
             tooltip.add(new StringTextComponent("§9+15% Harvest Speed."));
@@ -170,8 +170,8 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
         if (elementalHoeLevel > 0) {
             player.addEffect(new EffectInstance(
                     Effects.NIGHT_VISION,
-                    30*20*2,
-                    elementalHoeLevel,
+                    30*20*2+(elementalHoeLevel*20*20)-(20*20),
+                    0,
                     true,
                     true
             ));

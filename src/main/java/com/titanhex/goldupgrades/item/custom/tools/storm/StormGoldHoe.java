@@ -1,6 +1,7 @@
 package com.titanhex.goldupgrades.item.custom.tools.storm;
 
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.item.custom.inter.IElementalHoe;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
@@ -8,11 +9,18 @@ import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -56,6 +64,29 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
         if (oldWeather != currentWeather) {
             setWeather(stack, currentWeather);
         }
+
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+
+        if (isEquipped && elementalHoeLevel > 0 && (isThundering(stack, world))) {
+            int duration = 60;
+            if (livingEntity.tickCount % 60 == 0)
+                stack.hurtAndBreak(1, livingEntity,
+                        (e) -> {
+                            e.broadcastBreakEvent(EquipmentSlotType.OFFHAND);
+                        }
+                );
+            livingEntity.addEffect(new EffectInstance(
+                    Effects.DIG_SPEED,
+                    duration,
+                    elementalHoeLevel-1,
+                    false,
+                    false
+            ));
+        }
+
+        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
     @Override
@@ -64,6 +95,7 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
         int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
+        boolean hasElementalHoeEnchantment = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack) > 0;
 
         if (isThundering) {
             tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
@@ -71,6 +103,8 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
         }
         if (weatherBoostLevel > 0)
             tooltip.add(new StringTextComponent("§e"));
+        if (hasElementalHoeEnchantment)
+            tooltip.add(new StringTextComponent("§eHold for Dig Speed, use for Healing"));
     }
 
     @Override
@@ -79,6 +113,28 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
             return 5;
 
         return super.getHarvestLevel(stack, toolType, player, state);
+    }
+
+    @Override
+    public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+
+        if (elementalHoeLevel > 0) {
+            player.addEffect(new EffectInstance(
+                    Effects.HEAL,
+                    1,
+                    0,
+                    true,
+                    true
+            ));
+
+            stack.hurtAndBreak(60-(elementalHoeLevel*10), player, (e) -> {e.broadcastBreakEvent(hand);});
+
+            return ActionResult.consume(stack);
+        }
+
+        return super.use(world, player, hand);
     }
 
     @Override
