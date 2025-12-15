@@ -21,6 +21,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -105,6 +106,11 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
             tooltip.add(new StringTextComponent("§e"));
         if (hasElementalHoeEnchantment)
             tooltip.add(new StringTextComponent("§eHold for Dig Speed, use for Healing"));
+    }
+
+    @Override
+    public boolean mineBlock(ItemStack p_179218_1_, World p_179218_2_, BlockState p_179218_3_, BlockPos p_179218_4_, LivingEntity p_179218_5_) {
+        return super.mineBlock(p_179218_1_, p_179218_2_, p_179218_3_, p_179218_4_, p_179218_5_);
     }
 
     @Override

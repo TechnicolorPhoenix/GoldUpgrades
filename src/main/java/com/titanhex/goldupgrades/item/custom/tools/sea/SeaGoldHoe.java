@@ -7,6 +7,7 @@ import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
@@ -18,11 +19,13 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.Items;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -31,6 +34,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -39,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -135,6 +140,39 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
+    }
+
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (!world.isClientSide) {
+            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+            if (isRain(usedStack) && weatherBoostLevel > 0) {
+                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.is(BlockTags.LEAVES)) {
+                    ItemStack bonusDrop = new ItemStack(Items.G, 1);
+
+                    Block.popResource(world, blockPos, bonusDrop);
+
+                    if (world instanceof ServerWorld) {
+                        ServerWorld serverWorld = (ServerWorld) world;
+                        BlockState state = serverWorld.getBlockState(blockPos);
+                        int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                                world,
+                                blockPos.getX() + 0.5D,
+                                blockPos.getY() + 0.5D,
+                                blockPos.getZ() + 0.5D,
+                                bonusExp
+                        );
+
+                        // Spawn the entity into the world
+                        serverWorld.addFreshEntity(expOrb);
+                    }
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     @Override

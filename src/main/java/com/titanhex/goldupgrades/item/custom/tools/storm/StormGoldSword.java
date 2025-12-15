@@ -64,7 +64,7 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             if (isThundering) {
-                float damageBonus = 0;
+                float damageBonus = getWeatherBoosterEnchantmentLevel(stack);
 
                 ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_SWORD.get());
                 Multimap<Attribute, AttributeModifier> modifiers = powerItem.getAttributeModifiers(EquipmentSlotType.MAINHAND);
@@ -175,7 +175,8 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
 
         if (isThundering) {
             if (baseSpeed > 1.0F) {
-                return baseSpeed + 0.3F;
+                float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+                return baseSpeed + 0.3F + 0.1F*weatherBoosterLevel;
             }
         }
 

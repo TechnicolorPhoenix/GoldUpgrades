@@ -4,16 +4,23 @@ import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.potion.Effect;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
@@ -22,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class StormGoldPickaxe extends EffectPickaxe implements ILevelableItem, IWeatherInfluencedItem {
     /**
@@ -38,6 +46,39 @@ public class StormGoldPickaxe extends EffectPickaxe implements ILevelableItem, I
      */
     public StormGoldPickaxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed + 1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
+    }
+
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (!world.isClientSide) {
+            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+            if (isThundering(usedStack) && weatherBoostLevel > 0 && Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.PLAINS.location())) {
+                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.is(BlockTags.BASE_STONE_OVERWORLD)) {
+                    ItemStack bonusDrop = new ItemStack(Items.HONEYCOMB, 1);
+
+                    Block.popResource(world, blockPos, bonusDrop);
+
+                    if (world instanceof ServerWorld) {
+                        ServerWorld serverWorld = (ServerWorld) world;
+                        BlockState state = serverWorld.getBlockState(blockPos);
+                        int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                                world,
+                                blockPos.getX() + 0.5D,
+                                blockPos.getY() + 0.5D,
+                                blockPos.getZ() + 0.5D,
+                                bonusExp
+                        );
+
+                        // Spawn the entity into the world
+                        serverWorld.addFreshEntity(expOrb);
+                    }
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     @Override

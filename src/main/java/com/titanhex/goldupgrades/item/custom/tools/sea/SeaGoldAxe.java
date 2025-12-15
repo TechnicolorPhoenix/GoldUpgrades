@@ -71,7 +71,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
             builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                     SEA_DAMAGE_MODIFIER,
                     "Weapon modifier",
-                    getItemLevel() + (isRain(stack) ? getWeatherBoosterEnchantmentLevel(stack): 0F),
+                    getItemLevel() + (isRain(stack) ? (double) getWeatherBoosterEnchantmentLevel(stack) /2: 0F),
                     AttributeModifier.Operation.ADDITION
             ));
         }

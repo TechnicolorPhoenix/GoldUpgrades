@@ -20,6 +20,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.item.Items;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -28,6 +29,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -36,6 +38,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -94,6 +97,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
         boolean weatherIsRain = isRain(stack, worldIn);
+        boolean hasWeatherBooster = hasWeatherBoosterEnchantment(stack);
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
@@ -102,6 +106,9 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
+
+        if (hasWeatherBooster)
+            tooltip.add(new StringTextComponent("§eMine ocean stones for treasure."));
     }
 
     @Override
@@ -182,8 +189,8 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (!world.isClientSide) {
             int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
-            if (getIsSubmerged(usedStack) && weatherBoostLevel > 0) {
-                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0) {
+            if (getIsSubmerged(usedStack) && weatherBoostLevel > 0 && Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.OCEAN.location())) {
+                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.is(BlockTags.BASE_STONE_OVERWORLD)) {
                     ItemStack bonusDrop = new ItemStack(Items.NAUTILUS_SHELL, 1);
 
                     Block.popResource(world, blockPos, bonusDrop);

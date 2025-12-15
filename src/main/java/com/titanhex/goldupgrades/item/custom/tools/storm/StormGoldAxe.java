@@ -66,7 +66,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             if (isThundering) {
-                float damageBonus = 0;
+                float damageBonus = (float) getWeatherBoosterEnchantmentLevel(stack) /2;
 
                 ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_AXE.get());
                 Multimap<Attribute, AttributeModifier> modifiers = powerItem.getAttributeModifiers(EquipmentSlotType.MAINHAND);
@@ -171,14 +171,13 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
 
-        if (isThundering) {
-            if (baseSpeed > 1.0F) {
-                return baseSpeed + 0.3F;
-            }
+        if (isThundering && baseSpeed > 1.0F) {
+            float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+            return baseSpeed + 0.3F + 0.05F*weatherBoosterLevel;
         }
 
         return super.getDestroySpeed(stack, state);

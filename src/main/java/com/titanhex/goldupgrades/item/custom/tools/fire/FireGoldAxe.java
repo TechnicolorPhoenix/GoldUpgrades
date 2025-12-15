@@ -193,7 +193,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        (isDay ? 2 : 1) + (isClear(stack) ? getWeatherBoosterEnchantmentLevel(stack) : 0),
+                        (isDay ? 2 : 1) + (isClear(stack) ? (double) getWeatherBoosterEnchantmentLevel(stack) /2 : 0),
                         AttributeModifier.Operation.ADDITION
                 ));
             }
