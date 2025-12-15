@@ -6,15 +6,18 @@ import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.Items;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.*;
@@ -90,7 +93,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
+        boolean weatherIsRain = isRain(stack, worldIn);
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
@@ -113,11 +116,10 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
+        boolean weatherIsRain = isRain(stack);
         float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {
-
             float speedMultiplier = 1.0F + bonusSpeed;
 
             return baseSpeed * speedMultiplier;
@@ -174,6 +176,39 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         }
 
         return result;
+    }
+
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (!world.isClientSide) {
+            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+            if (getIsSubmerged(usedStack) && weatherBoostLevel > 0) {
+                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0) {
+                    ItemStack bonusDrop = new ItemStack(Items.NAUTILUS_SHELL, 1);
+
+                    Block.popResource(world, blockPos, bonusDrop);
+
+                    if (world instanceof ServerWorld) {
+                        ServerWorld serverWorld = (ServerWorld) world;
+                        BlockState state = serverWorld.getBlockState(blockPos);
+                        int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                                world,
+                                blockPos.getX() + 0.5D,
+                                blockPos.getY() + 0.5D,
+                                blockPos.getZ() + 0.5D,
+                                bonusExp
+                        );
+
+                        // Spawn the entity into the world
+                        serverWorld.addFreshEntity(expOrb);
+                    }
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     /**

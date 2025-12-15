@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem, ILightInfluencedItem
+public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem, ILightInfluencedItem, IElementalHoe
 {
     int burnTicks;
     int durabilityUse;
@@ -73,9 +73,10 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
             setIsDay(stack, currentIsDay);
         }
 
-        int elementalHoeLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack);
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
 
         if (isEquipped && elementalHoeLevel > 0 && (isClear(stack) || inValidDimension(stack))) {
+            int duration = 60;
             if (livingEntity.tickCount % 60 == 0)
                 stack.hurtAndBreak(1, livingEntity,
                         (e) -> {
@@ -84,7 +85,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
                 );
             livingEntity.addEffect(new EffectInstance(
                     Effects.FIRE_RESISTANCE,
-                    20,
+                    duration,
                     elementalHoeLevel-1,
                     false,
                     false
@@ -123,9 +124,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
 
         if (lightLevel > 7)
             tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
-        if (hasElementalHoeEnchantment) {
+        if (hasElementalHoeEnchantment)
             tooltip.add(new StringTextComponent("§eHold for Fire Resistance, use for Strength"));
-        }
     }
 
     /**
@@ -190,7 +190,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
                true
             ));
 
-            stack.hurtAndBreak(15, player, (e) -> {e.broadcastBreakEvent(hand);});
+            stack.hurtAndBreak(10+5*elementalHoeLevel, player, (e) -> {e.broadcastBreakEvent(hand);});
 
             return ActionResult.consume(stack);
         }

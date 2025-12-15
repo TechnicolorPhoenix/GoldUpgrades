@@ -6,6 +6,7 @@ import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectShovel;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
@@ -24,6 +25,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -32,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -54,6 +57,38 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
      */
     public SeaGoldShovel(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
+    }
+
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (!world.isClientSide) {
+            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+            if (Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BEACH.location()) && weatherBoostLevel > 0) {
+                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.getBlock().equals(Blocks.SAND)) {
+                    ItemStack bonusDrop = new ItemStack(Items.NAUTILUS_SHELL, 1);
+
+                    Block.popResource(world, blockPos, bonusDrop);
+
+                    if (world instanceof ServerWorld) {
+                        ServerWorld serverWorld = (ServerWorld) world;
+                        int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                                world,
+                                blockPos.getX() + 0.5D,
+                                blockPos.getY() + 0.5D,
+                                blockPos.getZ() + 0.5D,
+                                bonusExp
+                        );
+
+                        // Spawn the entity into the world
+                        serverWorld.addFreshEntity(expOrb);
+                    }
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     @Override
@@ -86,18 +121,21 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
+        boolean weatherIsRain = isRain(stack, worldIn);
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
-        } else if (inRain || submerged) {
+        } else if (submerged || inRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
+        if (weatherBoostLevel > 0)
+            tooltip.add(new StringTextComponent("§eTreasure when digging up beach sand in the rain."));
     }
 
     @Override
@@ -112,7 +150,7 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
+        boolean weatherIsRain = isRain(stack);
         float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {

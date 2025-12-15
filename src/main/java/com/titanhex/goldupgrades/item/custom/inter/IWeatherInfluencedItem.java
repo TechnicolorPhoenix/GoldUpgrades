@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -42,6 +43,7 @@ public interface IWeatherInfluencedItem {
         if (world == null) {
             return isRain(stack);
         } else {
+            GoldUpgrades.LOGGER.debug("WEATHER: {}, RAINING: {}", Weather.getCurrentWeather(world), Weather.RAINING);
             return Weather.getCurrentWeather(world) == Weather.RAINING;
         }
     }

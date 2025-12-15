@@ -1,7 +1,8 @@
 package com.titanhex.goldupgrades.item.custom.tools.sea;
 
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.enchantment.ModEnchantments;
+import com.titanhex.goldupgrades.item.custom.inter.IElementalHoe;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
@@ -10,15 +11,17 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
@@ -39,7 +42,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.function.Consumer;
 
-public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem
+public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem, IElementalHoe
 {
 
     private static final Random RANDOM = new Random();
@@ -84,16 +87,46 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
                 world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
             }
         }
+
+        if (!(holdingEntity instanceof LivingEntity))
+            return;
+
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
+
+        if (isEquipped && elementalHoeLevel > 0) {
+            int duration = 60;
+            if (livingEntity.tickCount % duration == 0) {
+                stack.hurtAndBreak(5 - elementalHoeLevel, livingEntity,
+                        (e) -> {
+                            e.broadcastBreakEvent(EquipmentSlotType.OFFHAND);
+                        }
+                );
+                livingEntity.addEffect(new EffectInstance(
+                        (currentSubmerged ? Effects.DOLPHINS_GRACE : Effects.MOVEMENT_SPEED),
+                        duration,
+                        elementalHoeLevel - 1,
+                        true,
+                        true
+                ));
+            }
+        }
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        int elementalHoeEnchantmentLevel = getElementalHoeEnchantmentLevel(stack);
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
-        boolean weatherIsRain = this.getWeather(stack) == Weather.RAINING;
+        boolean weatherIsRain = isRain(stack, worldIn);
+
+        if (elementalHoeEnchantmentLevel > 0)
+            tooltip.add(new StringTextComponent("§eHold for Dolphin's Grace, use for Water Breathing"));
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
@@ -181,6 +214,21 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
             }
         }
 
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        if (elementalHoeLevel > 0) {
+                player.addEffect(new EffectInstance(
+                        Effects.WATER_BREATHING,
+                        30*20,
+                        elementalHoeLevel,
+                        true,
+                        true
+                ));
+
+                stack.hurtAndBreak(5*elementalHoeLevel, player, (e) -> {e.broadcastBreakEvent(hand);});
+
+                return ActionResult.consume(stack);
+            }
+
         return result;
     }
 
@@ -188,6 +236,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
      * Handles the item use event (Right Click) with custom logic for water/ice
      * conversion, falling back to the parent class's aura application.
      */
+    @NotNull
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
@@ -210,8 +259,8 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
                 )
         );
 
-        int toolLevel = getItemLevel();
-        int elementalHoeLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack);
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        int toolLevel = getItemLevel() + elementalHoeLevel;
 
         if (state.getBlock() == Blocks.SNOW) {
             world.setBlock(pos, Blocks.ICE.defaultBlockState(), 11);

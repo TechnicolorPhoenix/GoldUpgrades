@@ -75,7 +75,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SEA_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        getItemLevel(),
+                        getItemLevel() + getWeatherBoosterEnchantmentLevel(stack),
                         AttributeModifier.Operation.ADDITION
                 ));
             }
@@ -183,7 +183,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
         ItemStack stack = player.getItemInHand(hand);
 
         if (world.isClientSide)
-            return use(world, player, hand);
+            return super.use(world, player, hand);
 
         BlockRayTraceResult hitResult = world.clip(
                 new RayTraceContext(
@@ -245,14 +245,12 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
         if (world.isClientSide || player == null)
             return super.useOn(context);
 
-        // --- Server-side Logic ---
-        // Get the RayTraceResult from the context, which holds the precise block hit.
         BlockRayTraceResult hitResult = world.clip(
                 new RayTraceContext(
-                        player.getEyePosition(1.0F),             // Start position (player's eyes)
-                        player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)), // End position (5 blocks away)
-                        RayTraceContext.BlockMode.OUTLINE,       // Only hit blocks with an outline
-                        RayTraceContext.FluidMode.SOURCE_ONLY,           // Crucially, hit ANY fluid block
+                        player.getEyePosition(1.0F),
+                        player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
+                        RayTraceContext.BlockMode.OUTLINE,
+                        RayTraceContext.FluidMode.SOURCE_ONLY,
                         player
                 )
         );
@@ -288,15 +286,11 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
             BlockPos rayHitPos = hitResult.getBlockPos();
             BlockState rayHitState = world.getBlockState(rayHitPos);
 
-            // 1. Check for Water -> Ice conversion (Priority 1)
             if (rayHitState.getBlock() == Blocks.WATER) {
-                // Set the block state to Ice
                 world.setBlock(rayHitPos, Blocks.ICE.defaultBlockState(), 11);
 
-                // Play a freezing sound
                 world.playSound(null, rayHitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
 
-                // Damage the tool by a small amount (1 point for block conversion)
                 stack.hurtAndBreak(this.baseDurabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
                 return ActionResultType.SUCCESS;

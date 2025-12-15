@@ -1,6 +1,7 @@
 package com.titanhex.goldupgrades.enchantment;
 
 import com.titanhex.goldupgrades.helper.ItemHelper;
+import com.titanhex.goldupgrades.item.custom.inter.IElementalHoe;
 import com.titanhex.goldupgrades.item.custom.tools.fire.FireGoldHoe;
 import com.titanhex.goldupgrades.item.custom.tools.obsidian.ObsidianGoldHoe;
 import com.titanhex.goldupgrades.item.custom.tools.sea.SeaGoldHoe;
@@ -18,12 +19,7 @@ public class ElementalHoeEnchantment extends Enchantment {
 
     @Override
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
-        return super.canApplyAtEnchantingTable(stack) && (
-                stack.getItem() instanceof FireGoldHoe ||
-                    stack.getItem() instanceof SeaGoldHoe ||
-                        stack.getItem() instanceof ObsidianGoldHoe ||
-                        stack.getItem() instanceof StormGoldHoe
-        );
+        return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof IElementalHoe;
     }
 
     @Override

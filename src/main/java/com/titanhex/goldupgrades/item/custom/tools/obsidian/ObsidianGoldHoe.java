@@ -2,13 +2,12 @@ package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.MoonPhase;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IMoonPhaseInfluencedItem;
+import com.titanhex.goldupgrades.enchantment.ModEnchantments;
+import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
@@ -34,7 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Random;
 
-public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem, IDayInfluencedItem, ILightInfluencedItem, ILevelableItem
+public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem, IDayInfluencedItem, ILightInfluencedItem, ILevelableItem, IElementalHoe
 {
 
     private static final Random RANDOM = new Random();
@@ -45,8 +44,10 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 
     @Override
     public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
-        if (world.isClientSide)
+        if (world.isClientSide) {
+            super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
             return;
+        }
 
         int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
@@ -62,6 +63,27 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
             setIsDay(stack, currentIsDay);
         }
 
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+
+        if (isEquipped && elementalHoeLevel > 0 && (isNight(stack))) {
+            int duration = 60;
+            if (livingEntity.tickCount % 60 == 0)
+                stack.hurtAndBreak(1, livingEntity,
+                        (e) -> {
+                            e.broadcastBreakEvent(EquipmentSlotType.OFFHAND);
+                        }
+                );
+            livingEntity.addEffect(new EffectInstance(
+                    Effects.DIG_SPEED,
+                    duration,
+                    elementalHoeLevel-1,
+                    false,
+                    false
+            ));
+        }
+
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
@@ -70,9 +92,8 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
         float baseSpeed = super.getDestroySpeed(stack, state);
         float bonusSpeed = isDay(stack) ? 0 : 0.15F;
 
-        if (getLightLevel(stack) == 0) {
+        if (getLightLevel(stack) == 0)
             baseSpeed = 1.1F;
-        }
 
         if (baseSpeed > 1.0F) {
             float speedMultiplier = 1.0F + bonusSpeed;
@@ -88,7 +109,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     }
 
     @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity enemy) {
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity enemy) {
         int phaseValue = getMoonPhaseValue(stack)*(2+getItemLevel());
         int chance = RANDOM.nextInt(100)+1;
 
@@ -112,6 +133,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        boolean hasElementalHoeEnchantment = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack) > 0;
 
         int phaseValue = getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
         int slowChance = phaseValue*(2+getItemLevel());
@@ -121,6 +143,9 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 
         if (getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
+
+        if (hasElementalHoeEnchantment)
+            tooltip.add(new StringTextComponent("§eHold for Dig Speed, use for Night Vision"));
 
         if (isNight(stack))
             tooltip.add(new StringTextComponent("§9+15% Harvest Speed."));
@@ -134,6 +159,29 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
             return true;
 
         return super.canHarvestBlock(stack, state);
+    }
+
+    @NotNull
+    @Override
+    public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+
+        if (elementalHoeLevel > 0) {
+            player.addEffect(new EffectInstance(
+                    Effects.NIGHT_VISION,
+                    30*20*2,
+                    elementalHoeLevel,
+                    true,
+                    true
+            ));
+
+            stack.hurtAndBreak(5*elementalHoeLevel*2, player, (e) -> {e.broadcastBreakEvent(hand);});
+
+            return ActionResult.consume(stack);
+        }
+
+        return super.use(world, player, hand);
     }
 
     /**

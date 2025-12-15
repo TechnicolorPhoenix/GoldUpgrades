@@ -1,6 +1,7 @@
 package com.titanhex.goldupgrades.item.custom.tools.storm;
 
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.custom.inter.IElementalHoe;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
@@ -24,7 +25,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherInfluencedItem {
+public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherInfluencedItem, IElementalHoe
+{
     /**
      * Constructor for the AuraPickaxe.
      * * @param tier The material tier of the pickaxe.
@@ -61,11 +63,14 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         if (isThundering) {
             tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
+        if (weatherBoostLevel > 0)
+            tooltip.add(new StringTextComponent("§e"));
     }
 
     @Override
