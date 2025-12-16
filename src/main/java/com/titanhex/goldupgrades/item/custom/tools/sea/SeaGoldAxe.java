@@ -139,11 +139,12 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
         boolean inRain = getIsInRain(stack);
         boolean submerged = getIsSubmerged(stack);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         if (inRain && submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
+            tooltip.add(new StringTextComponent("§9+" + (20 + weatherBoosterLevel*5) + "% Harvest Speed"));
         } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
+            tooltip.add(new StringTextComponent("§9+" + (15 + (inRain ? weatherBoosterLevel*5 : 0)) + "% Harvest Speed"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }

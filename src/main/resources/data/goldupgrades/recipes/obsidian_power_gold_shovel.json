@@ -1,0 +1,16 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+   "min_time": 13000,
+  "max_time": 23000,
+ "ingredients": [
+    {
+      "item": "goldupgrades:obsidian_upgraded_gold_shovel"
+    },
+    {
+      "item": "minecraft:gilded_blackstone"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:obsidian_power_gold_shovel"
+  }
+}

@@ -1,18 +1,25 @@
 package com.titanhex.goldupgrades.item.custom.tools.storm;
 
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.item.ExperienceOrbEntity;
+import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
@@ -50,30 +57,59 @@ public class StormGoldPickaxe extends EffectPickaxe implements ILevelableItem, I
 
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
-        if (!world.isClientSide) {
-            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
-            if (isThundering(usedStack) && weatherBoostLevel > 0 && Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.PLAINS.location())) {
-                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.is(BlockTags.BASE_STONE_OVERWORLD)) {
-                    ItemStack bonusDrop = new ItemStack(Items.HONEYCOMB, 1);
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
 
-                    Block.popResource(world, blockPos, bonusDrop);
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        boolean isPlains = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.PLAINS.location());
+        boolean minedStone = blockState.is(BlockTags.BASE_STONE_OVERWORLD);
 
-                    if (world instanceof ServerWorld) {
-                        ServerWorld serverWorld = (ServerWorld) world;
-                        BlockState state = serverWorld.getBlockState(blockPos);
-                        int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+        GoldUpgrades.LOGGER.debug("IS PLAINS: {}, MINED STONE: {}", isPlains, minedStone);
 
-                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
-                                world,
-                                blockPos.getX() + 0.5D,
-                                blockPos.getY() + 0.5D,
-                                blockPos.getZ() + 0.5D,
-                                bonusExp
-                        );
+        if (isPlains && minedStone && isThundering(usedStack, world)) {
+            int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
+            int luckAdjustedRollRange = 13 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+            int calculatedRoll = world.getRandom().nextInt(finalRollRange);
 
-                        // Spawn the entity into the world
-                        serverWorld.addFreshEntity(expOrb);
-                    }
+            GoldUpgrades.LOGGER.debug("FINAL RANGE: {}, ROLLED: {}: ", finalRollRange, calculatedRoll);
+            if (calculatedRoll == 0) {
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+//                    ItemStack bonusDrop = new ItemStack(Items.SLIME_BALL, 1);
+
+                    double x = blockPos.getX() + 0.5D;
+                    double y = blockPos.getY() + 0.5D;
+                    double z = blockPos.getZ() + 0.5D;
+
+                    SlimeEntity slime = new SlimeEntity(EntityType.SLIME, world);
+                    slime.setHealth(2F);
+                    slime.setPos(x, y-0.5F, z);
+
+                    ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                            world,
+                            x, y, z,
+                            bonusExp
+                    );
+
+                    int count = 10;
+                    double xz_variance = 0.2D;
+                    double y_velocity = 0.5D;
+
+                    serverWorld.sendParticles(
+                            ParticleTypes.ENCHANT,
+                            x, y, z,
+                            count,
+                            xz_variance,
+                            0.0D,
+                            xz_variance,
+                            y_velocity
+                    );
+
+                    serverWorld.addFreshEntity(expOrb);
+                    serverWorld.addFreshEntity(slime);
                 }
             }
         }
@@ -101,9 +137,13 @@ public class StormGoldPickaxe extends EffectPickaxe implements ILevelableItem, I
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§eMining stone in plains yields slime during thunderstorms."));
 
         if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
+            tooltip.add(new StringTextComponent("§9+"+(30 + 5*weatherBoosterLevel)+"% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
     }

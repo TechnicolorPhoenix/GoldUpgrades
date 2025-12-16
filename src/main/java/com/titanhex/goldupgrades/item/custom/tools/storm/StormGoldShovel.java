@@ -3,18 +3,26 @@ package com.titanhex.goldupgrades.item.custom.tools.storm;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectShovel;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
@@ -23,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWeatherInfluencedItem {
     /**
@@ -37,12 +46,12 @@ public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWe
      * @param durabilityCost        The number of durability points to subtract on each use.
      * @param properties            Item properties.
      */
-    public StormGoldShovel(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
+    public StormGoldShovel(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed + 1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
 
         if (world.isClientSide)
@@ -61,11 +70,70 @@ public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWe
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§eDigging grass in swamps yields treasure during thunderstorms."));
 
         if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
+            tooltip.add(new StringTextComponent("§9+" +(30 + 5*weatherBoosterLevel)+ "% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
+    }
+
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        boolean isSwamp = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.SWAMP.location());
+        boolean minedGrass = blockState.is(Blocks.GRASS);
+
+        if (isSwamp && minedGrass && isThundering(usedStack, world)) {
+            int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
+            int luckAdjustedRollRange = 6 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+
+            if (world.getRandom().nextInt(finalRollRange) == 0) {
+                ItemStack bonusDrop = new ItemStack(Items.BONE, 1);
+
+                Block.popResource(world, blockPos, bonusDrop);
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    double x = blockPos.getX() + 0.5D;
+                    double y = blockPos.getY() + 0.5D;
+                    double z = blockPos.getZ() + 0.5D;
+
+                    net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                            world,
+                            x, y, z,
+                            bonusExp
+                    );
+
+                    int count = 10;
+                    double xz_variance = 0.2D;
+                    double y_velocity = 0.5D;
+
+                    serverWorld.sendParticles(
+                            ParticleTypes.ENCHANT,
+                            x, y, z,
+                            count,
+                            xz_variance,
+                            0.0D,
+                            xz_variance,
+                            y_velocity
+                    );
+
+                    serverWorld.addFreshEntity(expOrb);
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     @Override
@@ -77,7 +145,7 @@ public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWe
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
 

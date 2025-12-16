@@ -17,4 +17,9 @@ public class WeatherBoosterEnchantment extends Enchantment {
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
         return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof IWeatherInfluencedItem;
     }
+
+    @Override
+    public int getMaxLevel() {
+        return 4;
+    }
 }

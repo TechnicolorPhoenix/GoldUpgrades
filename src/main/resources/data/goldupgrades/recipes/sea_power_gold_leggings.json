@@ -4,7 +4,13 @@
   
   "ingredients": [
     {
-      "item": "goldupgrades:sea_upgraded_gold_sword"
+      "item": "goldupgrades:sea_upgraded_gold_leggings"
+    },
+    {
+      "item": "minecraft:conduit"
+    },
+    {
+      "item": "minecraft:conduit"
     },
     {
       "item": "minecraft:conduit"
@@ -14,6 +20,6 @@
     }
   ],
   "result": {
-    "item": "goldupgrades:sea_power_gold_sword"
+    "item": "goldupgrades:sea_power_gold_leggings"
   }
 }

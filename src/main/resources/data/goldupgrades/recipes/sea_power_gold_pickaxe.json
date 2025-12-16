@@ -4,7 +4,10 @@
   
   "ingredients": [
     {
-      "item": "goldupgrades:sea_upgraded_gold_sword"
+      "item": "goldupgrades:sea_upgraded_gold_pickaxe"
+    },
+    {
+      "item": "minecraft:conduit"
     },
     {
       "item": "minecraft:conduit"
@@ -14,6 +17,6 @@
     }
   ],
   "result": {
-    "item": "goldupgrades:sea_power_gold_sword"
+    "item": "goldupgrades:sea_power_gold_pickaxe"
   }
 }

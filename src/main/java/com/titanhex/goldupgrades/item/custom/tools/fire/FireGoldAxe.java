@@ -107,7 +107,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     private float calculateBonusDestroySpeed(ItemStack stack) {
         int lightLevel = getLightLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantmentLevel(stack))/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) getWeatherBoosterEnchantmentLevel(stack)/100;
     }
 
     @Override

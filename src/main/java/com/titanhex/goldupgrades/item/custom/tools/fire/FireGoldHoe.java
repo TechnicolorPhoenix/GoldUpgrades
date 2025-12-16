@@ -8,7 +8,11 @@ import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.item.ExperienceOrbEntity;
+import net.minecraft.entity.monster.MagmaCubeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
@@ -20,12 +24,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem, ILightInfluencedItem, IElementalHoe
 {
@@ -93,18 +100,72 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         }
     }
 
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+
+        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
+
+        boolean isDesert = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BADLANDS.location());
+        boolean minedDeadBush = blockState.is(Blocks.DEAD_BUSH);
+
+        if (isDesert && minedDeadBush && isClear(usedStack, world)) {
+            int luckAdjustedRollRange = 11 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+
+            if (world.getRandom().nextInt(finalRollRange) == 0) {
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    BlockState state = serverWorld.getBlockState(blockPos);
+
+                    double x = blockPos.getX() + 0.5D;
+                    double y = blockPos.getY() + 0.5D;
+                    double z = blockPos.getZ() + 0.5D;
+                    
+                    MagmaCubeEntity magmaCube = new MagmaCubeEntity(EntityType.MAGMA_CUBE, world);
+                    magmaCube.setHealth(6F);
+                    magmaCube.setPos(x, y-0.5F, z);
+
+                    if (world.getRandom().nextInt(2) == 0) {
+                        ItemStack bonusDrop = new ItemStack(Items.MAGMA_CREAM, 1);
+                        Block.popResource(world, blockPos, bonusDrop);
+                    }
+                    
+                    serverWorld.addFreshEntity(magmaCube);
+
+                    int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    ExperienceOrbEntity expOrb = new ExperienceOrbEntity(
+                            world,
+                            x, y, z,
+                            bonusExp
+                    );
+
+                    serverWorld.addFreshEntity(expOrb);
+                    return true;
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+    }
+
     private float calculateBonusDestroySpeed(ItemStack stack) {
         int lightLevel = getLightLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantmentLevel(stack))/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F) + (isClear(stack) ? (float) getWeatherBoosterEnchantmentLevel(stack)/100 : 0);
     }
 
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
+            float bonusSpeed = calculateBonusDestroySpeed(stack);
             float speedMultiplier = 1.0F + bonusSpeed;
 
             return baseSpeed * speedMultiplier;        }
@@ -117,8 +178,9 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int lightLevel = getLightLevel(stack);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
-        boolean hasElementalHoeEnchantment = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack) > 0;
+        boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
 
         float bonus = calculateBonusDestroySpeed(stack)*100;
 
@@ -126,6 +188,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
             tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
         if (hasElementalHoeEnchantment)
             tooltip.add(new StringTextComponent("§eHold for Fire Resistance, use for Strength"));
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§eCutting dead bushes in badlands yields treasure in clear weather."));
     }
 
     /**

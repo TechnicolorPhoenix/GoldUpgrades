@@ -7,24 +7,32 @@ import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
@@ -33,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherInfluencedItem, IElementalHoe
 {
@@ -95,22 +104,72 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
-        int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
-        boolean hasElementalHoeEnchantment = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack) > 0;
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
 
         if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
+            tooltip.add(new StringTextComponent("§9+"+(30 + weatherBoosterLevel)+"% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
-        if (weatherBoostLevel > 0)
-            tooltip.add(new StringTextComponent("§e"));
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§Pruning leaves in plains yields treasure during thunderstorms."));
         if (hasElementalHoeEnchantment)
             tooltip.add(new StringTextComponent("§eHold for Dig Speed, use for Healing"));
     }
 
     @Override
-    public boolean mineBlock(ItemStack p_179218_1_, World p_179218_2_, BlockState p_179218_3_, BlockPos p_179218_4_, LivingEntity p_179218_5_) {
-        return super.mineBlock(p_179218_1_, p_179218_2_, p_179218_3_, p_179218_4_, p_179218_5_);
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        boolean isPlains = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.PLAINS.location());
+        boolean minedLeaves = blockState.is(BlockTags.LEAVES);
+
+        if (isPlains && minedLeaves && isThundering(usedStack, world)) {
+            int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
+            int luckAdjustedRollRange = 10 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+
+            if (world.getRandom().nextInt(finalRollRange) == 0) {
+                ItemStack bonusDrop = new ItemStack(Items.HONEYCOMB, 1);
+
+                Block.popResource(world, blockPos, bonusDrop);
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    double x = blockPos.getX() + 0.5D;
+                    double y = blockPos.getY() + 0.5D;
+                    double z = blockPos.getZ() + 0.5D;
+
+                    net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                            world,
+                            x, y, z,
+                            bonusExp
+                    );
+
+                    int count = 10;
+                    double xz_variance = 0.2D;
+                    double y_velocity = 0.5D;
+
+                    serverWorld.sendParticles(
+                            ParticleTypes.ENCHANT,
+                            x, y, z,
+                            count,
+                            xz_variance,
+                            0.0D,
+                            xz_variance,
+                            y_velocity
+                    );
+
+                    serverWorld.addFreshEntity(expOrb);
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     @Override

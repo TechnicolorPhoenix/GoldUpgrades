@@ -54,7 +54,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
      * @param durabilityCost        The number of durability points to subtract on each use.
      * @param properties            Item properties.
      */
-    public StormGoldAxe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
+    public StormGoldAxe(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed+1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
     }
 
@@ -155,9 +155,10 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
+            tooltip.add(new StringTextComponent("§9+" +(30 + 3*weatherBoosterLevel)+ "% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
     }
@@ -177,7 +178,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
 
         if (isThundering && baseSpeed > 1.0F) {
             float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
-            return baseSpeed + 0.3F + 0.05F*weatherBoosterLevel;
+            return baseSpeed + 0.3F + 0.03F*weatherBoosterLevel;
         }
 
         return super.getDestroySpeed(stack, state);

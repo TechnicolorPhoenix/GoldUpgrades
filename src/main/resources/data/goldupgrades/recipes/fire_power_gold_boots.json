@@ -3,10 +3,7 @@
   "dimension": "NETHER",
   "ingredients": [
     {
-      "item": "goldupgrades:fire_upgraded_gold_axe"
-    },
-    {
-      "item": "minecraft:dragon_breath"
+      "item": "goldupgrades:fire_upgraded_gold_boots"
     },
     {
       "item": "minecraft:dragon_breath"
@@ -16,6 +13,6 @@
     }
   ],
   "result": {
-    "item": "goldupgrades:fire_power_gold_axe"
+    "item": "goldupgrades:fire_power_gold_boots"
   }
 }

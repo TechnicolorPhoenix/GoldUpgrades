@@ -5,8 +5,7 @@ import com.titanhex.goldupgrades.item.ModItemGroup;
 import com.titanhex.goldupgrades.item.ModItemTier;
 import com.titanhex.goldupgrades.item.ModToolItems;
 import com.titanhex.goldupgrades.item.custom.tools.effect.*;
-import com.titanhex.goldupgrades.item.custom.tools.storm.StormGoldAxe;
-import com.titanhex.goldupgrades.item.custom.tools.storm.StormGoldPickaxe;
+import com.titanhex.goldupgrades.item.custom.tools.storm.*;
 import net.minecraft.item.*;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.Effects;
@@ -47,10 +46,12 @@ public class StormToolItems {
     
     // BASE
     public static final RegistryObject<Item> STORM_BASE_GOLD_SWORD = ITEMS.register("storm_base_gold_sword",
-            () -> new SwordItem(ModItemTier.STORM_BASE_GOLD, 4, -2.4F,
+            () -> new StormGoldSword(ModItemTier.STORM_BASE_GOLD, 4, -2.4F,
+                    baseToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_BASE_GOLD_SHOVEL = ITEMS.register("storm_base_gold_shovel",
-            () -> new ShovelItem(ModItemTier.STORM_BASE_GOLD, 2.5F, -3.0F,
+            () -> new StormGoldShovel(ModItemTier.STORM_BASE_GOLD, 2.5F, -3.0F,
+                    baseToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_BASE_GOLD_PICKAXE = ITEMS.register("storm_base_gold_pickaxe",
             () -> new StormGoldPickaxe(ModItemTier.STORM_BASE_GOLD, 2, -2.8F,
@@ -61,16 +62,17 @@ public class StormToolItems {
                     baseToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_BASE_GOLD_HOE = ITEMS.register("storm_base_gold_hoe",
-            () -> new HoeItem(ModItemTier.STORM_BASE_GOLD, 1, -3.0F,
+            () -> new StormGoldHoe(ModItemTier.STORM_BASE_GOLD, 1, -3.0F,
+                    baseToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
 
     //UPGRADED
     public static final RegistryObject<Item> STORM_UPGRADED_GOLD_SWORD = ITEMS.register("storm_upgraded_gold_sword",
-            () -> new EffectSword(ModItemTier.STORM_UPGRADED_GOLD, 5, -2.4F,
+            () -> new StormGoldSword(ModItemTier.STORM_UPGRADED_GOLD, 5, -2.4F,
                     upgradedToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_UPGRADED_GOLD_SHOVEL = ITEMS.register("storm_upgraded_gold_shovel",
-            () -> new EffectShovel(ModItemTier.STORM_UPGRADED_GOLD, 3.0F, -3.0F,
+            () -> new StormGoldShovel(ModItemTier.STORM_UPGRADED_GOLD, 3.0F, -3.0F,
                     upgradedToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_UPGRADED_GOLD_PICKAXE = ITEMS.register("storm_upgraded_gold_pickaxe",
@@ -82,17 +84,17 @@ public class StormToolItems {
                     upgradedToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_UPGRADED_GOLD_HOE = ITEMS.register("storm_upgraded_gold_hoe",
-            () -> new EffectHoe(ModItemTier.STORM_UPGRADED_GOLD, 1, -3.0F,
+            () -> new StormGoldHoe(ModItemTier.STORM_UPGRADED_GOLD, 1, -3.0F,
                     upgradedToolBonus, 600, 4,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     
     // POWER
     public static final RegistryObject<Item> STORM_POWER_GOLD_SWORD = ITEMS.register("storm_power_gold_sword",
-            () -> new EffectSword(ModItemTier.STORM_POWER_GOLD, 6, -2.4F,
+            () -> new StormGoldSword(ModItemTier.STORM_POWER_GOLD, 6, -2.4F,
                     powerToolBonus, 1200, 5,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_POWER_GOLD_SHOVEL = ITEMS.register("storm_power_gold_shovel",
-            () -> new EffectShovel(ModItemTier.STORM_POWER_GOLD, 3.5F, -3.0F,
+            () -> new StormGoldShovel(ModItemTier.STORM_POWER_GOLD, 3.5F, -3.0F,
                     powerToolBonus, 1200, 5,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_POWER_GOLD_PICKAXE = ITEMS.register("storm_power_gold_pickaxe",
@@ -104,7 +106,7 @@ public class StormToolItems {
                     powerToolBonus, 1200, 5,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> STORM_POWER_GOLD_HOE = ITEMS.register("storm_power_gold_hoe",
-            () -> new EffectHoe(ModItemTier.STORM_POWER_GOLD, 1, -3.0F,
+            () -> new StormGoldHoe(ModItemTier.STORM_POWER_GOLD, 1, -3.0F,
                     powerToolBonus, 1200, 5,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
 }

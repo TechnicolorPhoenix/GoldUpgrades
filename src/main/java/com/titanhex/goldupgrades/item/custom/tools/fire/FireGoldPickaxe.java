@@ -9,9 +9,15 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.WallTorchBlock;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.item.ExperienceOrbEntity;
+import net.minecraft.entity.monster.MagmaCubeEntity;
+import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
@@ -21,12 +27,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IDayInfluencedItem, IWeatherInfluencedItem, ILightInfluencedItem
 {
@@ -69,18 +78,74 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
+
+        boolean isBadlands = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BADLANDS.location());
+        boolean minedStone = blockState.is(BlockTags.BASE_STONE_OVERWORLD);
+
+        if (isBadlands && weatherBoosterLevel > 0 && minedStone && isClear(usedStack, world)) {
+            int luckAdjustedRollRange = 13 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+
+            if (world.getRandom().nextInt(finalRollRange) == 0) {
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+
+                    ItemStack bonusDrop = new ItemStack(Items.REDSTONE, 1);
+                    Block.popResource(world, blockPos, bonusDrop);
+
+                    int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    double x = blockPos.getX() + 0.5D;
+                    double y = blockPos.getY() + 0.5D;
+                    double z = blockPos.getZ() + 0.5D;
+
+                    ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                            world,
+                            x, y, z,
+                            bonusExp
+                    );
+
+                    int count = 10;
+                    double xz_variance = 0.2D;
+                    double y_velocity = 0.5D;
+
+                    serverWorld.sendParticles(
+                            ParticleTypes.ENCHANT,
+                            x, y, z,
+                            count,
+                            xz_variance,
+                            0.0D,
+                            xz_variance,
+                            y_velocity
+                    );
+
+                    serverWorld.addFreshEntity(expOrb);
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+    }
+
     private float calculateBonusDestroySpeed(ItemStack stack) {
         int lightLevel = getLightLevel(stack);
+        float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F + (float) getWeatherBoosterEnchantmentLevel(stack))/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F) + weatherBoosterLevel/100;
     }
 
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonus = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
+            float bonus = calculateBonusDestroySpeed(stack);
             float speedMultiplier = 1.0F + bonus;
 
             return baseSpeed * speedMultiplier;
@@ -95,10 +160,14 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int lightLevel = getLightLevel(stack);
-        float bonus = lightLevel > 7 ? 0.15F : 0.00F;
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        double bonus = calculateBonusDestroySpeed(stack)*100;
 
         if (lightLevel > 7)
             tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed ."));
+
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§eMining stone in the badlands yields treasure during clear weather."));
     }
 
     /**

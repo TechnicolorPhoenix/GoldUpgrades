@@ -12,8 +12,10 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
@@ -97,18 +99,19 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
         boolean weatherIsRain = isRain(stack, worldIn);
-        boolean hasWeatherBooster = hasWeatherBoosterEnchantment(stack);
+
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         if (submerged && weatherIsRain) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
+            tooltip.add(new StringTextComponent("§a+" + (20 + weatherBoosterLevel*5) + "% Harvest Speed"));
         } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
+            tooltip.add(new StringTextComponent("§a+" + (15 + weatherBoosterLevel*5) + "% Harvest Speed"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
 
-        if (hasWeatherBooster)
-            tooltip.add(new StringTextComponent("§eMine ocean stones for treasure."));
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§eMine ocean stones for treasure when raining."));
     }
 
     @Override
@@ -124,9 +127,10 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         boolean weatherIsRain = isRain(stack);
-        float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {
+            float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
+            bonusSpeed += isRain(stack) ? (float) getWeatherBoosterEnchantmentLevel(stack) /100*5 : 0F;
             float speedMultiplier = 1.0F + bonusSpeed;
 
             return baseSpeed * speedMultiplier;
@@ -187,30 +191,41 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
 
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
-        if (!world.isClientSide) {
-            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
-            if (getIsSubmerged(usedStack) && weatherBoostLevel > 0 && Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.OCEAN.location())) {
-                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.is(BlockTags.BASE_STONE_OVERWORLD)) {
-                    ItemStack bonusDrop = new ItemStack(Items.NAUTILUS_SHELL, 1);
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
 
-                    Block.popResource(world, blockPos, bonusDrop);
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
 
-                    if (world instanceof ServerWorld) {
-                        ServerWorld serverWorld = (ServerWorld) world;
-                        BlockState state = serverWorld.getBlockState(blockPos);
-                        int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+        boolean isOcean = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.OCEAN.location());
+        boolean minedStone = blockState.is(BlockTags.BASE_STONE_OVERWORLD);
 
-                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
-                                world,
-                                blockPos.getX() + 0.5D,
-                                blockPos.getY() + 0.5D,
-                                blockPos.getZ() + 0.5D,
-                                bonusExp
-                        );
+        if (isOcean && minedStone && isRain(usedStack, world)) {
+            int luckAdjustedRollRange = 16 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
 
-                        // Spawn the entity into the world
-                        serverWorld.addFreshEntity(expOrb);
-                    }
+            if (world.getRandom().nextInt(finalRollRange) == 0) {
+                ItemStack bonusDrop = new ItemStack(Items.HEART_OF_THE_SEA, 1);
+
+                Block.popResource(world, blockPos, bonusDrop);
+
+                usedStack.hurtAndBreak(6, miningEntity, (e) -> {e.broadcastBreakEvent(EquipmentSlotType.MAINHAND);});
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    BlockState state = serverWorld.getBlockState(blockPos);
+                    int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                            world,
+                            blockPos.getX() + 0.5D,
+                            blockPos.getY() + 0.5D,
+                            blockPos.getZ() + 0.5D,
+                            bonusExp
+                    );
+
+                    // Spawn the entity into the world
+                    serverWorld.addFreshEntity(expOrb);
                 }
             }
         }
@@ -222,6 +237,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
      * Handles the item use event (Right Click) with custom logic for water/ice
      * conversion, falling back to the parent class's aura application.
      */
+    @NotNull
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();

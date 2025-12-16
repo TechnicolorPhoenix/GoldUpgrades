@@ -1,0 +1,15 @@
+{
+  "type": "goldupgrades:environmental_shapeless",
+  "dimension": "NETHER",
+  "ingredients": [
+    {
+      "item": "goldupgrades:fire_upgraded_gold_shovel"
+    },
+    {
+      "item": "minecraft:dragon_breath"
+    }
+  ],
+  "result": {
+    "item": "goldupgrades:fire_power_gold_shovel"
+  }
+}

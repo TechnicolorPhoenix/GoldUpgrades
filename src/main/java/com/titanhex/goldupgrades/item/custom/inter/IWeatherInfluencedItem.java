@@ -43,7 +43,6 @@ public interface IWeatherInfluencedItem {
         if (world == null) {
             return isRain(stack);
         } else {
-            GoldUpgrades.LOGGER.debug("WEATHER: {}, RAINING: {}", Weather.getCurrentWeather(world), Weather.RAINING);
             return Weather.getCurrentWeather(world) == Weather.RAINING;
         }
     }

@@ -14,6 +14,7 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
@@ -125,6 +126,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int elementalHoeEnchantmentLevel = getElementalHoeEnchantmentLevel(stack);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
@@ -133,10 +135,13 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         if (elementalHoeEnchantmentLevel > 0)
             tooltip.add(new StringTextComponent("§eHold for Dolphin's Grace, use for Water Breathing"));
 
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§Cut leaves in the Jungle for treasure while raining."));
+
         if (submerged && weatherIsRain) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
+            tooltip.add(new StringTextComponent("§9 +" + (20 + weatherBoosterLevel*5) +"%Harvest Speed"));
         } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
+            tooltip.add(new StringTextComponent("§9 +" + (15 + weatherBoosterLevel*5) +"%Harvest Speed"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
@@ -144,30 +149,41 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
 
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
-        if (!world.isClientSide) {
-            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
-            if (isRain(usedStack) && weatherBoostLevel > 0) {
-                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.is(BlockTags.LEAVES)) {
-                    ItemStack bonusDrop = new ItemStack(Items.G, 1);
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
-                    Block.popResource(world, blockPos, bonusDrop);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
 
-                    if (world instanceof ServerWorld) {
-                        ServerWorld serverWorld = (ServerWorld) world;
-                        BlockState state = serverWorld.getBlockState(blockPos);
-                        int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
-                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
-                                world,
-                                blockPos.getX() + 0.5D,
-                                blockPos.getY() + 0.5D,
-                                blockPos.getZ() + 0.5D,
-                                bonusExp
-                        );
+        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
 
-                        // Spawn the entity into the world
-                        serverWorld.addFreshEntity(expOrb);
-                    }
+        boolean isJungle = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.JUNGLE.location());
+        boolean minedLeaves = blockState.is(BlockTags.LEAVES);
+
+        if (isJungle && minedLeaves && isRain(usedStack, world)) {
+            int luckAdjustedRollRange = 10 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+
+            if (world.getRandom().nextInt(finalRollRange) == 0) {
+                ItemStack bonusDrop = new ItemStack(Items.SEA_PICKLE, 1);
+
+                Block.popResource(world, blockPos, bonusDrop);
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    BlockState state = serverWorld.getBlockState(blockPos);
+                    int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
+                            world,
+                            blockPos.getX() + 0.5D,
+                            blockPos.getY() + 0.5D,
+                            blockPos.getZ() + 0.5D,
+                            bonusExp
+                    );
+
+                    // Spawn the entity into the world
+                    serverWorld.addFreshEntity(expOrb);
                 }
             }
         }
@@ -188,11 +204,11 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         boolean weatherIsRain = isRain(stack);
-        int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
         float bonusSpeed = getIsSubmerged(stack) ? 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (weatherIsRain)
-            bonusSpeed += 0.03F * weatherBoostLevel;
+            bonusSpeed += 0.05F * weatherBoosterLevel;
 
         if (baseSpeed > 1.0F) {
 

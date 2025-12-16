@@ -153,9 +153,10 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+30% Harvest Speed"));
+            tooltip.add(new StringTextComponent("§9+"+(30 + 10*weatherBoosterLevel)+"% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
     }

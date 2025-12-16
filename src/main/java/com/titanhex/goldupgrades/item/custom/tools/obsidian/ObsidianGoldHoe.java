@@ -133,7 +133,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        boolean hasElementalHoeEnchantment = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack) > 0;
+        boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
 
         int phaseValue = getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
         int slowChance = phaseValue*(2+getItemLevel());

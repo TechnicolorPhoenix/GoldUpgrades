@@ -1,6 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.tools.sea;
 
-import com.google.gson.internal.bind.JsonTreeReader;
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
@@ -13,6 +13,8 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
@@ -60,38 +62,6 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
     }
 
     @Override
-    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
-        if (!world.isClientSide) {
-            int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(usedStack);
-            if (Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BEACH.location()) && weatherBoostLevel > 0) {
-                if (world.getRandom().nextInt(11-weatherBoostLevel) == 0 && blockState.getBlock().equals(Blocks.SAND)) {
-                    ItemStack bonusDrop = new ItemStack(Items.NAUTILUS_SHELL, 1);
-
-                    Block.popResource(world, blockPos, bonusDrop);
-
-                    if (world instanceof ServerWorld) {
-                        ServerWorld serverWorld = (ServerWorld) world;
-                        int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
-
-                        net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
-                                world,
-                                blockPos.getX() + 0.5D,
-                                blockPos.getY() + 0.5D,
-                                blockPos.getZ() + 0.5D,
-                                bonusExp
-                        );
-
-                        // Spawn the entity into the world
-                        serverWorld.addFreshEntity(expOrb);
-                    }
-                }
-            }
-        }
-
-        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-    }
-
-    @Override
     public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
         if (world.isClientSide) return;
 
@@ -121,21 +91,22 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int weatherBoostLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
         boolean weatherIsRain = isRain(stack, worldIn);
 
+        if (weatherBoosterLevel > 0)
+            tooltip.add(new StringTextComponent("§eDigging up sand at the beach yields treasure in the rain."));
+
         if (submerged && weatherIsRain) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +20%."));
+            tooltip.add(new StringTextComponent("§9+" + (20 + weatherBoosterLevel*5) + "% Harvest Speed"));
         } else if (submerged || inRain) {
-            tooltip.add(new StringTextComponent("§aActive: Harvest Speed +15%."));
+            tooltip.add(new StringTextComponent("§9+" + (15 + (inRain ? weatherBoosterLevel*5 : 0)) + "% Harvest Speed"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
         }
-        if (weatherBoostLevel > 0)
-            tooltip.add(new StringTextComponent("§eTreasure when digging up beach sand in the rain."));
     }
 
     @Override
@@ -145,6 +116,63 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
             amount = Math.max(lowestValue, amount - getWaterDiverEnchantmentLevel(stack));
         }
         return super.damageItem(stack, amount, entity, onBroken);
+    }
+
+    @Override
+    public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
+        if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+
+        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
+
+        boolean isBeach = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BEACH.location());
+        boolean minedSand = blockState.is(Blocks.SAND);
+
+        if (isBeach && minedSand && isRain(usedStack, world)) {
+            int luckAdjustedRollRange = 11 - weatherBoosterLevel - minersLuck;
+            int finalRollRange = Math.max(2, luckAdjustedRollRange);
+            int chosenInt = world.getRandom().nextInt(finalRollRange);
+
+            if (chosenInt == 0) {
+                ItemStack bonusDrop = new ItemStack(Items.NAUTILUS_SHELL, 1);
+
+                Block.popResource(world, blockPos, bonusDrop);
+
+                if (world instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) world;
+                    int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
+
+                    double x = blockPos.getX() + 0.5D;
+                    double y = blockPos.getY() + 0.5D;
+                    double z = blockPos.getZ() + 0.5D;
+
+                    ExperienceOrbEntity expOrb = new ExperienceOrbEntity(
+                            world,
+                            x, y, z,
+                            bonusExp
+                    );
+
+                    int count = 10;
+                    double xz_variance = 0.2D;
+                    double y_velocity = 0.5D;
+
+                    serverWorld.sendParticles(
+                            ParticleTypes.SPLASH,
+                            x, y, z,
+                            count,
+                            xz_variance,
+                            0.0D,
+                            xz_variance,
+                            y_velocity
+                    );
+
+                    serverWorld.addFreshEntity(expOrb);
+                }
+            }
+        }
+
+        return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
     @Override
@@ -217,6 +245,7 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
      * Handles the item use event (Right Click) with custom logic for water/ice
      * conversion, falling back to the parent class's aura application.
      */
+    @NotNull
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
