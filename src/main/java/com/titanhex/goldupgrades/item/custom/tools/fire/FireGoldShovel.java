@@ -220,64 +220,18 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
         if (player == null)
             return super.useOn(context);
 
-        Direction face = context.getClickedFace();
         ItemStack stack = context.getItemInHand();
         BlockPos clickedPos = context.getClickedPos();
-        BlockState clickedState = world.getBlockState(clickedPos);
-
-        if (clickedState.is(BlockTags.LOGS)) {
-            world.removeBlock(clickedPos, false);
-
-            Block.popResource(world, clickedPos, new ItemStack(Items.CHARCOAL));
-
-            player.giveExperiencePoints(1);
-            world.playSound(null, clickedPos, SoundEvents.WOOD_BREAK, SoundCategory.BLOCKS, 0.8F, 1.2F);
-
-            stack.hurtAndBreak(durabilityUse*2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-
-            return ActionResultType.SUCCESS;
-        }
-
-        BlockPos facePos = clickedPos.relative(face);
-
         Block clickedBlock = world.getBlockState(clickedPos).getBlock();
-        Block faceBlock = world.getBlockState(facePos).getBlock();
 
-        if (clickedBlock == Blocks.FIRE) {
-            world.setBlock(clickedPos, Blocks.AIR.getBlock().defaultBlockState(), 11);
-            setDamage(stack, getDamage(stack) - 2);
-            player.giveExperiencePoints(1);
-
-            world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
-
-            return ActionResultType.SUCCESS;
-        } else if (clickedBlock == Blocks.SAND) {
-            world.setBlock(clickedPos, Blocks.GLASS.getBlock().defaultBlockState(), 11);
-            setDamage(stack, getDamage(stack) + 2);
-            player.giveExperiencePoints(1);
-
-            world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
-
-            return ActionResultType.SUCCESS;
-        } else if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {
-            return ActionResultType.PASS;
-        } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
-            if (context.getClickedFace() == Direction.UP) {
-                world.setBlock(facePos, Blocks.TORCH.defaultBlockState(), 11);
-            } else if (face.getAxis().isHorizontal()) {
-                Block wallTorch = Blocks.WALL_TORCH;
-                BlockState torchState = wallTorch.defaultBlockState().setValue(WallTorchBlock.FACING, face);
-                world.setBlock(facePos, torchState, 1);
-            } else
-                return ActionResultType.PASS;
-
-            stack.hurtAndBreak(8, player, (e) -> e.broadcastBreakEvent(context.getHand()));
-            player.giveExperiencePoints(1);
-
-            return ActionResultType.SUCCESS;
-        }
-
-        return ActionResultType.PASS;
+        return IIgnitableTool.handleUseOn(context, (itemStack) -> {
+            if (clickedBlock == Blocks.SAND) {
+                world.setBlock(clickedPos, Blocks.GLASS.getBlock().defaultBlockState(), 11);
+                setDamage(stack, getDamage(stack) + 2);
+                player.giveExperiencePoints(1);
+                world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
+            }
+        });
     }
 
     @Override
