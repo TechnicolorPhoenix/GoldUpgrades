@@ -65,7 +65,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
         boolean currentIsDay = isDay(stack, world);
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
         boolean oldIsDay = isDay(stack);
 
@@ -78,7 +78,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
                 shouldRefresh = oldMoonPhase != currentMoonPhase;
 
         if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
 
@@ -109,7 +109,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
         float baseSpeed = super.getDestroySpeed(stack, state);
         float bonusSpeed = isNight(stack) ? 0.15F : 0F;
 
-        if (getLightLevel(stack) == 0) {
+        if (ILightInfluencedItem.getLightLevel(stack) == 0) {
             baseSpeed = 1.1F + bonusSpeed;
         }
 
@@ -155,7 +155,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
         else
             tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
-        if (getLightLevel(stack) == 0)
+        if (ILightInfluencedItem.getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
         if (isNight)
@@ -164,7 +164,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
 
     @Override
     public boolean canHarvestBlock(ItemStack stack, BlockState state) {
-        if (getLightLevel(stack) == 0)
+        if (ILightInfluencedItem.getLightLevel(stack) == 0)
             return true;
 
         return super.canHarvestBlock(stack, state);

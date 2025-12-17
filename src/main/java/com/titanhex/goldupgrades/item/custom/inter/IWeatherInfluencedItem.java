@@ -58,10 +58,10 @@ public interface IWeatherInfluencedItem {
         }
     }
 
-    default int getWeatherBoosterEnchantmentLevel(ItemStack stack) {
+    static int getWeatherBoosterEnchantmentLevel(ItemStack stack) {
         return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WEATHER_BOOSTER_ENCHANTMENT.get(), stack);
     }
-    default boolean hasWeatherBoosterEnchantment(ItemStack stack) {
+    static boolean hasWeatherBoosterEnchantment(ItemStack stack) {
         return getWeatherBoosterEnchantmentLevel(stack) > 0;
     }
 }

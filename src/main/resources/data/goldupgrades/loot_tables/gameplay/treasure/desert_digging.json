@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:glowstone_dust",
+          "weight": 20,
+          "quality": -1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:gold_nugget",
+          "weight": 10
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:magma_cream",
+          "quality": 1,
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:dragon_breath",
+          "quality": 1,
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

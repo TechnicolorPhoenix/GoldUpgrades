@@ -75,7 +75,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SEA_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        getItemLevel() + getWeatherBoosterEnchantmentLevel(stack),
+                        getItemLevel() + IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack),
                         AttributeModifier.Operation.ADDITION
                 ));
             }

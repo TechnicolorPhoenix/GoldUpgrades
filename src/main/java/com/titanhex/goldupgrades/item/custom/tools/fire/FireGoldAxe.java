@@ -51,10 +51,10 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
 
         if (oldBrightness != currentBrightness) {
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
         }
 
         if (world.isClientSide)
@@ -104,16 +104,10 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
-    private float calculateBonusDestroySpeed(ItemStack stack) {
-        int lightLevel = getLightLevel(stack);
-
-        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) getWeatherBoosterEnchantmentLevel(stack)/100;
-    }
-
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = calculateBonusDestroySpeed(stack);
+        float bonusSpeed = IIgnitableTool.calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
             float speedMultiplier = 1.0F + bonusSpeed;
@@ -193,7 +187,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        (isDay ? 2 : 1) + (isClear(stack) ? (double) getWeatherBoosterEnchantmentLevel(stack) /2 : 0),
+                        (isDay ? 2 : 1) + (isClear(stack) ? (double) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2 : 0),
                         AttributeModifier.Operation.ADDITION
                 ));
             }
@@ -208,7 +202,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        float bonus = calculateBonusDestroySpeed(stack)*100;
+        float bonus = IIgnitableTool.calculateBonusDestroySpeed(stack)*100;
 
         if (!inValidDimension(stack, worldIn) && !isClear(stack))
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));

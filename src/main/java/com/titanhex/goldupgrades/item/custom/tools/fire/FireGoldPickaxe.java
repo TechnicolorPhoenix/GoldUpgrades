@@ -52,10 +52,10 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
 
         if (oldBrightness != currentBrightness) {
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
         }
 
         if (world.isClientSide)
@@ -81,7 +81,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
         int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
 
         boolean isBadlands = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BADLANDS.location());
@@ -134,8 +134,8 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     }
 
     private float calculateBonusDestroySpeed(ItemStack stack) {
-        int lightLevel = getLightLevel(stack);
-        float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
+        float weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         return (lightLevel > 7 ? 0.15F : 0.00F) + weatherBoosterLevel/100;
     }
@@ -159,8 +159,8 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int lightLevel = getLightLevel(stack);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
         double bonus = calculateBonusDestroySpeed(stack)*100;
 
         if (lightLevel > 7)

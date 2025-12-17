@@ -61,7 +61,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
         boolean currentIsDay = isDay(stack, world);
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
         boolean oldIsDay = isDay(stack);
 
@@ -74,7 +74,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
                 shouldRefresh = oldMoonPhase != currentMoonPhase;
 
         if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
         }
@@ -107,7 +107,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
-        int lightLevel = getLightLevel(stack);
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
         float toughnessBonus = (float) (15 - lightLevel) / 5;
 
         if (equipmentSlot == this.slot)

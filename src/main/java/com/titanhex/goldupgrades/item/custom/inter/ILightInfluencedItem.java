@@ -9,12 +9,13 @@ import net.minecraft.world.World;
 public interface ILightInfluencedItem {
     String NBT_LIGHT_LEVEL = "ItemLightLevel";
 
-    default int getLightLevel(ItemStack stack) {
+    static int getLightLevel(ItemStack stack) {
         return stack.getOrCreateTag().getInt(NBT_LIGHT_LEVEL);
     }
-    default void setLightLevel(ItemStack stack, int value) {
+    static void setLightLevel(ItemStack stack, int value) {
         stack.getOrCreateTag().putInt(NBT_LIGHT_LEVEL, value);
     }
+
     default int getLightLevel(ItemStack stack, World world, BlockPos pos) {
         if (world != null) {
             long time = world.getDayTime() % 24000L;
@@ -29,7 +30,7 @@ public interface ILightInfluencedItem {
             }
             return Math.max(0, lightLevel + sunShift);
         } else
-            return getLightLevel(stack);
+            return ILightInfluencedItem.getLightLevel(stack);
     }
 
     static int getMoonlightEnchantmentLevel(ItemStack stack) {

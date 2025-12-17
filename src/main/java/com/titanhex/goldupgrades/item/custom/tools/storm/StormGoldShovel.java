@@ -70,7 +70,7 @@ public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWe
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         if (weatherBoosterLevel > 0)
             tooltip.add(new StringTextComponent("§eDigging grass in swamps yields treasure during thunderstorms."));
@@ -84,11 +84,11 @@ public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWe
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
 
         if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
         boolean isSwamp = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.SWAMP.location());
-        boolean minedGrass = blockState.is(Blocks.GRASS);
+        boolean minedGrass = blockState.is(Blocks.GRASS_BLOCK);
 
         if (isSwamp && minedGrass && isThundering(usedStack, world)) {
             int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);

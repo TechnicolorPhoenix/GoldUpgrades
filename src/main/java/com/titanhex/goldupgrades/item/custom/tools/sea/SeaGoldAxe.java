@@ -71,7 +71,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
             builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                     SEA_DAMAGE_MODIFIER,
                     "Weapon modifier",
-                    getItemLevel() + (isRain(stack) ? (double) getWeatherBoosterEnchantmentLevel(stack) /2: 0F),
+                    getItemLevel() + (isRain(stack) ? (double) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2: 0F),
                     AttributeModifier.Operation.ADDITION
             ));
         }
@@ -139,7 +139,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
         boolean inRain = getIsInRain(stack);
         boolean submerged = getIsSubmerged(stack);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         if (inRain && submerged) {
             tooltip.add(new StringTextComponent("§9+" + (20 + weatherBoosterLevel*5) + "% Harvest Speed"));

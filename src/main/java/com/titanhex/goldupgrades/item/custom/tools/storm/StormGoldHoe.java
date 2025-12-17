@@ -104,7 +104,7 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
         boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
 
         if (isThundering) {
@@ -120,7 +120,7 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
 
         if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
         boolean isPlains = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.PLAINS.location());

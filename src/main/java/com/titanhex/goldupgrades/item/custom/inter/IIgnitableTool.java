@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.WallTorchBlock;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -18,8 +19,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -49,14 +50,18 @@ public interface IIgnitableTool {
      */
     ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos pos);
 
-    @OnlyIn(Dist.CLIENT)
-    default void appendHoverText(ItemStack stack, List<ITextComponent> tooltip, String treasureText) {
+    static float calculateBonusDestroySpeed(ItemStack stack) {
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
 
-        // Add the specific treasure text passed from the item
-        if (treasureText != null && !treasureText.isEmpty()) {
-            // check if weather booster > 0
-            tooltip.add(new StringTextComponent(treasureText));
-        }
+        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)/100;
+    }
+
+    static void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
+        int bonus = (int) (calculateBonusDestroySpeed(stack) * 100);
+
+        if (lightLevel > 7)
+            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed ."));
     }
 
     static ActionResultType handleUseOn(ItemUseContext context, Consumer<ItemStack> specializedAction) {
@@ -96,8 +101,6 @@ public interface IIgnitableTool {
 
         if (specializedAction != null) {
             specializedAction.accept(stack);
-            // Note: You might need this method to return an ActionResultType to know if it succeeded
-            // For this example, let's assume specific logic is handled inside the Item class if it's unique
         }
 
         if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {

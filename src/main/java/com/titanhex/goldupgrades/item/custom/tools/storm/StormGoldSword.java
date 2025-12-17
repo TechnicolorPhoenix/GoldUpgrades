@@ -64,7 +64,7 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             if (isThundering) {
-                float damageBonus = getWeatherBoosterEnchantmentLevel(stack);
+                float damageBonus = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
                 ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_SWORD.get());
                 Multimap<Attribute, AttributeModifier> modifiers = powerItem.getAttributeModifiers(EquipmentSlotType.MAINHAND);
@@ -153,7 +153,7 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         if (isThundering) {
             tooltip.add(new StringTextComponent("§9+"+(30 + 10*weatherBoosterLevel)+"% Harvest Speed"));
@@ -176,7 +176,7 @@ public class StormGoldSword extends EffectSword implements ILevelableItem, IWeat
 
         if (isThundering) {
             if (baseSpeed > 1.0F) {
-                float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+                float weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
                 return baseSpeed + 0.3F + 0.1F*weatherBoosterLevel;
             }
         }

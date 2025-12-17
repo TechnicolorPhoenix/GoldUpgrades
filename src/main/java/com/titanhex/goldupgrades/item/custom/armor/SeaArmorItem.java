@@ -158,7 +158,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
         if (currentWeather != lastWeather) {
             if (currentWeather == Weather.RAINING && lastWeather == Weather.CLEAR) {
-                float weatherBoosterAmount = getWeatherBoosterEnchantmentLevel(stack);
+                float weatherBoosterAmount = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
                 livingEntity.setAbsorptionAmount(
                         Math.min(
                                 16F + weatherBoosterAmount,

@@ -100,7 +100,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         boolean submerged = this.getIsSubmerged(stack);
         boolean weatherIsRain = isRain(stack, worldIn);
 
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§a+" + (20 + weatherBoosterLevel*5) + "% Harvest Speed"));
@@ -111,7 +111,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         }
 
         if (weatherBoosterLevel > 0)
-            tooltip.add(new StringTextComponent("§eMine ocean stones for treasure when raining."));
+            tooltip.add(new StringTextComponent("§eMine jungle stones for treasure when raining."));
     }
 
     @Override
@@ -130,7 +130,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
 
         if (baseSpeed > 1.0F) {
             float bonusSpeed = getIsSubmerged(stack) ? weatherIsRain ? 0.20F : 0.15F : getIsInRain(stack) ? 0.15F : 0F;
-            bonusSpeed += isRain(stack) ? (float) getWeatherBoosterEnchantmentLevel(stack) /100*5 : 0F;
+            bonusSpeed += isRain(stack) ? (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /100*5 : 0F;
             float speedMultiplier = 1.0F + bonusSpeed;
 
             return baseSpeed * speedMultiplier;
@@ -192,12 +192,12 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
 
         if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
         int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
 
-        boolean isOcean = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.OCEAN.location());
+        boolean isOcean = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.JUNGLE.location());
         boolean minedStone = blockState.is(BlockTags.BASE_STONE_OVERWORLD);
 
         if (isOcean && minedStone && isRain(usedStack, world)) {

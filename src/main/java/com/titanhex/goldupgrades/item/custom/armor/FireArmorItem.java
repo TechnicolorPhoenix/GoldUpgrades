@@ -64,7 +64,7 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER[this.slot.getIndex()],
                         "Armor modifier",
-                        this.damageBonus + (double) getWeatherBoosterEnchantmentLevel(stack)/2,
+                        this.damageBonus + (double) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)/2,
                         AttributeModifier.Operation.ADDITION
                 ));
             }

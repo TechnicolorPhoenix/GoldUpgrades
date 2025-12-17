@@ -53,12 +53,12 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
         boolean currentIsDay = isDay(stack, world);
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
         MoonPhase oldMoonPhase = this.getMoonPhase(stack);
         boolean oldIsDay = isDay(stack);
 
         if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
             setMoonPhase(stack, currentMoonPhase);
             setIsDay(stack, currentIsDay);
         }
@@ -71,7 +71,7 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         float baseSpeed = super.getDestroySpeed(stack, state);
         float bonusSpeed = isDay(stack) ? 0 : 0.15F;
 
-        if (getLightLevel(stack) == 0) {
+        if (ILightInfluencedItem.getLightLevel(stack) == 0) {
             baseSpeed = 1.1F;
         }
 
@@ -116,7 +116,7 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         tooltip.add(new StringTextComponent((weaknessChance == 0 ? "§c" : "§a" ) + "Weakness Chance: " + weaknessChance + "%"));
         tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
 
-        if (getLightLevel(stack) == 0)
+        if (ILightInfluencedItem.getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
         if (isNight(stack))
@@ -127,7 +127,7 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
 
     @Override
     public boolean canHarvestBlock(ItemStack stack, BlockState state) {
-        if (getLightLevel(stack) == 0)
+        if (ILightInfluencedItem.getLightLevel(stack) == 0)
             return true;
 
         return super.canHarvestBlock(stack, state);

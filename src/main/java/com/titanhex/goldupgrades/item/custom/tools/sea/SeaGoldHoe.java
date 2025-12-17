@@ -126,7 +126,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         int elementalHoeEnchantmentLevel = getElementalHoeEnchantmentLevel(stack);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         boolean inRain = this.getIsInRain(stack);
         boolean submerged = this.getIsSubmerged(stack);
@@ -136,7 +136,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
             tooltip.add(new StringTextComponent("§eHold for Dolphin's Grace, use for Water Breathing"));
 
         if (weatherBoosterLevel > 0)
-            tooltip.add(new StringTextComponent("§Cut leaves in the Jungle for treasure while raining."));
+            tooltip.add(new StringTextComponent("§Cut kelp in the Ocean for treasure while raining."));
 
         if (submerged && weatherIsRain) {
             tooltip.add(new StringTextComponent("§9 +" + (20 + weatherBoosterLevel*5) +"%Harvest Speed"));
@@ -151,14 +151,14 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
 
         if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
         int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
 
-        boolean isJungle = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.JUNGLE.location());
-        boolean minedLeaves = blockState.is(BlockTags.LEAVES);
+        boolean isJungle = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.OCEAN.location());
+        boolean minedLeaves = blockState.is(Blocks.KELP_PLANT);
 
         if (isJungle && minedLeaves && isRain(usedStack, world)) {
             int luckAdjustedRollRange = 10 - weatherBoosterLevel - minersLuck;
@@ -204,7 +204,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
         boolean weatherIsRain = isRain(stack);
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
         float bonusSpeed = getIsSubmerged(stack) ? 0.15F : getIsInRain(stack) ? 0.15F : 0F;
 
         if (weatherIsRain)

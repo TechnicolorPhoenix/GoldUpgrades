@@ -2,6 +2,7 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -15,10 +16,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -37,21 +35,23 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
 {
     int burnTicks;
     int durabilityUse;
+    TreasureToolComponent treasureHandler;
 
     public FireGoldShovel(IItemTier tier, float atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
+        treasureHandler = new TreasureToolComponent();
     }
 
     @Override
     public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
 
         if (oldBrightness != currentBrightness)
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
 
         if (world.isClientSide)
             return;
@@ -74,9 +74,9 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
     }
 
     private float calculateBonusDestroySpeed(ItemStack stack) {
-        int lightLevel = getLightLevel(stack);
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) getWeatherBoosterEnchantmentLevel(stack)/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)/100;
     }
 
     @Override
@@ -97,16 +97,8 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int lightLevel = getLightLevel(stack);
-        boolean hasWeatherBoost = getWeatherBoosterEnchantmentLevel(stack) > 0;
-
-        float bonus = calculateBonusDestroySpeed(stack) * 100;
-
-        if (hasWeatherBoost)
-            tooltip.add(new StringTextComponent("§eDigging sand in the desert yields treasure during clear weather."));
-
-        if (lightLevel > 7)
-            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed ."));
+        treasureHandler.appendHoverText(stack, tooltip, "§eDigging sand in the desert yields treasure during clear weather.");
+        IIgnitableTool.appendHoverText(stack, worldIn, tooltip, flagIn);
     }
 
     /**
@@ -123,44 +115,13 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(usedStack);
-
-        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-
-        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
-
-        boolean isDesert = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.DESERT.location());
-        boolean minedDeadBush = blockState.is(BlockTags.SAND);
-
-        if (isDesert && minedDeadBush && isClear(usedStack, world)) {
-            int luckAdjustedRollRange = 12 - weatherBoosterLevel - minersLuck;
-            int finalRollRange = Math.max(2, luckAdjustedRollRange);
-
-            if (world.getRandom().nextInt(finalRollRange) == 0) {
-                ItemStack bonusDrop = new ItemStack(Items.GLOWSTONE_DUST, 1);
-
-                Block.popResource(world, blockPos, bonusDrop);
-
-                if (world instanceof ServerWorld) {
-                    ServerWorld serverWorld = (ServerWorld) world;
-                    BlockState state = serverWorld.getBlockState(blockPos);
-                    int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
-
-                    net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
-                            world,
-                            blockPos.getX() + 0.5D,
-                            blockPos.getY() + 0.5D,
-                            blockPos.getZ() + 0.5D,
-                            bonusExp
-                    );
-
-                    // Spawn the entity into the world
-                    serverWorld.addFreshEntity(expOrb);
-                }
-            }
-        }
-
+        treasureHandler.tryDropTreasure(
+                world, blockPos, blockState, miningEntity, usedStack,
+                Biomes.DESERT.location(),
+                BlockTags.SAND,
+                new ResourceLocation("goldupgrades", "gameplay/treasure/desert_digging"),
+                12
+        );
         return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 

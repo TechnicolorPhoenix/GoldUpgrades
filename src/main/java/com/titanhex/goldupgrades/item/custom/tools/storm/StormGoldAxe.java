@@ -66,7 +66,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
 
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             if (isThundering) {
-                float damageBonus = (float) getWeatherBoosterEnchantmentLevel(stack) /2;
+                float damageBonus = (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2;
 
                 ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_AXE.get());
                 Multimap<Attribute, AttributeModifier> modifiers = powerItem.getAttributeModifiers(EquipmentSlotType.MAINHAND);
@@ -155,7 +155,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
-        int weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         if (isThundering) {
             tooltip.add(new StringTextComponent("§9+" +(30 + 3*weatherBoosterLevel)+ "% Harvest Speed"));
@@ -177,7 +177,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
         boolean isThundering = getWeather(stack) == Weather.THUNDERING;
 
         if (isThundering && baseSpeed > 1.0F) {
-            float weatherBoosterLevel = getWeatherBoosterEnchantmentLevel(stack);
+            float weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
             return baseSpeed + 0.3F + 0.03F*weatherBoosterLevel;
         }
 

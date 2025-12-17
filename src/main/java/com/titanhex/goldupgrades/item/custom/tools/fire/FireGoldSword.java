@@ -51,10 +51,10 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
-        int oldBrightness = getLightLevel(stack);
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
 
         if (oldBrightness != currentBrightness) {
-            setLightLevel(stack, currentBrightness);
+            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
         }
 
         if (world.isClientSide)
@@ -106,9 +106,9 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     }
 
     private float calculateBonusDestroySpeed(ItemStack stack) {
-        int lightLevel = getLightLevel(stack);
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
 
-        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) getWeatherBoosterEnchantmentLevel(stack)/100;
+        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)/100;
     }
 
     @Override
@@ -137,7 +137,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                         SUN_DAMAGE_MODIFIER,
                         "Weapon modifier",
-                        (isDay ? 2 : 1) + (isClear(stack) ? getWeatherBoosterEnchantmentLevel(stack) : 0),
+                        (isDay ? 2 : 1) + (isClear(stack) ? IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) : 0),
                         AttributeModifier.Operation.ADDITION
                 ));
             }
@@ -150,7 +150,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int lightLevel = getLightLevel(stack);
+        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
 
         float bonus = calculateBonusDestroySpeed(stack)*100;
 
