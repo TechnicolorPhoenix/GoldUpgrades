@@ -30,6 +30,18 @@ public interface IDimensionInfluencedItem {
         return hasEnchantment(stack) || getDimension(stack) == primaryDimension();
     }
 
+    default boolean changeDimension(ItemStack stack, World world){
+        DimensionType currentDimension = DimensionType.getCurrentDimension(world);
+
+        DimensionType oldDimension = getDimension(stack);
+
+        if (currentDimension != oldDimension){
+            setDimension(stack, currentDimension);
+            return true;
+        }
+        return false;
+    }
+
     static int getEnchantmentLevel(ItemStack stack) {
         return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.DIMENSION_MARAUDER_ENCHANTMENT.get(), stack);
     }

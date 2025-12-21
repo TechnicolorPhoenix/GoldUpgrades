@@ -27,12 +27,10 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem, IArmorCooldown {
@@ -52,7 +50,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
             UUID.randomUUID(), // CHESTPLATE
             UUID.randomUUID()  // HELMET
     };
-    private Random RANDOM = new Random();
+    private final Random RANDOM = new Random();
 
     public SeaArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, effects, attributeBonuses, builderIn);
@@ -104,7 +102,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
         boolean inRain = this.getInRain(stack);
@@ -116,9 +114,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
             tooltip.add(new StringTextComponent("§cInactive: Rain required for Speed bonus."));
         }
 
-        if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§aActive: Armor bonus + 1."));
-        } else {
+        if (!inRain && !submerged) {
             tooltip.add(new StringTextComponent("§cInactive: Rain required for Armor bonus."));
         }
 
@@ -126,7 +122,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
         super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
 
         if (world.isClientSide) return;
@@ -136,8 +132,8 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
         boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
 
         boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
-        boolean currentRainOrwater = holdingEntity.isInWaterOrRain();
-        boolean currentInRain = currentRainOrwater && !currentSubmerged;
+        boolean inWaterOrRain = holdingEntity.isInWaterOrRain();
+        boolean currentInRain = inWaterOrRain && !currentSubmerged;
 
         boolean oldSubmerged = this.getSubmerged(stack);
         boolean oldInRain = this.getInRain(stack);
@@ -215,7 +211,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
             int toRestore = Math.min(oxygenDifference, 30);
 
             if (currentOxygen <= 60 && timer == 0) {
-                stack.hurtAndBreak(toRestore / this.drainFactor, player, (p) -> p.broadcastBreakEvent(stack.getEquipmentSlot()));
+                stack.hurtAndBreak(toRestore / this.drainFactor, player, (p) -> p.broadcastBreakEvent(Objects.requireNonNull(stack.getEquipmentSlot())));
                 player.setAirSupply(currentOxygen + toRestore);
                 setArmorCooldown(stack, 120);
             }

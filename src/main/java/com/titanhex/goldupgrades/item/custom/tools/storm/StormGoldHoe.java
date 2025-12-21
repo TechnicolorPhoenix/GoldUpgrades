@@ -1,38 +1,31 @@
 package com.titanhex.goldupgrades.item.custom.tools.storm;
 
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.enchantment.ModEnchantments;
+import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.IElementalHoe;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
-import com.titanhex.goldupgrades.item.custom.tools.effect.EffectPickaxe;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
@@ -41,17 +34,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherInfluencedItem, IElementalHoe
 {
+
+    TreasureToolComponent treasureHandler;
     /**
      * Constructor for the AuraPickaxe.
      * * @param tier The material tier of the pickaxe.
      *
      * @param tier                  The base material of the tool.
-     * @param attackDamage          The base attack damage of the tool.
-     * @param attackSpeed           The attack speed modifier of the tool.
+     * @param attackDamage          The base attack damage.
+     * @param attackSpeed           The attack speed modifier.
      * @param effectAmplifications  A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
      * @param effectDuration        The duration of the effects in ticks (20 ticks = 1 second).
      * @param durabilityCost        The number of durability points to subtract on each use.
@@ -59,10 +53,11 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
      */
     public StormGoldHoe(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed + 1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
+        treasureHandler = new TreasureToolComponent();
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
 
         if (world.isClientSide)
@@ -77,15 +72,13 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
 
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
-        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
 
         if (isEquipped && elementalHoeLevel > 0 && (isThundering(stack, world))) {
             int duration = 60;
             if (livingEntity.tickCount % 60 == 0)
                 stack.hurtAndBreak(1, livingEntity,
-                        (e) -> {
-                            e.broadcastBreakEvent(EquipmentSlotType.OFFHAND);
-                        }
+                        (e) -> e.broadcastBreakEvent(EquipmentSlotType.OFFHAND)
                 );
             livingEntity.addEffect(new EffectInstance(
                     Effects.DIG_SPEED,
@@ -103,71 +96,27 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        boolean isThundering = isThundering(stack);
         int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
-        boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
 
         if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+"+(30 + weatherBoosterLevel)+"% Harvest Speed"));
+            tooltip.add(new StringTextComponent("§9+"+(30 + weatherBoosterLevel*5)+"% Harvest Speed"));
             tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
         }
-        if (weatherBoosterLevel > 0)
-            tooltip.add(new StringTextComponent("§Pruning leaves in plains yields treasure during thunderstorms."));
-        if (hasElementalHoeEnchantment)
-            tooltip.add(new StringTextComponent("§eHold for Dig Speed, use for Healing"));
+        treasureHandler.appendHoverText(stack, tooltip, "§Pruning leaves in plains yields treasure during thunderstorms.");
+        IElementalHoe.appendHoverText(stack, tooltip, "§eHold for Dig Speed, use for Healing");
     }
 
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
 
-        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-        boolean isPlains = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.PLAINS.location());
-        boolean minedLeaves = blockState.is(BlockTags.LEAVES);
-
-        if (isPlains && minedLeaves && isThundering(usedStack, world)) {
-            int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
-            int luckAdjustedRollRange = 10 - weatherBoosterLevel - minersLuck;
-            int finalRollRange = Math.max(2, luckAdjustedRollRange);
-
-            if (world.getRandom().nextInt(finalRollRange) == 0) {
-                ItemStack bonusDrop = new ItemStack(Items.HONEYCOMB, 1);
-
-                Block.popResource(world, blockPos, bonusDrop);
-
-                if (world instanceof ServerWorld) {
-                    ServerWorld serverWorld = (ServerWorld) world;
-                    int bonusExp = blockState.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
-
-                    double x = blockPos.getX() + 0.5D;
-                    double y = blockPos.getY() + 0.5D;
-                    double z = blockPos.getZ() + 0.5D;
-
-                    net.minecraft.entity.item.ExperienceOrbEntity expOrb = new net.minecraft.entity.item.ExperienceOrbEntity(
-                            world,
-                            x, y, z,
-                            bonusExp
-                    );
-
-                    int count = 10;
-                    double xz_variance = 0.2D;
-                    double y_velocity = 0.5D;
-
-                    serverWorld.sendParticles(
-                            ParticleTypes.ENCHANT,
-                            x, y, z,
-                            count,
-                            xz_variance,
-                            0.0D,
-                            xz_variance,
-                            y_velocity
-                    );
-
-                    serverWorld.addFreshEntity(expOrb);
-                }
-            }
-        }
+        treasureHandler.tryDropTreasure(world, blockPos, blockState, miningEntity, usedStack,
+                Biomes.PLAINS.location(), (state) -> (state.is(BlockTags.LEAVES)),
+                (stack) -> isThundering(stack, world),
+                new ResourceLocation("goldupgrades", "gameplay/treasure/plains_cutting"),
+                10
+                );
 
         return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
@@ -180,10 +129,11 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
         return super.getHarvestLevel(stack, toolType, player, state);
     }
 
+    @NotNull
     @Override
     public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
 
         if (elementalHoeLevel > 0) {
             player.addEffect(new EffectInstance(
@@ -194,7 +144,7 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
                     true
             ));
 
-            stack.hurtAndBreak(60-(elementalHoeLevel*10), player, (e) -> {e.broadcastBreakEvent(hand);});
+            stack.hurtAndBreak(60-(elementalHoeLevel*10), player, (e) -> e.broadcastBreakEvent(hand));
 
             return ActionResult.consume(stack);
         }
@@ -203,9 +153,9 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     }
 
     @Override
-    public float getDestroySpeed(ItemStack stack, BlockState state) {
+    public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        boolean isThundering = isThundering(stack);
 
         if (isThundering) {
             if (baseSpeed > 1.0F) {

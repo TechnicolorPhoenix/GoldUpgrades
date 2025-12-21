@@ -5,21 +5,29 @@ import com.titanhex.goldupgrades.item.ModItemTier;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TieredItem;
 
 public interface ILevelableItem {
-    default int getItemLevel(){
-        if (this instanceof TieredItem) {
-            TieredItem tieredItem = (TieredItem) this;
+
+    static int getItemLevel(Item item){
+        if (item instanceof TieredItem) {
+            TieredItem tieredItem = (TieredItem) item;
             return tieredItem.getTier().getLevel();
-        } else if (this instanceof ArmorItem) {
-            ArmorItem armor = (ArmorItem) this;
+        } else if (item instanceof ArmorItem) {
+            ArmorItem armor = (ArmorItem) item;
             if (armor.getMaterial() instanceof ModArmorMaterial) {
-                ModArmorMaterial modMaterial = (ModArmorMaterial) ((ArmorItem) this).getMaterial();
+                ModArmorMaterial modMaterial = (ModArmorMaterial) ((ArmorItem) item).getMaterial();
                 return modMaterial.getLevel();
             }
         }
+        return -1;
+    }
+    default int getItemLevel(){
+        if (this instanceof  Item)
+            return getItemLevel((Item) this);
+
         return -1;
     }
 

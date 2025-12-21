@@ -2,6 +2,8 @@ package com.titanhex.goldupgrades.item.custom.inter;
 
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -31,6 +33,16 @@ public interface ILightInfluencedItem {
             return Math.max(0, lightLevel + sunShift);
         } else
             return ILightInfluencedItem.getLightLevel(stack);
+    }
+
+    default void calibrateLightLevel(ItemStack stack, World world, Entity holdingEntity){
+        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
+
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
+
+        if (oldBrightness != currentBrightness) {
+            setLightLevel(stack, currentBrightness);
+        }
     }
 
     static int getMoonlightEnchantmentLevel(ItemStack stack) {

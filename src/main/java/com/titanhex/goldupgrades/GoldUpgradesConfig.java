@@ -10,18 +10,17 @@ public class GoldUpgradesConfig {
     public static final ForgeConfigSpec COMMON_SPEC;
 
     // Define your values
-    public static ForgeConfigSpec.ConfigValue<Integer> EXAMPLE_INTEGER;
+    public static ForgeConfigSpec.ConfigValue<Integer> TORCH_DURABILITY_COST;
 
     static {
         COMMON_BUILDER.comment("Gold Upgrades Mod Settings").push("general"); // Section
 
-        EXAMPLE_INTEGER = COMMON_BUILDER
-                .comment("An example integer setting")
-                .define("example_int", 100); // Name, Default Value
+        TORCH_DURABILITY_COST = COMMON_BUILDER
+                .comment("Durability cost to place down a torch")
+                .define("torch_durability", 8); // Name, Default Value
 
         COMMON_BUILDER.pop(); // End section
 
         COMMON_SPEC = COMMON_BUILDER.build();
     }
-
 }

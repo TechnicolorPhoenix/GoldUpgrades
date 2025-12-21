@@ -65,7 +65,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
-        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
 
         if (isEquipped && elementalHoeLevel > 0 && (isNight(stack))) {
             int duration = 60;
@@ -133,7 +133,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
+        boolean hasElementalHoeEnchantment = IElementalHoe.hasElementalHoeEnchantment(stack);
 
         int phaseValue = getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
         int slowChance = phaseValue*(2+getItemLevel());
@@ -165,7 +165,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
     @Override
     public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
 
         if (elementalHoeLevel > 0) {
             player.addEffect(new EffectInstance(

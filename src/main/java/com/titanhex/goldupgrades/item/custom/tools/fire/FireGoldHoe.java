@@ -1,8 +1,8 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
-import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
+import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
@@ -10,51 +10,45 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.monster.MagmaCubeEntity;
+import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Objects;
 
 public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTool, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem, ILightInfluencedItem, IElementalHoe
 {
     int burnTicks;
     int durabilityUse;
+    TreasureToolComponent treasureHandler;
 
     public FireGoldHoe(IItemTier tier, int atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
+        treasureHandler = new TreasureToolComponent();
     }
 
     @Override
     public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
 
-        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
-
-        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
-
-        if (oldBrightness != currentBrightness)
-             ILightInfluencedItem.setLightLevel(stack, currentBrightness);
+        calibrateLightLevel(stack, world, holdingEntity);
 
         if (world.isClientSide)
             return;
@@ -66,21 +60,11 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
 
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
 
-        DimensionType oldDimension = getDimension(stack);
-        Weather oldWeather = getWeather(stack);
-        boolean oldIsDay = isDay(stack);
+        changeDimension(stack, world);
+        changeWeather(stack, world);
+        changeDay(stack, world);
 
-        DimensionType currentDimension = DimensionType.getCurrentDimension(world);
-        Weather currentWeather = Weather.getCurrentWeather(world);
-        boolean currentIsDay = isDay(stack, world);
-
-        if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
-            setWeather(stack, currentWeather);
-            setDimension(stack, currentDimension);
-            setIsDay(stack, currentIsDay);
-        }
-
-        int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
 
         if (isEquipped && elementalHoeLevel > 0 && (isClear(stack) || inValidDimension(stack))) {
             int duration = 60;
@@ -103,54 +87,27 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @Override
     public boolean mineBlock(@NotNull ItemStack usedStack, @NotNull World world, @NotNull BlockState blockState, @NotNull BlockPos blockPos, @NotNull LivingEntity miningEntity) {
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        if (!isClear(usedStack)) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
+        MagmaCubeEntity magmaCube = new MagmaCubeEntity(EntityType.MAGMA_CUBE, world);
 
-        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(usedStack);
+        try {
+            // "func_70799_a" is the SRG name for setSlimeSize in 1.16.5
+            Method setSizeMethod = ObfuscationReflectionHelper.findMethod(SlimeEntity.class, "func_70799_a", int.class, boolean.class);
 
-        if (weatherBoosterLevel == 0) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-
-        int minersLuck = (int) miningEntity.getAttributeValue(Attributes.LUCK);
-
-        boolean isDesert = Objects.equals(world.getBiome(blockPos).getRegistryName(), Biomes.BADLANDS.location());
-        boolean minedDeadBush = blockState.is(Blocks.DEAD_BUSH);
-
-        if (isDesert && minedDeadBush && isClear(usedStack, world)) {
-            int luckAdjustedRollRange = 11 - weatherBoosterLevel - minersLuck;
-            int finalRollRange = Math.max(2, luckAdjustedRollRange);
-
-            if (world.getRandom().nextInt(finalRollRange) == 0) {
-                if (world instanceof ServerWorld) {
-                    ServerWorld serverWorld = (ServerWorld) world;
-                    BlockState state = serverWorld.getBlockState(blockPos);
-
-                    double x = blockPos.getX() + 0.5D;
-                    double y = blockPos.getY() + 0.5D;
-                    double z = blockPos.getZ() + 0.5D;
-                    
-                    MagmaCubeEntity magmaCube = new MagmaCubeEntity(EntityType.MAGMA_CUBE, world);
-                    magmaCube.setHealth(6F);
-                    magmaCube.setPos(x, y-0.5F, z);
-
-                    if (world.getRandom().nextInt(2) == 0) {
-                        ItemStack bonusDrop = new ItemStack(Items.MAGMA_CREAM, 1);
-                        Block.popResource(world, blockPos, bonusDrop);
-                    }
-                    
-                    serverWorld.addFreshEntity(magmaCube);
-
-                    int bonusExp = state.getExpDrop(serverWorld, blockPos, 0, 0) + 5;
-
-                    ExperienceOrbEntity expOrb = new ExperienceOrbEntity(
-                            world,
-                            x, y, z,
-                            bonusExp
-                    );
-
-                    serverWorld.addFreshEntity(expOrb);
-                    return true;
-                }
-            }
+            // Call the method: setSizeMethod.invoke(entity, size, resetHealth)
+            setSizeMethod.invoke(magmaCube, world.getRandom().nextInt(5)+1, true);
+        } catch (Exception e) {
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
         }
-
+        magmaCube.setHealth(magmaCube.getMaxHealth());
+        treasureHandler.tryMonsterSpawn(
+                world, blockPos, blockState, miningEntity, usedStack,
+                Biomes.BADLANDS.location(),
+                Blocks.DEAD_BUSH,
+                magmaCube,
+                9
+        );
         return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
     }
 
@@ -177,19 +134,9 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
-        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
-
-        boolean hasElementalHoeEnchantment = hasElementalHoeEnchantment(stack);
-
-        float bonus = calculateBonusDestroySpeed(stack)*100;
-
-        if (lightLevel > 7)
-            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
-        if (hasElementalHoeEnchantment)
-            tooltip.add(new StringTextComponent("§eHold for Fire Resistance, use for Strength"));
-        if (weatherBoosterLevel > 0)
-            tooltip.add(new StringTextComponent("§eCutting dead bushes in badlands yields treasure in clear weather."));
+        treasureHandler.appendHoverText(stack, tooltip, "§eCutting dead bushes in badlands yields treasure in clear weather.");
+        IIgnitableTool.appendHoverText(stack, tooltip);
+        IElementalHoe.appendHoverText(stack, tooltip, "§eHold for Fire Resistance, use for Strength");
     }
 
     /**
@@ -201,34 +148,6 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @Override
     public void igniteEntity(LivingEntity target, ItemStack stack) {
         target.setSecondsOnFire(2 + (isDay(stack) ? 2 : 0));
-    }
-
-    /**
-     * Attempts to ignite a block, similar to a Flint and Steel.
-     * This logic is typically called from the Item's onItemUse method.
-     *
-     * @param player The player performing the action.
-     * @param world  The world the action is taking place in.
-     * @param firePos    The BlockPos of the block being targeted.
-     * @return ActionResultType.SUCCESS if fire was placed, ActionResultType.PASS otherwise.
-     */
-    @Override
-    public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos firePos) {
-        if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
-            world.playSound(player, firePos, SoundEvents.FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
-
-            world.setBlock(firePos, Blocks.FIRE.getBlock().defaultBlockState(), burnTicks);
-
-            if (player != null) {
-                player.getItemInHand(player.getUsedItemHand()).hurtAndBreak(durabilityUse, player, (p) -> {
-                    p.broadcastBreakEvent(player.getUsedItemHand());
-                });
-            }
-
-            return ActionResultType.sidedSuccess(world.isClientSide); // ActionResultType.success(world.isRemote)
-        }
-
-        return ActionResultType.PASS;
     }
 
     /**
@@ -276,7 +195,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         if (player == null)
             return super.useOn(context);
 
-        return IIgnitableTool.handleUseOn(context, (itemStack) -> {});
+        //TODO: Set this to cook potato, or bake bread.
+        return IIgnitableTool.useOn(context, null);
     }
 
     @Override

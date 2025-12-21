@@ -7,29 +7,23 @@ import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.WallTorchBlock;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 
 public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
 {
@@ -98,7 +92,7 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         treasureHandler.appendHoverText(stack, tooltip, "§eDigging sand in the desert yields treasure during clear weather.");
-        IIgnitableTool.appendHoverText(stack, worldIn, tooltip, flagIn);
+        IIgnitableTool.appendHoverText(stack, tooltip);
     }
 
     /**
@@ -118,40 +112,12 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
         treasureHandler.tryDropTreasure(
                 world, blockPos, blockState, miningEntity, usedStack,
                 Biomes.DESERT.location(),
-                BlockTags.SAND,
+                (state) -> state.is(BlockTags.SAND),
+                this::isClear,
                 new ResourceLocation("goldupgrades", "gameplay/treasure/desert_digging"),
                 12
         );
         return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
-    }
-
-    /**
-     * Attempts to ignite a block, similar to a Flint and Steel.
-     * This logic is typically called from the Item's onItemUse method.
-     *
-     * @param player The player performing the action.
-     * @param world  The world the action is taking place in.
-     * @param firePos    The BlockPos of the block being targeted.
-     * @return ActionResultType.SUCCESS if fire was placed, ActionResultType.PASS otherwise.
-     */
-    @Override
-    public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos firePos) {
-
-        if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
-            world.playSound(player, firePos, SoundEvents.FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
-
-            world.setBlock(firePos, Blocks.FIRE.getBlock().defaultBlockState(), burnTicks);
-
-            if (player != null) {
-                player.getItemInHand(player.getUsedItemHand()).hurtAndBreak(durabilityUse, player, (p) -> {
-                    p.broadcastBreakEvent(player.getUsedItemHand());
-                });
-            }
-
-            return ActionResultType.sidedSuccess(world.isClientSide); // ActionResultType.success(world.isClientSide)
-        }
-
-        return ActionResultType.PASS;
     }
 
     /**
@@ -185,13 +151,15 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
         BlockPos clickedPos = context.getClickedPos();
         Block clickedBlock = world.getBlockState(clickedPos).getBlock();
 
-        return IIgnitableTool.handleUseOn(context, (itemStack) -> {
+        return IIgnitableTool.useOn(context, (itemStack) -> {
             if (clickedBlock == Blocks.SAND) {
                 world.setBlock(clickedPos, Blocks.GLASS.getBlock().defaultBlockState(), 11);
                 setDamage(stack, getDamage(stack) + 2);
                 player.giveExperiencePoints(1);
                 world.playSound(null, clickedPos, SoundEvents.FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.8F, 1.2F);
+                return ActionResultType.CONSUME;
             }
+            return ActionResultType.PASS;
         });
     }
 

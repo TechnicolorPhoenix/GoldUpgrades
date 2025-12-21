@@ -1,6 +1,5 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
-import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -15,6 +14,19 @@ public interface IWeatherInfluencedItem {
     }
     default void setWeather(ItemStack stack, Weather value) {
         stack.getOrCreateTag().putString(NBT_WEATHER, value.name());
+    }
+
+    default boolean changeWeather(ItemStack stack, World world){
+        Weather currentWeather = Weather.getCurrentWeather(world);
+
+        Weather oldWeather = getWeather(stack);
+
+        if (currentWeather != oldWeather) {
+            setWeather(stack, currentWeather);
+            return true;
+        }
+
+        return false;
     }
 
     static int getEnchantmentLevel(ItemStack stack) {
@@ -36,12 +48,12 @@ public interface IWeatherInfluencedItem {
         }
     }
 
-    default boolean isRain(ItemStack stack) {
+    default boolean isRaining(ItemStack stack) {
         return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WATER_RAINLESS_ENCHANTMENT.get(), stack) > 0 || getWeather(stack) == Weather.RAINING;
     }
-    default boolean isRain(ItemStack stack, World world) {
+    default boolean isRaining(ItemStack stack, World world) {
         if (world == null) {
-            return isRain(stack);
+            return isRaining(stack);
         } else {
             return Weather.getCurrentWeather(world) == Weather.RAINING;
         }

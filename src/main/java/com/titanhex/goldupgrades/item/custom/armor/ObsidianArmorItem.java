@@ -32,7 +32,6 @@ import java.util.UUID;
 
 public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelableItem, ILightInfluencedItem, IMoonPhaseInfluencedItem, IDayInfluencedItem {
 
-    protected final int itemLevel;
     private final UUID[] LIGHT_LEVEL_TOUGHNESS_UUID = new UUID[]{
             UUID.randomUUID(), // BOOTS
             UUID.randomUUID(), // LEGGINGS
@@ -44,7 +43,6 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
 
     public ObsidianArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, attributeBonuses, builderIn);
-        this.itemLevel = getItemLevel();
     }
 
     @Override
@@ -108,6 +106,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
         int lightLevel = ILightInfluencedItem.getLightLevel(stack);
+        int itemLevel = getItemLevel();
         float toughnessBonus = (float) (15 - lightLevel) / 5;
 
         if (equipmentSlot == this.slot)
@@ -145,26 +144,26 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
     public void onArmorTick(ItemStack stack, World world, PlayerEntity player) {
         super.onArmorTick(stack, world, player);
 
-        if (!world.isClientSide)
+        if (world.isClientSide)
             return;
+
         CompoundNBT nbt = stack.getOrCreateTag();
         int timer = nbt.getInt(NBT_ARMOR_TIMER_KEY);
         int totalSetLevel = getTotalSetLevel(player);
+        int itemLevel = getItemLevel();
 
         if (timer <= 0) {
             if (isNight(stack, world)) {
                 float toAdd = 0.1F*itemLevel;
                 float currentAbsorptionAmount = player.getAbsorptionAmount();
-                final int MAX_CAP = 20;
-
-                GoldUpgrades.LOGGER.debug("TO ADD: {}", toAdd);
+                final int MAX_CAP = (totalSetLevel+1)/2 * 2;
 
                 if (currentAbsorptionAmount < MAX_CAP) {
                     player.setAbsorptionAmount(Math.min(MAX_CAP, currentAbsorptionAmount + toAdd));
                 }
             }
 
-            nbt.putInt(NBT_ARMOR_TIMER_KEY, (20*60) - totalSetLevel*4);
+            nbt.putInt(NBT_ARMOR_TIMER_KEY, (20*40) - totalSetLevel*20);
         } else
             nbt.putInt(NBT_ARMOR_TIMER_KEY, timer - 1);
     }

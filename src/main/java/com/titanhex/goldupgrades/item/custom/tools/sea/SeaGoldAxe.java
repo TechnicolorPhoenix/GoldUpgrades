@@ -2,13 +2,13 @@ package com.titanhex.goldupgrades.item.custom.tools.sea;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
+import com.titanhex.goldupgrades.item.components.SeaToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectAxe;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -23,12 +23,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -37,22 +32,20 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeatherInfluencedItem, ILevelableItem
 {
-    private static final UUID SEA_DAMAGE_MODIFIER = UUID.randomUUID();
-    private static final Random RANDOM = new Random();
+    private final SeaToolComponent seaToolHandler;
+    private final DynamicAttributeComponent dynamicAttributeHandler;
 
     /**
      * Constructor for the Sea Gold Pickaxe.
      * * @param tier The material tier of the pickaxe.
      *
      * @param tier                  The stat material for the tool.
-     * @param attackDamage          The base attack damage of the tool.
-     * @param attackSpeed           The attack speed modifier of the tool.
+     * @param attackDamage          The base attack damage.
+     * @param attackSpeed           The attack speed modifier.
      * @param effectAmplifications  A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
      * @param effectDuration        The duration of the effects in ticks (20 ticks = 1 second).
      * @param durabilityCost        The number of durability points to subtract on each use.
@@ -60,6 +53,8 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
      */
     public SeaGoldAxe(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
+        this.seaToolHandler = new SeaToolComponent(baseDurabilityCost);
+        this.dynamicAttributeHandler = new DynamicAttributeComponent(seaToolHandler.SEA_DAMAGE_MODIFIER);
     }
 
     @Override
@@ -69,9 +64,9 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
         if (getIsInRain(stack) || getIsSubmerged(stack)) {
             builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                    SEA_DAMAGE_MODIFIER,
+                    seaToolHandler.SEA_DAMAGE_MODIFIER,
                     "Weapon modifier",
-                    getItemLevel() + (isRain(stack) ? (double) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2: 0F),
+                    getItemLevel() + (isRaining(stack) ? (double) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2: 0F),
                     AttributeModifier.Operation.ADDITION
             ));
         }
@@ -90,44 +85,24 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
-        boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
-        boolean currentInRain = isInRainOrWaterNow && !currentSubmerged;
+        boolean weatherChanged = changeWeather(stack, world);
+        boolean inRainChanged = changeIsInRain(stack, holdingEntity);
+        boolean isSubmergedChanged = changeSubmerged(stack, holdingEntity);
 
-        Weather currentWeather = Weather.getCurrentWeather(world);
-
-        boolean oldSubmerged = this.getIsSubmerged(stack);
-        boolean oldInRain = this.getIsInRain(stack);
-        Weather oldWeather = this.getWeather(stack);
-
-        boolean environmentalStateChanged = currentInRain != oldInRain || currentSubmerged != oldSubmerged || oldWeather != currentWeather;
+        boolean environmentalStateChanged = weatherChanged || inRainChanged || isSubmergedChanged;
 
         if (environmentalStateChanged) {
-            setIsInRain(stack, currentInRain);
-            setIsSubmerged(stack, currentSubmerged);
-            setWeather(stack, currentWeather);
-
-            if (currentInRain || currentSubmerged) {
+            if (getIsInRain(stack, holdingEntity) || getIsSubmerged(holdingEntity)) {
                 world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
             }
         }
 
-        ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
-
         if (environmentalStateChanged && isEquipped) {
+            ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
             if (attackInstance != null) {
-                attackInstance.removeModifier(SEA_DAMAGE_MODIFIER);
                 Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
-
-                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                    if (instance != null) {
-                        if (entry.getValue().getId().equals(SEA_DAMAGE_MODIFIER)) {
-                            instance.addTransientModifier(entry.getValue());
-                        }
-                    }
-                }
+                dynamicAttributeHandler.updateAttributes(livingEntity, newModifiers, attackInstance);
             }
         }
     }
@@ -137,36 +112,20 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        boolean inRain = getIsInRain(stack);
-        boolean submerged = getIsSubmerged(stack);
-        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
-
-        if (inRain && submerged) {
-            tooltip.add(new StringTextComponent("§9+" + (20 + weatherBoosterLevel*5) + "% Harvest Speed"));
-        } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§9+" + (15 + (inRain ? weatherBoosterLevel*5 : 0)) + "% Harvest Speed"));
-        } else {
-            tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
-        }
+        seaToolHandler.appendHoverText(this, stack, tooltip);
     }
 
     @Override
     public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-        if (getIsSubmerged(stack) && hasWaterDiverEnchantment(stack)){
-            int lowestValue = RANDOM.nextInt(2);
-            amount = Math.max(lowestValue, amount - getWaterDiverEnchantmentLevel(stack));
-        }
-        return super.damageItem(stack, amount, entity, onBroken);
+        return super.damageItem(stack, seaToolHandler.damageItem(this, stack, amount), entity, onBroken);
     }
 
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean isRaining = getWeather(stack) == Weather.RAINING;
-        float bonusSpeed = getIsInRain(stack) ? isRaining ? 0.20F : 0.15F : isRaining ? 0.15F : 0F;
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + bonusSpeed;
+            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(this, stack);
 
             return baseSpeed * speedMultiplier;
         }
@@ -179,30 +138,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
     public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        BlockRayTraceResult hitResult = world.clip(
-                new RayTraceContext(
-                        player.getEyePosition(1.0F),
-                        player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
-                        RayTraceContext.BlockMode.OUTLINE,
-                        RayTraceContext.FluidMode.ANY,
-                        player
-                )
-        );
-
-        if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
-            BlockPos hitPos = hitResult.getBlockPos();
-            BlockState hitState = world.getBlockState(hitPos);
-
-            if (hitState.getBlock() == Blocks.WATER ||
-                    hitState.getBlock() == Blocks.ICE ||
-                    hitState.getBlock() == Blocks.PACKED_ICE ) {
-
-                if (!getIsSubmerged(stack))
-                    return ActionResult.pass(stack);
-            }
-        }
-
-        return super.use(world, player, hand);
+        return seaToolHandler.use(world, player, stack, super.use(world, player, hand));
     }
 
     /**
@@ -214,56 +150,10 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
         PlayerEntity player = context.getPlayer();
-        ItemStack stack = context.getItemInHand();
-        BlockPos hitPos = context.getClickedPos();
 
         if (world.isClientSide || player == null)
             return super.useOn(context);
 
-        BlockRayTraceResult hitResult = world.clip(
-                new RayTraceContext(
-                        player.getEyePosition(1.0F),
-                        player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
-                        RayTraceContext.BlockMode.OUTLINE,
-                        RayTraceContext.FluidMode.SOURCE_ONLY,
-                        player
-                )
-        );
-
-        BlockState state = world.getBlockState(hitPos);
-
-        int toolLevel = getItemLevel();
-
-        if (state.getBlock() == Blocks.ICE && toolLevel > 1) {
-            world.setBlock(hitPos, Blocks.PACKED_ICE.defaultBlockState(), 11);
-
-            world.playSound(null, hitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 0.8F);
-
-            stack.hurtAndBreak(super.baseDurabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-
-            return ActionResultType.SUCCESS;
-        } else if (state.getBlock() == Blocks.PACKED_ICE && toolLevel > 2) {
-            world.setBlock(hitPos, Blocks.BLUE_ICE.defaultBlockState(), 11);
-
-            world.playSound(null, hitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 0.8F);
-
-            stack.hurtAndBreak(super.baseDurabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-
-            return ActionResultType.SUCCESS;
-        } else if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
-            BlockPos rayHitPos = hitResult.getBlockPos();
-            BlockState rayHitState = world.getBlockState(rayHitPos);
-
-            if (rayHitState.getBlock() == Blocks.WATER) {
-                world.setBlock(rayHitPos, Blocks.ICE.defaultBlockState(), 11);
-
-                world.playSound(null, rayHitPos, SoundEvents.GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.5F);
-
-                stack.hurtAndBreak(super.baseDurabilityCost / 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
-
-                return ActionResultType.SUCCESS;
-            }
-        }
-        return ActionResultType.PASS;
+        return seaToolHandler.useOn(this, context, null);
     }
 }

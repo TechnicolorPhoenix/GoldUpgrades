@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
 import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
@@ -16,9 +17,7 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
@@ -31,75 +30,46 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
 {
     int burnTicks;
     int durabilityUse;
-
-    private static final UUID SUN_DAMAGE_MODIFIER = UUID.randomUUID();
+    DynamicAttributeComponent dynamicAttributeHandler;
 
     public FireGoldSword(IItemTier tier, int atkDamage, float atkSpeed, int burnTicks, int durabilityUse, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
         this.burnTicks = burnTicks;
         this.durabilityUse = durabilityUse;
+        this.dynamicAttributeHandler = new DynamicAttributeComponent();
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
-
-        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
-
-        if (oldBrightness != currentBrightness) {
-            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
-        }
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+        calibrateLightLevel(stack, world, holdingEntity);
 
         if (world.isClientSide)
             return;
 
+        changeDay(stack, world);
+        boolean changeWeather = changeWeather(stack, world);
+        boolean changeDimension = changeDimension(stack, world);
+
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
-        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
-
-        boolean currentIsDay = isDay(stack, world);
-        boolean oldIsDay = isDay(stack);
-
-        Weather currentWeather = Weather.getCurrentWeather(world);
-        DimensionType currentDimension = DimensionType.getCurrentDimension(world);
-
-        DimensionType oldDimension = getDimension(stack);
-        Weather oldWeather = getWeather(stack);
 
         ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
         boolean shouldRefresh = false;
+        boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
         if (isEquipped && attackInstance != null)
-            if (attackInstance.getModifier(SUN_DAMAGE_MODIFIER) != null)
-                shouldRefresh = oldDimension != currentDimension || oldWeather != currentWeather || currentIsDay != oldIsDay;
-
-        if (oldWeather != currentWeather || oldDimension != currentDimension || currentIsDay != oldIsDay) {
-            setWeather(stack, currentWeather);
-            setDimension(stack, currentDimension);
-            setIsDay(stack, currentIsDay);
-        }
+            if (attackInstance.getModifier(dynamicAttributeHandler.dynamicUUID) != null)
+                shouldRefresh = changeDimension || changeWeather;
 
         if (shouldRefresh && holdingEntity instanceof LivingEntity) {
-
             Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
-
-            attackInstance.removeModifier(SUN_DAMAGE_MODIFIER);
-
-            for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                if (instance != null) {
-                    if (entry.getValue().getId().equals(SUN_DAMAGE_MODIFIER)) {
-                        instance.addTransientModifier(entry.getValue());
-                    }
-                }
-            }
+            dynamicAttributeHandler.updateAttributes(livingEntity, newModifiers, attackInstance);
         }
 
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
@@ -114,9 +84,9 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = calculateBonusDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
+            float bonusSpeed = IIgnitableTool.calculateBonusDestroySpeed(stack);
 
             float speedMultiplier = 1.0F + bonusSpeed;
 
@@ -135,7 +105,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         if (equipmentSlot == EquipmentSlotType.MAINHAND) {
             if (getWeather(stack) == Weather.CLEAR || inValidDimension(stack)) {
                 builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                        SUN_DAMAGE_MODIFIER,
+                        dynamicAttributeHandler.dynamicUUID,
                         "Weapon modifier",
                         (isDay ? 2 : 1) + (isClear(stack) ? IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) : 0),
                         AttributeModifier.Operation.ADDITION
@@ -150,16 +120,12 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
 
-        float bonus = calculateBonusDestroySpeed(stack)*100;
-
-        if (!inValidDimension(stack, worldIn) && getWeather(stack) != Weather.CLEAR) {
+        if (!inValidDimension(stack, worldIn) && getWeather(stack) != Weather.CLEAR)
             tooltip.add(new StringTextComponent("§cInactive: Damage Bonus (Requires Clear Skies or Nether)"));
-        }
 
-        if (lightLevel > 7)
-            tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed"));
+
+        IIgnitableTool.appendHoverText(stack, tooltip);
     }
 
     /**
@@ -171,39 +137,6 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     @Override
     public void igniteEntity(LivingEntity target, ItemStack stack) {
         target.setSecondsOnFire(burnTicks);
-    }
-
-    /**
-     * Attempts to ignite a block, similar to a Flint and Steel.
-     * This logic is typically called from the Item's onItemUse method.
-     *
-     * @param player The player performing the action.
-     * @param world  The world the action is taking place in.
-     * @param firePos    The BlockPos of the block being targeted.
-     * @return ActionResultType.SUCCESS if fire was placed, ActionResultType.PASS otherwise.
-     */
-    @Override
-    public ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos firePos) {
-
-        if (world.isEmptyBlock(firePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, firePos)) {
-
-            // Play sound effect
-            world.playSound(player, firePos, SoundEvents.FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, random.nextFloat() * 0.4F + 0.8F);
-
-            // Set the block to fire
-            world.setBlock(firePos, Blocks.FIRE.getBlock().defaultBlockState(), 6);
-
-            // Damage the tool item
-            if (player != null) {
-                player.getItemInHand(player.getUsedItemHand()).hurtAndBreak(durabilityUse, player, (p) -> {
-                    p.broadcastBreakEvent(player.getUsedItemHand());
-                });
-            }
-
-            return ActionResultType.sidedSuccess(world.isClientSide); // ActionResultType.success(world.isClientSide)
-        }
-
-        return ActionResultType.PASS;
     }
 
     /**
@@ -232,7 +165,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         if (player == null)
             return super.useOn(context);
 
-        return IIgnitableTool.handleUseOn(context, (toolStack) -> {});
+        return IIgnitableTool.useOn(context, null);
     }
 
     @Override

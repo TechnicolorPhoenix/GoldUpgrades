@@ -1,10 +1,10 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.WallTorchBlock;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Interface defining the required ignition capabilities for a tool.
@@ -39,16 +38,11 @@ public interface IIgnitableTool {
      */
     void igniteEntity(LivingEntity target, ItemStack stack);
     int durabilityUse = 0;
-    /**
-     * Attempts to ignite a block, similar to a Flint and Steel.
-     * This logic is typically called from the Item's onItemUse method.
-     *
-     * @param player The player performing the action.
-     * @param world The world the action is taking place in.
-     * @param pos The BlockPos of the block being targeted.
-     * @return ActionResultType.SUCCESS if fire was placed, ActionResultType.PASS otherwise.
-     */
-    ActionResultType igniteBlock(PlayerEntity player, World world, BlockPos pos);
+
+    @FunctionalInterface
+    interface IgnitableToolAction{
+        ActionResultType apply(ItemStack stack);
+    }
 
     static float calculateBonusDestroySpeed(ItemStack stack) {
         int lightLevel = ILightInfluencedItem.getLightLevel(stack);
@@ -56,7 +50,7 @@ public interface IIgnitableTool {
         return (lightLevel > 7 ? 0.15F : 0.00F) + (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)/100;
     }
 
-    static void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
+    static void appendHoverText(@NotNull ItemStack stack, @NotNull List<ITextComponent> tooltip) {
         int lightLevel = ILightInfluencedItem.getLightLevel(stack);
         int bonus = (int) (calculateBonusDestroySpeed(stack) * 100);
 
@@ -64,7 +58,7 @@ public interface IIgnitableTool {
             tooltip.add(new StringTextComponent("§9+" + bonus + "% Harvest Speed ."));
     }
 
-    static ActionResultType handleUseOn(ItemUseContext context, Consumer<ItemStack> specializedAction) {
+    static ActionResultType useOn(ItemUseContext context, @Nullable IgnitableToolAction specializedAction) {
         World world = context.getLevel();
         if (world.isClientSide) return ActionResultType.PASS;
 
@@ -77,9 +71,11 @@ public interface IIgnitableTool {
         if (clickedState.is(BlockTags.LOGS)) {
             world.removeBlock(clickedPos, false);
             Block.popResource(world, clickedPos, new ItemStack(Items.CHARCOAL));
-            if (player != null) player.giveExperiencePoints(1);
+            if (player != null) {
+                player.giveExperiencePoints(1);
+                stack.hurtAndBreak(durabilityUse * 2, player, (p) -> p.broadcastBreakEvent(context.getHand()));
+            }
             world.playSound(null, clickedPos, SoundEvents.WOOD_BREAK, SoundCategory.BLOCKS, 0.8F, 1.2F);
-            stack.hurtAndBreak(durabilityUse * 2, player != null ? player : null, (p) -> p.broadcastBreakEvent(context.getHand()));
             return ActionResultType.SUCCESS;
         }
 
@@ -99,10 +95,6 @@ public interface IIgnitableTool {
             return ActionResultType.SUCCESS;
         }
 
-        if (specializedAction != null) {
-            specializedAction.accept(stack);
-        }
-
         if (clickedBlock == Blocks.TORCH || faceBlock == Blocks.TORCH) {
             return ActionResultType.PASS;
         } else if (world.isEmptyBlock(facePos) || Blocks.FIRE.getBlock().defaultBlockState().canSurvive(world, facePos)) {
@@ -115,10 +107,16 @@ public interface IIgnitableTool {
             } else
                 return ActionResultType.PASS;
 
-            stack.hurtAndBreak(8, player, (e) -> e.broadcastBreakEvent(context.getHand()));
-            player.giveExperiencePoints(1);
+            if (player != null) {
+                stack.hurtAndBreak(GoldUpgradesConfig.TORCH_DURABILITY_COST.get(), player, (e) -> e.broadcastBreakEvent(context.getHand()));
+                player.giveExperiencePoints(1);
+            }
 
             return ActionResultType.SUCCESS;
+        }
+
+        if (specializedAction != null) {
+            return specializedAction.apply(stack);
         }
 
         return ActionResultType.PASS;

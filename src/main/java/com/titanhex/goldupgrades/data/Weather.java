@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.data;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public enum Weather {
