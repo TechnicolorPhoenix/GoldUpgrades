@@ -42,7 +42,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
 
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
      * @param tier                  The tier enum for the armor type.
      * @param attackDamage         The base attack damage.

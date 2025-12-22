@@ -42,7 +42,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
 
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
      * @param tier                  The stat material for the tool.
      * @param attackDamage         The base attack damage.

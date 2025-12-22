@@ -42,7 +42,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
     /**
      * Constructor for the Sea Gold Pickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
      * @param tier                  The stat material for the tool.
      * @param attackDamage          The base attack damage.
@@ -135,7 +135,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
 
     @NotNull
     @Override
-    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
         return seaToolHandler.use(world, player, stack, super.use(world, player, hand));

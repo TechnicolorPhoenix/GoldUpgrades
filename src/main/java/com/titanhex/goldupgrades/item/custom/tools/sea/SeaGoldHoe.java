@@ -50,7 +50,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     TreasureToolComponent treasureHandler;
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
      * @param tier                  The tier enum for the item type.
      * @param attackDamage         The base attack damage.

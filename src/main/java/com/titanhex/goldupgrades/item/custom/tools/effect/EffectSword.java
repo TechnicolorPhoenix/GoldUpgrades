@@ -29,9 +29,9 @@ public class EffectSword extends SwordItem
 
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
-     * @param attackDamage The base attack damage of the tool.
-     * @param attackSpeed The attack speed modifier of the tool.
+     * * @param tier The material tier.
+     * @param attackDamage The base attack damage.
+     * @param attackSpeed The attack speed modifier.
      * @param effectAmplifications A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
      * @param effectDuration The duration of the effects in ticks (20 ticks = 1 second).
      * @param durabilityCost The number of durability points to subtract on each use.

@@ -44,11 +44,11 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
 
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
-     * @param tier                  The base material of the tool.
-     * @param attackDamage          The base attack damage of the tool.
-     * @param attackSpeed           The attack speed modifier of the tool.
+     * @param tier                  The base material.
+     * @param attackDamage          The base attack damage.
+     * @param attackSpeed           The attack speed modifier.
      * @param effectAmplifications  A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
      * @param effectDuration        The duration of the effects in ticks (20 ticks = 1 second).
      * @param durabilityCost        The number of durability points to subtract on each use.

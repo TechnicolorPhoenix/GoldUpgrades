@@ -38,9 +38,9 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
 
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
-     * @param tier                  The tier for the stats of the tool.
+     * @param tier                  The tier for the stats.
      * @param attackDamage         The base attack damage.
      * @param attackSpeed          The attack speed modifier.
      * @param effectAmplifications A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).

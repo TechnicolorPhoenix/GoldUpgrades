@@ -41,9 +41,9 @@ public class StormGoldHoe extends EffectHoe implements ILevelableItem, IWeatherI
     TreasureToolComponent treasureHandler;
     /**
      * Constructor for the AuraPickaxe.
-     * * @param tier The material tier of the pickaxe.
+     * * @param tier The material tier.
      *
-     * @param tier                  The base material of the tool.
+     * @param tier                  The base material.
      * @param attackDamage          The base attack damage.
      * @param attackSpeed           The attack speed modifier.
      * @param effectAmplifications  A map where keys are the Effect and values are the amplification level (1 for Level I, 2 for Level II, etc.).
