@@ -40,8 +40,14 @@ public class SeaToolComponent {
         ActionResultType apply(ItemStack stack);
     }
 
-    public int damageItem(Item tool, ItemStack stack, int amount) {
-        IWaterInfluencedItem waterTool = (IWaterInfluencedItem) tool;
+    public float getSeaDamage(Item item, ItemStack stack){
+        ILevelableItem levelableItem = (ILevelableItem) item;
+        IWeatherInfluencedItem weatherItem = (IWeatherInfluencedItem) item;
+        return levelableItem.getItemLevel() + (weatherItem.isRaining(stack) ? (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2: 0F);
+    }
+
+    public int damageItem(ItemStack stack, int amount) {
+        IWaterInfluencedItem waterTool = (IWaterInfluencedItem) stack.getItem();
         if (waterTool.getIsSubmerged(stack) && waterTool.hasWaterDiverEnchantment(stack)){
             int lowestValue = RANDOM.nextInt(2);
             amount = Math.max(lowestValue, amount - waterTool.getWaterDiverEnchantmentLevel(stack));
@@ -49,7 +55,8 @@ public class SeaToolComponent {
         return amount;
     }
 
-    public void appendHoverText(Item tool, ItemStack usedStack, List<ITextComponent> tooltip){
+    public void appendHoverText(ItemStack usedStack, List<ITextComponent> tooltip){
+        Item tool = usedStack.getItem();
         IWaterInfluencedItem waterTool = (IWaterInfluencedItem) tool;
         boolean submerged = waterTool.getIsSubmerged(usedStack);
         IWeatherInfluencedItem weatherTool = (IWeatherInfluencedItem) tool;
@@ -64,7 +71,8 @@ public class SeaToolComponent {
         }
     }
 
-    public float getDestroySpeed(Item tool, @NotNull ItemStack stack) {
+    public float getDestroySpeed(@NotNull ItemStack stack) {
+        Item tool = stack.getItem();
         IWeatherInfluencedItem weatherTool = (IWeatherInfluencedItem) tool;
         IWaterInfluencedItem waterTool = (IWaterInfluencedItem) tool;
 
@@ -74,7 +82,8 @@ public class SeaToolComponent {
 
         float bonusSpeed = isSubmerged ? isRaining ? 0.20F : 0.15F : isInRain ? 0.15F : 0F;
 
-        bonusSpeed += isRaining ? (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /100*5 : 0F;
+        if (isRaining)
+            bonusSpeed += 0.05F * IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
         return bonusSpeed;
     }

@@ -4,6 +4,7 @@ import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 public interface IMoonPhaseInfluencedItem {
     String NBT_MOON_PHASE = "ItemMoonPhase";
@@ -43,6 +44,18 @@ public interface IMoonPhaseInfluencedItem {
         }
 
         return phaseValue + getMoonBoostEnchantmentLevel(stack);
+    }
+
+    default boolean changeMoonPhase(ItemStack stack, World world) {
+        MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
+        MoonPhase oldMoonPhase = getMoonPhase(stack);
+
+        if ( currentMoonPhase != oldMoonPhase) {
+            setMoonPhase(stack, currentMoonPhase);
+            return true;
+        }
+
+        return false;
     }
 
     static int getMoonMaxEnchantmentLevel(ItemStack stack) {

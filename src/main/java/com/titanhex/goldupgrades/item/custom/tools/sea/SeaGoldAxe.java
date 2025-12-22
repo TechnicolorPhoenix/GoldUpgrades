@@ -24,6 +24,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.*;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -54,7 +55,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
     public SeaGoldAxe(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
         this.seaToolHandler = new SeaToolComponent(baseDurabilityCost);
-        this.dynamicAttributeHandler = new DynamicAttributeComponent(seaToolHandler.SEA_DAMAGE_MODIFIER);
+        this.dynamicAttributeHandler = new DynamicAttributeComponent(seaToolHandler.SEA_DAMAGE_MODIFIER, EquipmentSlotType.MAINHAND);
     }
 
     @Override
@@ -62,21 +63,18 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
-        if (getIsInRain(stack) || getIsSubmerged(stack)) {
-            builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                    seaToolHandler.SEA_DAMAGE_MODIFIER,
-                    "Weapon modifier",
-                    getItemLevel() + (isRaining(stack) ? (double) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2: 0F),
-                    AttributeModifier.Operation.ADDITION
-            ));
-        }
+        dynamicAttributeHandler.getAttributeModifiers(
+                equipmentSlot, builder,
+                () -> getIsInRain(stack) || getIsSubmerged(stack),
+                () -> (double) seaToolHandler.getSeaDamage(this, stack)/2
+        );
 
         return builder.build();
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
-        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int itemSlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, itemSlot, isSelected);
 
         if (world.isClientSide) return;
 
@@ -112,12 +110,14 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        seaToolHandler.appendHoverText(this, stack, tooltip);
+        seaToolHandler.appendHoverText(stack, tooltip);
+        if (!isRaining(stack, worldIn))
+            tooltip.add(new StringTextComponent("§cDamage bonus inactive outside of rain and water."));
     }
 
     @Override
     public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-        return super.damageItem(stack, seaToolHandler.damageItem(this, stack, amount), entity, onBroken);
+        return super.damageItem(stack, seaToolHandler.damageItem(stack, amount), entity, onBroken);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class SeaGoldAxe extends EffectAxe implements IWaterInfluencedItem, IWeat
         float baseSpeed = super.getDestroySpeed(stack, state);
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(this, stack);
+            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(stack);
 
             return baseSpeed * speedMultiplier;
         }

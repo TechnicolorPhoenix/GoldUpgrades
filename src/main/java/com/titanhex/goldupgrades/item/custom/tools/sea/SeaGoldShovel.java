@@ -55,7 +55,7 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int itemSlot, boolean isSelected) {
         if (world.isClientSide) return;
 
         boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
@@ -84,13 +84,13 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        seaToolHandler.appendHoverText(this, stack, tooltip);
+        seaToolHandler.appendHoverText(stack, tooltip);
         treasureHandler.appendHoverText(stack, tooltip, "§eDigging up sand at the beach yields treasure in the rain.");
     }
 
     @Override
     public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-        return super.damageItem(stack, seaToolHandler.damageItem(this, stack, amount), entity, onBroken);
+        return super.damageItem(stack, seaToolHandler.damageItem(stack, amount), entity, onBroken);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
 
         if (baseSpeed > 1.0F) {
 
-            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(this, stack);
+            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(stack);
 
             return baseSpeed * speedMultiplier;
         }

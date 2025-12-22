@@ -67,28 +67,16 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int itemSlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, itemSlot, isSelected);
         if (world.isClientSide) return;
 
-        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
-        boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
-        boolean currentInRain = isInRainOrWaterNow && !currentSubmerged;
-        Weather currentWeather = Weather.getCurrentWeather(world);
+        boolean submergedChanged = changeSubmerged(stack, holdingEntity);
+        boolean isInRainChanged = changeIsInRain(stack, holdingEntity);
+        boolean weatherChanged = changeWeather(stack, world);
 
-        boolean oldSubmerged = this.getIsSubmerged(stack);
-        boolean oldInRain = this.getIsInRain(stack);
-        Weather oldWeather = this.getWeather(stack);
-
-        boolean environmentalStateChanged = currentInRain != oldInRain || currentSubmerged != oldSubmerged || oldWeather != currentWeather;
-
-        if (environmentalStateChanged) {
-            setIsInRain(stack, currentInRain);
-            setIsSubmerged(stack, currentSubmerged);
-            setWeather(stack, currentWeather);
-
-            if (currentInRain || currentSubmerged) {
-                world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
-            }
+        if (isInRainChanged || submergedChanged) {
+            world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
 
         if (!(holdingEntity instanceof LivingEntity))
@@ -100,19 +88,10 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.OFFHAND) == stack;
 
         if (isEquipped && elementalHoeLevel > 0) {
-            int duration = 60;
-            if (livingEntity.tickCount % duration == 0) {
-                stack.hurtAndBreak(5 - elementalHoeLevel, livingEntity,
-                        (e) -> e.broadcastBreakEvent(EquipmentSlotType.OFFHAND)
-                );
-                livingEntity.addEffect(new EffectInstance(
-                        (currentSubmerged ? Effects.DOLPHINS_GRACE : Effects.MOVEMENT_SPEED),
-                        duration,
-                        elementalHoeLevel - 1,
-                        true,
-                        true
-                ));
-            }
+            holdingElementalHoe(stack, livingEntity,
+                    (getIsSubmerged(holdingEntity) ? Effects.DOLPHINS_GRACE : Effects.MOVEMENT_SPEED),
+                    () -> isRaining(stack)
+            );
         }
     }
 
@@ -127,19 +106,10 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         boolean submerged = this.getIsSubmerged(stack);
         boolean weatherIsRain = isRaining(stack, worldIn);
 
-        if (elementalHoeEnchantmentLevel > 0)
-            tooltip.add(new StringTextComponent("§eHold for Dolphin's Grace, use for Water Breathing"));
+        IElementalHoe.appendHoverText(stack, tooltip, "§eHold for Dolphin's Grace, use for Water Breathing");
 
-        if (weatherBoosterLevel > 0)
-            tooltip.add(new StringTextComponent("§Cut kelp in the Ocean for treasure while raining."));
-
-        if (submerged && weatherIsRain) {
-            tooltip.add(new StringTextComponent("§9 +" + (20 + weatherBoosterLevel*5) +"%Harvest Speed"));
-        } else if (inRain || submerged) {
-            tooltip.add(new StringTextComponent("§9 +" + (15 + weatherBoosterLevel*5) +"%Harvest Speed"));
-        } else {
-            tooltip.add(new StringTextComponent("§cInactive: Water required for harvest bonus."));
-        }
+        treasureHandler.appendHoverText(stack, tooltip, "§Cut kelp in the Ocean for treasure while raining.");
+        seaToolHandler.appendHoverText(stack, tooltip);
     }
 
     @Override
@@ -158,7 +128,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
 
     @Override
     public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-        return super.damageItem(stack, seaToolHandler.damageItem(this, stack, amount), entity, onBroken);
+        return super.damageItem(stack, seaToolHandler.damageItem(stack, amount), entity, onBroken);
     }
 
     @Override
@@ -166,10 +136,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         float baseSpeed = super.getDestroySpeed(stack, state);
         boolean weatherIsRain = isRaining(stack);
         int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
-        float bonusSpeed = getIsSubmerged(stack) ? 0.15F : getIsInRain(stack) ? 0.15F : 0F;
-
-        if (weatherIsRain)
-            bonusSpeed += 0.05F * weatherBoosterLevel;
+        float bonusSpeed = seaToolHandler.getDestroySpeed(stack);
 
         if (baseSpeed > 1.0F) {
 
@@ -186,24 +153,11 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
     public ActionResult<ItemStack> use(@NotNull World world, PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
         ActionResult<ItemStack> result = super.use(world, player, hand);
-        seaToolHandler.use(world, player, stack, result);
 
-        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
-        if (elementalHoeLevel > 0) {
-                player.addEffect(new EffectInstance(
-                        Effects.WATER_BREATHING,
-                        30*20,
-                        elementalHoeLevel,
-                        true,
-                        true
-                ));
+        if (hand == Hand.OFF_HAND)
+            result = IElementalHoe.use(stack, player, Effects.WATER_BREATHING, 30*20);
 
-                stack.hurtAndBreak(5*elementalHoeLevel, player, (e) -> e.broadcastBreakEvent(hand));
-
-                return ActionResult.consume(stack);
-            }
-
-        return result;
+        return seaToolHandler.use(world, player, stack, result);
     }
 
     /**

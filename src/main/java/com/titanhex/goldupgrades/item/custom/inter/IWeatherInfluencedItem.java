@@ -16,25 +16,8 @@ public interface IWeatherInfluencedItem {
         stack.getOrCreateTag().putString(NBT_WEATHER, value.name());
     }
 
-    default boolean changeWeather(ItemStack stack, World world){
-        Weather currentWeather = Weather.getCurrentWeather(world);
-
-        Weather oldWeather = getWeather(stack);
-
-        if (currentWeather != oldWeather) {
-            setWeather(stack, currentWeather);
-            return true;
-        }
-
-        return false;
-    }
-
     static int getEnchantmentLevel(ItemStack stack) {
         return EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.WEATHER_BOOSTER_ENCHANTMENT.get(), stack);
-    }
-
-    static boolean hasEnchantment(ItemStack stack) {
-        return getEnchantmentLevel(stack) > 0;
     }
 
     default boolean isClear(ItemStack stack) {
@@ -68,6 +51,19 @@ public interface IWeatherInfluencedItem {
         } else {
             return Weather.getCurrentWeather(world) == Weather.THUNDERING;
         }
+    }
+
+    default boolean changeWeather(ItemStack stack, World world){
+        Weather currentWeather = Weather.getCurrentWeather(world);
+
+        Weather oldWeather = getWeather(stack);
+
+        if (currentWeather != oldWeather) {
+            setWeather(stack, currentWeather);
+            return true;
+        }
+
+        return false;
     }
 
     static int getWeatherBoosterEnchantmentLevel(ItemStack stack) {

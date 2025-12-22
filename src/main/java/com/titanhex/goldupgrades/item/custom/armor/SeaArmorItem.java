@@ -122,8 +122,8 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
-        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int itemSlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, itemSlot, isSelected);
 
         if (world.isClientSide) return;
         if (!(holdingEntity instanceof LivingEntity)) return;

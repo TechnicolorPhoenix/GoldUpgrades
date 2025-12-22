@@ -97,8 +97,8 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int unknownInt, boolean unknownConditional) {
-        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int itemSlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, itemSlot, isSelected);
 
         if (world.isClientSide) return;
 

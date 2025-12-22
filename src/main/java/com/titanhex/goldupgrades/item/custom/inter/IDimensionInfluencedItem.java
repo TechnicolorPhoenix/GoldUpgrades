@@ -3,10 +3,8 @@ package com.titanhex.goldupgrades.item.custom.inter;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface IDimensionInfluencedItem {

@@ -1,7 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
 import com.titanhex.goldupgrades.item.ModArmorMaterial;
-import com.titanhex.goldupgrades.item.ModItemTier;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;

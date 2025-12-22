@@ -56,7 +56,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
 
         boolean changeWeather = changeWeather(stack, world);
         boolean changeDimension = changeDimension(stack, world);
-        boolean changeDay = changeDay(stack, world);
+        changeDay(stack, world);
 
         ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 

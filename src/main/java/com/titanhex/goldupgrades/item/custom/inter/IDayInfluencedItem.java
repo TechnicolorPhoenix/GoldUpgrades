@@ -1,7 +1,5 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
-import com.titanhex.goldupgrades.GoldUpgrades;
-import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
@@ -19,7 +17,7 @@ public interface IDayInfluencedItem {
 
     default boolean isNight(ItemStack stack){
         return hasEnchantment(stack) || !getIsDay(stack);
-    };
+    }
     default boolean isNight(ItemStack stack, @Nullable World world){
         if (world == null)
             return isNight(stack);
@@ -28,11 +26,11 @@ public interface IDayInfluencedItem {
             boolean isNight = time > 13000L && time < 23000L;
             return hasEnchantment(stack) || isNight;
         }
-    };
+    }
 
     default boolean isDay(ItemStack stack){
         return hasEnchantment(stack) || getIsDay(stack);
-    };
+    }
     default boolean isDay(ItemStack stack, @Nullable World world){
         if (world == null)
             return isDay(stack);
@@ -41,7 +39,7 @@ public interface IDayInfluencedItem {
             boolean isDay = time < 13000L;
             return hasEnchantment(stack) || isDay;
         }
-    };
+    }
 
     default boolean changeDay(ItemStack stack, World world) {
         boolean currentIsDay = isDay(stack, world);

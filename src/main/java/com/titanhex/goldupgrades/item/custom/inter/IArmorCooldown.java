@@ -15,6 +15,6 @@ public interface IArmorCooldown {
         stack.getOrCreateTag().putInt(NBT_ARMOR_TIMER_KEY, getArmorCooldown(stack) - value);
     }
     default void reduceArmorCooldown(ItemStack stack) {
-        stack.getOrCreateTag().putInt(NBT_ARMOR_TIMER_KEY, getArmorCooldown(stack) - 1);
+        reduceArmorCooldown(stack, 1);
     }
 }

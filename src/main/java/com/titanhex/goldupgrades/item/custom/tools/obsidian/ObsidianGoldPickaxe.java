@@ -1,30 +1,15 @@
 package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 
-import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.data.MoonPhase;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IMoonPhaseInfluencedItem;
+import com.titanhex.goldupgrades.item.components.ObsidianToolComponent;
+import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
-import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.*;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -34,33 +19,31 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Random;
 
 public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, IDayInfluencedItem, IMoonPhaseInfluencedItem, ILightInfluencedItem
 {
-    private final Random RANDOM = new Random();
+    ObsidianToolComponent obsidianToolHandler;
 
     public ObsidianGoldPickaxe(IItemTier tier, int atkDamage, float atkSpeed, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
+        this.obsidianToolHandler = new ObsidianToolComponent();
     }
 
     @Override
     public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
-        if (world.isClientSide)
+        if (world.isClientSide) {
+            super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
             return;
+        }
 
-        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
-        MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentIsDay = isDay(stack, world);
+        changeDay(stack, world);
+        changeMoonPhase(stack, world);
 
-        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
-        MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldIsDay = isDay(stack);
+        int currentBrightness = ILightInfluencedItem.getLightLevel(stack);
+        int oldBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness > 0 != currentBrightness > 0) {
+        if (oldBrightness > 0 != currentBrightness > 0) {
             ILightInfluencedItem.setLightLevel(stack, currentBrightness);
-            setMoonPhase(stack, currentMoonPhase);
-            setIsDay(stack, currentIsDay);
         }
 
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
@@ -89,18 +72,12 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
     }
 
     @Override
-    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity enemy) {
-        int phaseValue = getMoonPhaseValue(stack)*(2+getItemLevel());
-        int chance = RANDOM.nextInt(100)+1;
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
+        boolean appliedDamage = super.hurtEnemy(stack, target, attacker);
+        if (!appliedDamage) return false;
 
-        if (super.hurtEnemy(stack, target, enemy) && chance < phaseValue) {
-            target.addEffect(new EffectInstance(
-                    Effects.WEAKNESS,
-                    100,
-                    0
-            ));
-            return true;
-        }
+        obsidianToolHandler.hurtEnemy(stack, target, Effects.WEAKNESS);
+
         return false;
     }
 
@@ -108,29 +85,27 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int itemLevel = getItemLevel();
+        double weaknessChance = obsidianToolHandler.getEffectChance(stack);
 
-        int phaseValue = getMoonPhaseValue(stack);
-        int weaknessChance = phaseValue*(2+itemLevel);
-
-        tooltip.add(new StringTextComponent((weaknessChance == 0 ? "§c" : "§a" ) + "Weakness Chance: " + weaknessChance + "%"));
-        tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
-
-        if (ILightInfluencedItem.getLightLevel(stack) == 0)
-            tooltip.add(new StringTextComponent("§eHarvest Anything."));
-
-        if (isNight(stack))
-            tooltip.add(new StringTextComponent("§a+15% Harvest Speed."));
-        else
-            tooltip.add(new StringTextComponent("§cInactive: Harvest Speed Bonus (Requires Night)"));
+        tooltip.add(new StringTextComponent((weaknessChance == 0 ? "§c" : "§a") + "Weakness Chance: " + weaknessChance + "%"));
+        obsidianToolHandler.appendHoverText(worldIn, stack, tooltip);
     }
 
     @Override
     public boolean canHarvestBlock(ItemStack stack, BlockState state) {
-        if (ILightInfluencedItem.getLightLevel(stack) == 0)
-            return true;
+        return obsidianToolHandler.canHarvestBlock(stack, state, super.canHarvestBlock(stack, state));
+    }
 
-        return super.canHarvestBlock(stack, state);
+    @NotNull
+    @Override
+    public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
+
+        if (hand == Hand.OFF_HAND)
+            return IElementalHoe.use(stack, player, Effects.NIGHT_VISION, 30*20*2+(elementalHoeLevel*20*20)-(20*20));
+
+        return super.use(world, player, hand);
     }
 
     /**
@@ -142,47 +117,10 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         World world = context.getLevel();
         if (world.isClientSide) return super.useOn(context);
         PlayerEntity player = context.getPlayer();
+        if (player == null) return super.useOn(context);
         ItemStack stack = context.getItemInHand();
-        BlockPos clickedPos = context.getClickedPos();
-        int itemLevel = getItemLevel();
 
-        if (player != null) {
-
-            BlockRayTraceResult hitResult = world.clip(
-                    new RayTraceContext(
-                            player.getEyePosition(1.0F),
-                            player.getEyePosition(1.0F).add(player.getLookAngle().scale(7.0D)),
-                            RayTraceContext.BlockMode.OUTLINE,
-                            RayTraceContext.FluidMode.ANY, // Check ANY block/fluid in range
-                            player
-                    )
-            );
-
-            if (hitResult.getType() == RayTraceResult.Type.BLOCK) {
-                BlockPos rayHitPos = hitResult.getBlockPos();
-                BlockState rayHitState = world.getBlockState(rayHitPos);
-
-                if (rayHitState.getBlock() == Blocks.LAVA) {
-
-                    world.setBlock(rayHitPos, Blocks.OBSIDIAN.defaultBlockState(), 3);
-
-                    if (world.dimension() == World.NETHER) {
-                        stack.hurtAndBreak((4-itemLevel)*3, player, (entity) -> entity.broadcastBreakEvent(context.getHand()));
-                    } else {
-                        int currentDamage = stack.getDamageValue();
-                        stack.setDamageValue(Math.max(0, currentDamage - itemLevel));
-                    }
-
-                    player.giveExperiencePoints(1);
-
-                    world.playSound(null, clickedPos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-
-                    return ActionResultType.SUCCESS;
-                }
-            }
-        }
-
-        return ActionResultType.PASS;
+        return obsidianToolHandler.useOn(context, stack);
     }
 
     @Override

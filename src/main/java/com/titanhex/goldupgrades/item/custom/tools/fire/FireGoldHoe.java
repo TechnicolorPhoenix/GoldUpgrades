@@ -1,6 +1,7 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
+import com.titanhex.goldupgrades.enchantment.ElementalHoeEnchantment;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.*;
@@ -64,23 +65,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         changeWeather(stack, world);
         changeDay(stack, world);
 
-        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
-
-        if (isEquipped && elementalHoeLevel > 0 && (isClear(stack) || inValidDimension(stack))) {
-            int duration = 60;
-            if (livingEntity.tickCount % 60 == 0)
-                stack.hurtAndBreak(1, livingEntity,
-                        (e) -> {
-                            e.broadcastBreakEvent(EquipmentSlotType.OFFHAND);
-                        }
-                );
-            livingEntity.addEffect(new EffectInstance(
-                    Effects.FIRE_RESISTANCE,
-                    duration,
-                    elementalHoeLevel-1,
-                    false,
-                    false
-            ));
+        if (isEquipped) {
+            holdingElementalHoe(stack, livingEntity, Effects.FIRE_RESISTANCE, () -> (isClear(stack) || inValidDimension(stack)));
         }
     }
 
@@ -163,20 +149,9 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @Override
     public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand); // Get the ItemStack directly from the context
-        int elementalHoeLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.ELEMENTAL_HOE_ENCHANTMENT.get(), stack);
-        if (elementalHoeLevel > 0) {
-            player.addEffect(new EffectInstance(
-               Effects.DAMAGE_BOOST,
-               30*20,
-               elementalHoeLevel,
-               true,
-               true
-            ));
 
-            stack.hurtAndBreak(10+5*elementalHoeLevel, player, (e) -> {e.broadcastBreakEvent(hand);});
-
-            return ActionResult.consume(stack);
-        }
+        if (hand == Hand.OFF_HAND)
+            return IElementalHoe.use(stack, player, Effects.DAMAGE_BOOST, 30*20);
 
         return super.use(world, player, hand);
     }

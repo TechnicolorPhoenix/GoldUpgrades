@@ -26,7 +26,7 @@ public class ObsidianToolItems {
             () -> new ObsidianGoldPickaxe(ModItemTier.OBSIDIAN_BASE_GOLD, 2, -2.8F,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_AXE = ITEMS.register("obsidian_base_gold_axe",
-            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_BASE_GOLD, 7.0F, -3.0F, 1,
+            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_BASE_GOLD, 7.0F, -3.0F,
                     new Item.Properties().rarity(Rarity.UNCOMMON).tab(ModItemGroup.GOLD_BASE_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_BASE_GOLD_HOE = ITEMS.register("obsidian_base_gold_hoe",
             () -> new ObsidianGoldHoe(ModItemTier.OBSIDIAN_BASE_GOLD, 1, -3.0F,
@@ -43,7 +43,7 @@ public class ObsidianToolItems {
             () -> new ObsidianGoldPickaxe(ModItemTier.OBSIDIAN_UPGRADED_GOLD, 2, -2.8F,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_UPGRADED_GOLD_AXE = ITEMS.register("obsidian_upgraded_gold_axe",
-            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_UPGRADED_GOLD, 8.0F, -3.0F,2,
+            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_UPGRADED_GOLD, 8.0F, -3.0F,
                     new Item.Properties().rarity(Rarity.RARE).tab(ModItemGroup.GOLD_UPGRADED_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_UPGRADED_GOLD_HOE = ITEMS.register("obsidian_upgraded_gold_hoe",
             () -> new ObsidianGoldHoe(ModItemTier.OBSIDIAN_UPGRADED_GOLD, 1, -3.0F,
@@ -60,7 +60,7 @@ public class ObsidianToolItems {
             () -> new ObsidianGoldPickaxe(ModItemTier.OBSIDIAN_POWER_GOLD, 3, -2.8F,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_POWER_GOLD_AXE = ITEMS.register("obsidian_power_gold_axe",
-            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_POWER_GOLD, 9.0F, -3.0F, 3,
+            () -> new ObsidianGoldAxe(ModItemTier.OBSIDIAN_POWER_GOLD, 9.0F, -3.0F,
                     new Item.Properties().rarity(Rarity.EPIC).tab(ModItemGroup.GOLD_POWER_ARMOR_GROUP)));
     public static final RegistryObject<Item> OBSIDIAN_POWER_GOLD_HOE = ITEMS.register("obsidian_power_gold_hoe",
             () -> new ObsidianGoldHoe(ModItemTier.OBSIDIAN_POWER_GOLD, 1, -3.0F,

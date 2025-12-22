@@ -2,7 +2,6 @@ package com.titanhex.goldupgrades.item.custom.tools.sea;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
 import com.titanhex.goldupgrades.item.components.SeaToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
@@ -56,7 +55,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
     public SeaGoldSword(IItemTier tier, int attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
         this.seaToolHandler = new SeaToolComponent(durabilityCost);
-        this.dynamicAttributeHandler = new DynamicAttributeComponent(seaToolHandler.SEA_DAMAGE_MODIFIER);
+        this.dynamicAttributeHandler = new DynamicAttributeComponent(seaToolHandler.SEA_DAMAGE_MODIFIER, EquipmentSlotType.MAINHAND);
     }
 
     @Override
@@ -65,27 +64,16 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
 
         dynamicAttributeHandler.getAttributeModifiers(
-                equipmentSlot, stack, builder,
+                equipmentSlot, builder,
                 () -> getIsInRain(stack) || getIsSubmerged(stack),
-                () -> (float) getItemLevel() + IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)
+                () -> (double) getItemLevel() + IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)
         );
-
-        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            if (getIsInRain(stack) || getIsSubmerged(stack)) {
-                builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                        seaToolHandler.SEA_DAMAGE_MODIFIER,
-                        "Weapon modifier",
-                        getItemLevel() + IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack),
-                        AttributeModifier.Operation.ADDITION
-                ));
-            }
-        }
 
         return builder.build();
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int unknownInt, boolean unknownConditional) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int itemSlot, boolean isSelected) {
         if (world.isClientSide) return;
 
         if (!(holdingEntity instanceof LivingEntity)) return;
@@ -93,48 +81,28 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
 
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
-        boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
-        boolean currentInRain = isInRainOrWaterNow && !currentSubmerged;
+        boolean submergedChanged = changeSubmerged(stack, holdingEntity);
+        boolean isInRainChanged = changeIsInRain(stack, holdingEntity);
+        boolean weatherChanged = changeWeather(stack, world);
 
-        Weather currentWeather = Weather.getCurrentWeather(world);
-
-        boolean oldSubmerged = this.getIsSubmerged(stack);
-        boolean oldInRain = this.getIsInRain(stack);
-        Weather oldWeather = this.getWeather(stack);
-
-        boolean environmentalStateChanged = currentInRain != oldInRain || currentSubmerged != oldSubmerged || oldWeather != currentWeather;
-
-        if (environmentalStateChanged) {
-            setIsInRain(stack, currentInRain);
-            setIsSubmerged(stack, currentSubmerged);
-            setWeather(stack, currentWeather);
-
-            if (currentInRain || currentSubmerged) {
-                world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
-            }
+        if (isInRainChanged || submergedChanged) {
+            world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
+
+        boolean environmentalStateChanged = submergedChanged || weatherChanged || isInRainChanged;
 
         ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
         if (environmentalStateChanged && isEquipped) {
 
             if (attackInstance != null) {
-                attackInstance.removeModifier(seaToolHandler.SEA_DAMAGE_MODIFIER);
                 Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
 
-                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                    if (instance != null) {
-                        if (entry.getValue().getId().equals(seaToolHandler.SEA_DAMAGE_MODIFIER)) {
-                            instance.addTransientModifier(entry.getValue());
-                        }
-                    }
-                }
+                dynamicAttributeHandler.updateAttributes(livingEntity, newModifiers, attackInstance);
             }
         }
 
-        super.inventoryTick(stack, world, holdingEntity, unknownInt, unknownConditional);
+        super.inventoryTick(stack, world, holdingEntity, itemSlot, isSelected);
     }
 
     @Override
@@ -142,7 +110,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        seaToolHandler.appendHoverText(this, stack, tooltip);
+        seaToolHandler.appendHoverText(stack, tooltip);
 
         if (!isRaining(stack, worldIn))
             tooltip.add(new StringTextComponent("§cDamage bonus inactive outside of rain and water."));
@@ -150,7 +118,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
 
     @Override
     public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-        return super.damageItem(stack, seaToolHandler.damageItem(this, stack, amount), entity, onBroken);
+        return super.damageItem(stack, seaToolHandler.damageItem(stack, amount), entity, onBroken);
     }
 
     @Override
@@ -158,7 +126,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
         float baseSpeed = super.getDestroySpeed(stack, state);
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(this, stack);
+            float speedMultiplier = 1.0F + seaToolHandler.getDestroySpeed(stack);
 
             return baseSpeed * speedMultiplier;
         }

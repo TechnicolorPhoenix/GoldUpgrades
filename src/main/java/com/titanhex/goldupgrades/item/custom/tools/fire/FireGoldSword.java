@@ -18,9 +18,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -30,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.UUID;
 
 public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitableTool, ILightInfluencedItem, IDimensionInfluencedItem, IWeatherInfluencedItem, IDayInfluencedItem
 {
@@ -73,12 +69,6 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
         }
 
         super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
-    }
-
-    private float calculateBonusDestroySpeed(ItemStack stack) {
-        int lightLevel = ILightInfluencedItem.getLightLevel(stack);
-
-        return (lightLevel > 7 ? 0.15F : 0.00F) + (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack)/100;
     }
 
     @Override

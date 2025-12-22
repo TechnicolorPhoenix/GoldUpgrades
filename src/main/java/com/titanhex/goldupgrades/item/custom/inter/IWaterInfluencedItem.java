@@ -1,12 +1,9 @@
 package com.titanhex.goldupgrades.item.custom.inter;
 
-import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
 
 public interface IWaterInfluencedItem {
     String NBT_IS_SUBMERGED = "ItemSubmerged";
@@ -48,7 +45,7 @@ public interface IWaterInfluencedItem {
     }
 
     default boolean changeIsInRain(ItemStack stack, Entity holdingEntity){
-        boolean isInRainOrWaterNow = ;
+        boolean isInRainOrWaterNow = holdingEntity.isInWaterOrRain();
         boolean currentInRain = isInRainOrWaterNow && !getIsSubmerged(holdingEntity);
 
         if (currentInRain != getIsInRain(stack)) {
