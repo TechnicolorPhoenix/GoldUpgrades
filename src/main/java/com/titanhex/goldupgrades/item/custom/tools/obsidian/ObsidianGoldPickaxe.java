@@ -30,51 +30,39 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
+
         if (world.isClientSide) {
-            super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
             return;
         }
 
         changeDay(stack, world);
         changeMoonPhase(stack, world);
 
-        int currentBrightness = ILightInfluencedItem.getLightLevel(stack);
-        int oldBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
+        int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
+        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
 
         if (oldBrightness > 0 != currentBrightness > 0) {
             ILightInfluencedItem.setLightLevel(stack, currentBrightness);
         }
-
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        float bonusSpeed = isDay(stack) ? 0 : 0.15F;
 
-        if (ILightInfluencedItem.getLightLevel(stack) == 0) {
-            baseSpeed = 1.1F;
-        }
-
-        if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + bonusSpeed;
-            return baseSpeed * speedMultiplier;
-        }
-
-        return baseSpeed;
+        return obsidianToolHandler.getDestroySpeed(stack, baseSpeed);
     }
 
     @Override
     public int getItemEnchantability(ItemStack stack) {
-        return super.getItemEnchantability(stack) + getMoonPhaseValue(stack);
+        return super.getItemEnchantability(stack) + obsidianToolHandler.getItemEnchantability(stack);
     }
 
     @Override
     public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
-        boolean appliedDamage = super.hurtEnemy(stack, target, attacker);
-        if (!appliedDamage) return false;
+        if (!hurtEnemy(stack, target, attacker)) return false;
 
         obsidianToolHandler.hurtEnemy(stack, target, Effects.WEAKNESS);
 
@@ -96,18 +84,6 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         return obsidianToolHandler.canHarvestBlock(stack, state, super.canHarvestBlock(stack, state));
     }
 
-    @NotNull
-    @Override
-    public ActionResult<ItemStack> use(@NotNull World world, @NotNull PlayerEntity player, @NotNull Hand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
-
-        if (hand == Hand.OFF_HAND)
-            return IElementalHoe.use(stack, player, Effects.NIGHT_VISION, 30*20*2+(elementalHoeLevel*20*20)-(20*20));
-
-        return super.use(world, player, hand);
-    }
-
     /**
      * Handles the block use event (Right Click) with custom Pickaxe and Fire functionality.
      */
@@ -118,6 +94,7 @@ public class ObsidianGoldPickaxe extends PickaxeItem implements ILevelableItem, 
         if (world.isClientSide) return super.useOn(context);
         PlayerEntity player = context.getPlayer();
         if (player == null) return super.useOn(context);
+
         ItemStack stack = context.getItemInHand();
 
         return obsidianToolHandler.useOn(context, stack);

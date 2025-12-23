@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.item.components;
 
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.BlockState;
@@ -62,22 +63,17 @@ public class ObsidianToolComponent {
         float bonusSpeed = isNight ? 0.15F : 0F;
 
         if (ILightInfluencedItem.getLightLevel(stack) == 0) {
-            baseSpeed = 1.1F + bonusSpeed;
+            baseSpeed += 0.1F;
         }
 
         if (baseSpeed > 1.0F) {
-            float speedMultiplier = 1.0F + bonusSpeed;
-            return baseSpeed * speedMultiplier;
+            return baseSpeed * (1.0F + bonusSpeed);
         }
 
         return baseSpeed;
     }
 
     public void hurtEnemy(ItemStack stack, LivingEntity target, Effect effect) {
-        Item item = stack.getItem();
-        ILevelableItem levelableItem = (ILevelableItem) item;
-        IMoonPhaseInfluencedItem moonPhaseItem = (IMoonPhaseInfluencedItem) item;
-
         double phaseChance = getEffectChance(stack);
         int calculatedRoll = RANDOM.nextInt(100) + 1;
 
@@ -88,12 +84,16 @@ public class ObsidianToolComponent {
         }
     }
 
-        public void appendHoverText(World worldIn, ItemStack stack, List<ITextComponent> tooltip){
+    public void appendHoverText(World worldIn, ItemStack stack, List<ITextComponent> tooltip) {
         Item item = stack.getItem();
         IMoonPhaseInfluencedItem moonPhaseItem = (IMoonPhaseInfluencedItem) item;
         IDayInfluencedItem nightItem = (IDayInfluencedItem) item;
         int phaseValue = moonPhaseItem.getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
         boolean isNight = nightItem.isNight(stack, worldIn);
+        float bonusSpeed = isNight ? 0.15F : 0F;
+
+        if (ILightInfluencedItem.getLightLevel(stack) == 0)
+            bonusSpeed += 0.1F;
 
         if (phaseValue < 0)
             tooltip.add(new StringTextComponent("§aEnchantment Boost from Moon"));
@@ -103,11 +103,12 @@ public class ObsidianToolComponent {
         if (ILightInfluencedItem.getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));
 
-        if (isNight)
-            tooltip.add(new StringTextComponent("§9+" + (getDestroySpeed(stack, 1.0F) - 1.0D) + "% Harvest Speed."));
+        if (bonusSpeed > 0)
+            tooltip.add(new StringTextComponent("§9+" + (int) (bonusSpeed * 100) + "% Harvest Speed."));
         else
             tooltip.add(new StringTextComponent("§cInactive: Harvest Speed Bonus (Requires Night)"));
-        }
+    }
+
     public boolean canHarvestBlock(ItemStack itemStack, BlockState state, Boolean originalCheck){
         if (ILightInfluencedItem.getLightLevel(itemStack) == 0)
             if (!(state.getDestroySpeed(null, null) < 0))

@@ -2,12 +2,11 @@ package com.titanhex.goldupgrades.item.custom.tools.storm;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.ModItemTier;
+import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
+import com.titanhex.goldupgrades.item.components.StormToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
 import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectAxe;
-import com.titanhex.goldupgrades.item.custom.tools.effect.EffectSword;
 import com.titanhex.goldupgrades.item.tool.StormToolItems;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -21,12 +20,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -36,11 +31,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherInfluencedItem {
+public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherInfluencedItem
+{
 
-    private static final UUID STORM_DAMAGE_MODIFIER = UUID.randomUUID();
+    DynamicAttributeComponent dynamicAttributeHandler;
+    StormToolComponent stormToolHandler;
 
     /**
      * Constructor for the AuraPickaxe.
@@ -56,96 +52,52 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
      */
     public StormGoldAxe(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
         super(tier, attackDamage, attackSpeed+1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
+        this.stormToolHandler = new StormToolComponent();
+        this.dynamicAttributeHandler = new DynamicAttributeComponent(StormToolComponent.STORM_DAMAGE_MODIFIER, EquipmentSlotType.MAINHAND);
     }
 
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
-        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
+        boolean isThundering = isThundering(stack);
 
-        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-            if (isThundering) {
-                float damageBonus = (float) IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack) /2;
-
-                ItemStack powerItem = new ItemStack(StormToolItems.STORM_POWER_GOLD_AXE.get());
-                Multimap<Attribute, AttributeModifier> modifiers = powerItem.getAttributeModifiers(EquipmentSlotType.MAINHAND);
-
-                Attribute attackDamageAttribute = Attributes.ATTACK_DAMAGE;
-
-                for (AttributeModifier modifier : modifiers.get(attackDamageAttribute)) {
-                    if (modifier.getOperation() == AttributeModifier.Operation.ADDITION) {
-                        damageBonus += (float) modifier.getAmount();
-                    }
-                }
-
-                float maxDamage = damageBonus - (this.getDamage(stack) + this.getTier().getAttackDamageBonus()) + 1;
-
-                builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                        STORM_DAMAGE_MODIFIER,
-                        "Weapon modifier",
-                        maxDamage,
-                        AttributeModifier.Operation.ADDITION
-                ));
-            }
-        }
+        dynamicAttributeHandler.getAttributeModifiers(
+                equipmentSlot, builder,
+                () -> isThundering,
+                () -> stormToolHandler.getToolDamageBonus(
+                        stack,
+                        StormToolItems.STORM_POWER_GOLD_AXE.get()
+                )
+        );
 
         return builder.build();
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity holdingEntity, int uInt, boolean uBoolean) {
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
 
         if (world.isClientSide)
             return;
+        if (!(holdingEntity instanceof LivingEntity))
+            return;
+
+        boolean environmentalStateChanged = changeWeather(stack, world);
+
+        if (!environmentalStateChanged) return;
 
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        stormToolHandler.updateInventory(stack, world, livingEntity, isSelected);
+
         boolean isEquipped = livingEntity.getItemBySlot(EquipmentSlotType.MAINHAND) == stack;
 
-        Weather oldWeather = getWeather(stack);
-        Weather currentWeather = Weather.getCurrentWeather(world);
-
-        boolean environmentalStateChanged = oldWeather != currentWeather;
-
-        if (environmentalStateChanged) {
-            setWeather(stack, currentWeather);
-
-            world.addParticle(
-                    ParticleTypes.ITEM_SLIME, // The type of particle
-                    holdingEntity.getX() + 0F,   // X coordinate
-                    holdingEntity.getY() + 1.0,   // Y coordinate
-                    holdingEntity.getZ() + 0F,   // Z coordinate
-                    0.05, 0.05, 0.05                // Speed/velocity of the particle
-            );
-            world.playSound(
-                    null,
-                    holdingEntity.getX(),
-                    holdingEntity.getY(),
-                    holdingEntity.getZ(),
-                    SoundEvents.LIGHTNING_BOLT_IMPACT,
-                    SoundCategory.PLAYERS,
-                    0.5F,
-                    0.8F
-            );
-        }
-
-        ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
-
-        if (environmentalStateChanged && isEquipped) {
+        if (isEquipped) {
+            ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ATTACK_DAMAGE);
 
             if (attackInstance != null) {
-                attackInstance.removeModifier(STORM_DAMAGE_MODIFIER);
                 Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
-
-                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                    if (instance != null) {
-                        if (entry.getValue().getId().equals(STORM_DAMAGE_MODIFIER)) {
-                            instance.addTransientModifier(entry.getValue());
-                        }
-                    }
-                }
+                dynamicAttributeHandler.updateAttributes(livingEntity, newModifiers, attackInstance);
             }
         }
     }
@@ -154,33 +106,28 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
-        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
 
-        if (isThundering) {
-            tooltip.add(new StringTextComponent("§9+" +(30 + 3*weatherBoosterLevel)+ "% Harvest Speed"));
-            tooltip.add(new StringTextComponent("§eMaxed Harvest Level."));
-        }
+        stormToolHandler.appendHoverText(stack, worldIn, tooltip);
+    }
+
+    @Override
+    public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity targetEntity, @NotNull LivingEntity attacker) {
+        if (!super.hurtEnemy(stack, targetEntity, attacker)) return false;
+
+        stormToolHandler.hurtEnemyWithLightning(stack, targetEntity, attacker);
+
+        return true;
     }
 
     @Override
     public int getHarvestLevel(@NotNull ItemStack stack, @NotNull ToolType toolType, @Nullable PlayerEntity player, @Nullable BlockState state) {
-        if (getWeather(stack) == Weather.THUNDERING)
-            return 5;
-
-        return super.getHarvestLevel(stack, toolType, player, state);
+        return stormToolHandler.getHarvestLevel(stack, super.getHarvestLevel(stack, toolType, player, state));
     }
 
     @Override
     public float getDestroySpeed(@NotNull ItemStack stack, @NotNull BlockState state) {
         float baseSpeed = super.getDestroySpeed(stack, state);
-        boolean isThundering = getWeather(stack) == Weather.THUNDERING;
 
-        if (isThundering && baseSpeed > 1.0F) {
-            float weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
-            return baseSpeed + 0.3F + 0.03F*weatherBoosterLevel;
-        }
-
-        return super.getDestroySpeed(stack, state);
+        return baseSpeed * (1.0F + stormToolHandler.getDestroyBonus(stack));
     }
 }

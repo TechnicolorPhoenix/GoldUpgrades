@@ -39,7 +39,7 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int inventorySlot, boolean isSelected) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
@@ -64,7 +64,7 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
             setIsDay(stack, currentIsDay);
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     private float calculateBonusDestroySpeed(ItemStack stack) {
@@ -111,9 +111,7 @@ public class FireGoldShovel extends ShovelItem implements ILevelableItem, IIgnit
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
         treasureHandler.tryDropTreasure(
                 world, blockPos, blockState, miningEntity, usedStack,
-                Biomes.DESERT.location(),
-                (state) -> state.is(BlockTags.SAND),
-                this::isClear,
+                () -> blockState.is(BlockTags.SAND),
                 new ResourceLocation("goldupgrades", "gameplay/treasure/desert_digging"),
                 12
         );

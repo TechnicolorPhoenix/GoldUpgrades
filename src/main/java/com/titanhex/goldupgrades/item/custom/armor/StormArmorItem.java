@@ -81,8 +81,8 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
 
         if (world.isClientSide)
             return;

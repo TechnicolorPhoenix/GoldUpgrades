@@ -41,7 +41,7 @@ public interface IElementalHoe {
         }
     }
 
-    static ActionResult<ItemStack> use(ItemStack stack, PlayerEntity player, Effect effect, int durationTicks){
+    static ActionResult<ItemStack> use(ItemStack stack, PlayerEntity player, Effect effect, int durationTicks, int cost){
         int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
 
         if (elementalHoeLevel > 0) {
@@ -53,7 +53,7 @@ public interface IElementalHoe {
                     true
             ));
 
-            stack.hurtAndBreak(5*elementalHoeLevel*2, player, (e) -> e.broadcastBreakEvent(Hand.OFF_HAND));
+            stack.hurtAndBreak(cost, player, (e) -> e.broadcastBreakEvent(Hand.OFF_HAND));
 
             return ActionResult.consume(stack);
         }
@@ -61,6 +61,10 @@ public interface IElementalHoe {
         return ActionResult.pass(stack);
     }
 
+    static ActionResult<ItemStack> use(ItemStack stack, PlayerEntity player, Effect effect, int durationTicks){
+        int elementalHoeLevel = IElementalHoe.getElementalHoeEnchantmentLevel(stack);
+        return use(stack, player, effect, durationTicks, 5*elementalHoeLevel*2);
+    }
     default void holdingElementalHoe(ItemStack stack, LivingEntity livingEntity, Effect effect, Supplier<Boolean> environmentCheck) {
         int elementalHoeLevel = getElementalHoeEnchantmentLevel(stack);
 

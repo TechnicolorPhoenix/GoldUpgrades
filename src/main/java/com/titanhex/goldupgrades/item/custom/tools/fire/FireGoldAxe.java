@@ -45,7 +45,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
         calibrateLightLevel(stack, world, holdingEntity);
 
         if (world.isClientSide)
@@ -82,7 +82,7 @@ public class FireGoldAxe extends AxeItem implements ILevelableItem, IIgnitableTo
             }
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     @Override

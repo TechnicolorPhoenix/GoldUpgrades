@@ -49,9 +49,9 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
         if (world.isClientSide) {
-            super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+            super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
             return;
         }
 
@@ -84,7 +84,7 @@ public class ObsidianGoldSword extends SwordItem implements ILevelableItem, IDay
             dynamicAttributeHandler.updateAttributes(livingEntity, newModifiers, attackInstance);
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     @Override

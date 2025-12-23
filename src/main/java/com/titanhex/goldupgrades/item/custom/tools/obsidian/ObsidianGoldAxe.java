@@ -48,9 +48,9 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
         if (world.isClientSide) {
-            super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+            super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
             return;
         }
 
@@ -79,7 +79,7 @@ public class ObsidianGoldAxe extends AxeItem implements ILightInfluencedItem, ID
             }
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     @Override

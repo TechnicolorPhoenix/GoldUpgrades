@@ -124,9 +124,7 @@ public class SeaGoldPickaxe extends EffectPickaxe implements IWaterInfluencedIte
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
         treasureHandler.tryDropTreasure(world, blockPos, blockState, miningEntity, usedStack,
-                Biomes.JUNGLE.location(),
-                (stack) -> stack.is(BlockTags.BASE_STONE_OVERWORLD),
-                (stack -> isRaining(stack, world)),
+                () -> blockState.is(BlockTags.BASE_STONE_OVERWORLD),
                 new ResourceLocation("goldupgrades", "gameplay/treasure/jungle_mining"),
                 16);
         return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);

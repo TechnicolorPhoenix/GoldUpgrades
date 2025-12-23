@@ -98,8 +98,7 @@ public class SeaGoldShovel extends EffectShovel implements IWaterInfluencedItem,
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
         treasureHandler.tryDropTreasure(world, blockPos, blockState, miningEntity, usedStack,
-                Biomes.BEACH.location(), (state) -> state.is(Blocks.SAND),
-                (stack) -> isRaining(stack, world),
+                () -> blockState.is(Blocks.SAND),
                 new ResourceLocation("goldupgrades", "gameplay/treasure/beach_digging"),
                 11
                 );

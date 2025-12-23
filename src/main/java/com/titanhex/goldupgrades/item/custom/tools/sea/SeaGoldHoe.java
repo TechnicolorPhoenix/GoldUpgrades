@@ -118,8 +118,7 @@ public class SeaGoldHoe extends EffectHoe implements IWeatherInfluencedItem, IWa
         if (!isRaining(usedStack)) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
 
         treasureHandler.tryDropTreasure(world, blockPos, blockState, miningEntity, usedStack,
-                Biomes.OCEAN.location(),
-                (state) -> blockState.is(Blocks.SEAGRASS), this::isRaining,
+                () -> blockState.is(Blocks.SEAGRASS),
                 new ResourceLocation("goldupgrades", "gameplay/treasure/ocean_cutting"),
                 2);
 

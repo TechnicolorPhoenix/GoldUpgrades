@@ -1,6 +1,5 @@
 package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 
-import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.item.components.ObsidianToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
@@ -10,10 +9,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ActionResultType;
@@ -29,7 +25,6 @@ import java.util.List;
 
 public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, IDayInfluencedItem, IMoonPhaseInfluencedItem, ILightInfluencedItem
 {
-
     ObsidianToolComponent obsidianToolHandler;
     public ObsidianGoldShovel(IItemTier tier, float atkDamage, float atkSpeed, Properties itemProperties) {
         super(tier, atkDamage, atkSpeed, itemProperties);
@@ -37,9 +32,10 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
+
         if (world.isClientSide) {
-            super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
             return;
         }
 
@@ -52,8 +48,6 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
         if (oldBrightness > 0 != currentBrightness > 0) {
             ILightInfluencedItem.setLightLevel(stack, currentBrightness);
         }
-
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
     }
 
     @Override
@@ -75,11 +69,6 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
         obsidianToolHandler.hurtEnemy(stack, target, Effects.POISON);
 
         return false;
-    }
-
-    @Override
-    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
-        return super.getAttributeModifiers(equipmentSlot, stack);
     }
 
     @Override

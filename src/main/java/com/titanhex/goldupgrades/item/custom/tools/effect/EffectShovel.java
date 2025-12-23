@@ -22,13 +22,10 @@ import java.util.Map;
  */
 public class EffectShovel extends ShovelItem
 {
-    // A map to store which Effect applies and what its amplification level should be.
     private final Map<Effect, Integer> effectMap;
 
-    // The duration (in ticks) for which the effects will last.
     private final int effectDuration;
 
-    // The durability cost incurred each time the aura is activated.
     protected final int baseDurabilityCost;
 
     /**
@@ -61,18 +58,14 @@ public class EffectShovel extends ShovelItem
         World world = context.getLevel();
         ItemStack stack = context.getItemInHand();
 
-        // The aura/buff should only apply on the server side and if a player is holding it.
         if (!world.isClientSide && player != null) {
 
-            // 1. Apply effects based on the configuration map
             for (Map.Entry<Effect, Integer> entry : this.effectMap.entrySet()) {
                 Effect effect = entry.getKey();
                 int amplificationLevel = entry.getValue();
 
-                // Potion amplifications are 0-indexed (Level I = amplifier 0, Level II = amplifier 1).
                 int amplifier = Math.max(0, amplificationLevel - 1);
 
-                // Create and apply the effect instance
                 player.addEffect(new EffectInstance(
                         effect,
                         this.effectDuration,
@@ -82,21 +75,16 @@ public class EffectShovel extends ShovelItem
                 ));
             }
 
-            // 2. Damage the tool
-            // The durability cost is fixed, as defined in the constructor
+
             stack.hurtAndBreak(this.baseDurabilityCost, player, (p) -> p.broadcastBreakEvent(context.getHand()));
 
-            // 3. Play a sound to confirm the action (Level Up sound is a good indicator of a buff)
             world.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5F, 1.0F);
 
-            // Since the action was successful and the item was used, return SUCCESS
             return ActionResultType.SUCCESS;
         }
 
         return ActionResultType.PASS;
     }
 
-    // Note: The base hitEntity method from PickaxeItem will still apply
-    // combat damage. If you need a custom hitEntity, you should override it here.
 }

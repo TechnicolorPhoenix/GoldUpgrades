@@ -46,7 +46,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
         if (world.isClientSide)
             return;
 
@@ -93,7 +93,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
             }
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     @Override

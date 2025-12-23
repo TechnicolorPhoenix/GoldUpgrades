@@ -6,13 +6,14 @@ import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
 /**
  * A specialized Pickaxe that grants multiple defined Potion Effects to the player
  * upon right-click use, incurring a durability cost.
- *
+
  * The effects, their amplification levels, and the durability cost are all
  * configured via the constructor.
  */
@@ -50,46 +51,36 @@ public class EffectSword extends SwordItem
     /**
      * Handles the item use event (Right Click) to apply status effects to the player.
      */
+    @NotNull
     @Override
-    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, @NotNull Hand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        // The aura/buff should only apply on the server side and if a player is holding it.
-        if (!world.isClientSide && player != null) {
+        if (!world.isClientSide) {
 
-            // 1. Apply effects based on the configuration map
             for (Map.Entry<Effect, Integer> entry : this.effectMap.entrySet()) {
                 Effect effect = entry.getKey();
                 int amplificationLevel = entry.getValue();
 
-                // Potion amplifications are 0-indexed (Level I = amplifier 0, Level II = amplifier 1).
                 int amplifier = Math.max(0, amplificationLevel - 1);
 
-                // Create and apply the effect instance
                 player.addEffect(new EffectInstance(
                         effect,
                         this.effectDuration,
                         amplifier,
-                        false, // isAmbient
-                        true // showsParticles
+                        false,
+                        true
                 ));
             }
 
-            // 2. Damage the tool
-            // The durability cost is fixed, as defined in the constructor
             stack.hurtAndBreak(this.baseDurabilityCost, player, (p) -> p.broadcastBreakEvent(hand));
 
-            // 3. Play a sound to confirm the action (Level Up sound is a good indicator of a buff)
             world.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5F, 1.0F);
 
-            // Since the action was successful and the item was used, return SUCCESS
             return ActionResult.success(stack);
         }
 
         return ActionResult.pass(stack);
     }
-
-    // Note: The base hitEntity method from PickaxeItem will still apply
-    // combat damage. If you need a custom hitEntity, you should override it here.
 }

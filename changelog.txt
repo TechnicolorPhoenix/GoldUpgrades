@@ -1001,7 +1001,7 @@
  - 29.0.1 Revert fluid change to use Material, fixes server crash
  - 29.0.0 Update to 1.15
           Due to the massive rendering changes, certain features, such as emissive item rendering and the forge block rendering/lighting pipeline are currently disabled.
-          Co-authored-by: David Quintana <gigaherz@gmail.com>
+          Co-authored-by: David QinventorySlotana <gigaherz@gmail.com>
           Co-authored-by: tterrag <tterrag1098@gmail.com>
           Co-authored-by: Unnoen <theunnoen@gmail.com>
 

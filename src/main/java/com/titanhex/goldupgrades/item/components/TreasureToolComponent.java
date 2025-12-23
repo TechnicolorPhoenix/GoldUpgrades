@@ -15,7 +15,6 @@ import net.minecraft.loot.LootParameters;
 import net.minecraft.loot.LootTable;
 import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -31,7 +30,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class TreasureToolComponent {
 
@@ -41,31 +40,29 @@ public class TreasureToolComponent {
     public TreasureToolComponent(){
 
     }
-    public TreasureToolComponent(BasicParticleType treasureParticle){
-        this.treasureParticle = treasureParticle;
-    }
     public TreasureToolComponent(BasicParticleType treasureParticle, SoundEvent treasureFoundSound){
         this.treasureParticle = treasureParticle;
         this.treasureFoundSound = treasureFoundSound;
     }
 
-    public void tryMonsterSpawn(World world, BlockPos blockPos, BlockState state, LivingEntity miner,
-                                ItemStack tool, ResourceLocation targetBiome, Block brokenBlock, Entity spawnableEntity,
-                                int baseRoll) {
+    public void tryMonsterSpawn(World world, BlockPos blockPos, BlockState state, LivingEntity miner, ItemStack tool,
+                                ResourceLocation targetBiome,
+                                Supplier<Boolean> blockMatcher,
+                                Supplier<Boolean> environmentCheck,
+                                Entity spawnableEntity, int baseRoll) {
 
-        // 1. Check Biome
         boolean isCorrectBiome = Objects.equals(world.getBiome(blockPos).getRegistryName(), targetBiome);
         if (!isCorrectBiome) return;
 
-        // 2. Check Block Tag
-        boolean isCorrectBlock = state.is(brokenBlock);
+        boolean isCorrectBlock = blockMatcher.get();
         if (!isCorrectBlock) return;
 
-        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(tool); // Retrieve this from your enchantment helper logic
+        boolean isCorrectEnvironment = environmentCheck.get();
+        if (!isCorrectEnvironment) return;
 
+        int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(tool);
         if (weatherBoosterLevel <= 0) return;
 
-        // 4. Calculate Chance (Luck + Enchantment)
         int minersLuck = (int) miner.getAttributeValue(Attributes.LUCK);
         int luckAdjustedRollRange = baseRoll - weatherBoosterLevel - minersLuck;
         int finalRollRange = Math.max(2, luckAdjustedRollRange);
@@ -103,57 +100,43 @@ public class TreasureToolComponent {
     }
 
     public void tryDropTreasure(World world, BlockPos pos, BlockState state, LivingEntity miner,
-                                ItemStack tool, ResourceLocation targetBiome,
-                                Predicate<BlockState> blockMatcher,
-                                Predicate<ItemStack> environmentCheck,
+                                ItemStack tool, Supplier<Boolean> blockMatcher,
                                 ResourceLocation lootTableID, int baseRoll) {
 
-        if (world.isClientSide) return;
+        if (world.isClientSide || !(world instanceof ServerWorld)) return;
 
-        // 1. Check Biome
-        boolean isCorrectBiome = Objects.equals(world.getBiome(pos).getRegistryName(), targetBiome);
-        if (!isCorrectBiome) return;
-
-        // 2. Check Block
-        if (!blockMatcher.test(state)) return;
+        if (!blockMatcher.get()) return;
 
         int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(tool); // Retrieve this from your enchantment helper logic
-
         if (weatherBoosterLevel <= 0) return;
-
-        if (!environmentCheck.test(tool)) return;
 
         // 4. Calculate Chance (Luck + Enchantment)
         int minersLuck = (int) miner.getAttributeValue(Attributes.LUCK);
-        int luckAdjustedRollRange = baseRoll - weatherBoosterLevel - minersLuck;
-        int finalRollRange = Math.max(2, luckAdjustedRollRange);
-        int calculatedRoll = world.getRandom().nextInt(finalRollRange);
+        int calculatedRoll = Math.max(2, baseRoll - weatherBoosterLevel - minersLuck);
 
         // 5. Roll for Treasure
-        if (calculatedRoll == 0) {
-            if (world instanceof ServerWorld) {
-                ServerWorld serverWorld = (ServerWorld) world;
-                MinecraftServer server = serverWorld.getServer();
+        if (world.getRandom().nextInt(calculatedRoll) == 0) {
+            ServerWorld serverWorld = (ServerWorld) world;
 
-                // Get the Loot Table
-                LootTable table = server.getLootTables().get(lootTableID);
+            // Get the Loot Table
+            LootTable table = serverWorld.getServer().getLootTables().get(lootTableID);
 
-                // Build Loot Context
-                LootContext.Builder builder = (new LootContext.Builder(serverWorld))
-                        .withParameter(LootParameters.ORIGIN, new Vector3d(pos.getX(), pos.getY(), pos.getZ()))
-                        .withParameter(LootParameters.TOOL, tool)
-                        .withParameter(LootParameters.THIS_ENTITY, miner)
-                        .withRandom(world.getRandom());
+            // Build Loot Context
+            LootContext.Builder builder = new LootContext.Builder(serverWorld)
+                    .withParameter(LootParameters.ORIGIN, Vector3d.atCenterOf(pos))
+                    .withParameter(LootParameters.BLOCK_STATE, state)
+                    .withParameter(LootParameters.TOOL, tool)
+                    .withParameter(LootParameters.THIS_ENTITY, miner)
+                    .withLuck(minersLuck);
 
-                // Generate Items
-                List<ItemStack> drops = table.getRandomItems(builder.create(LootParameterSets.CHEST));
+            // Generate Items
+            List<ItemStack> drops = table.getRandomItems(builder.create(LootParameterSets.CHEST));
 
-                // Spawn Drops
+            if (!drops.isEmpty()){
                 for (ItemStack drop : drops) {
                     Block.popResource(world, pos, drop);
                 }
 
-                // Spawn Particles & XP (Preserving your original flair)
                 spawnTreasureParticlesAndXP(serverWorld, pos, state);
             }
         }

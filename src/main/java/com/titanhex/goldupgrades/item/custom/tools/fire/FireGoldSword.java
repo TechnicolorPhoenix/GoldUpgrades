@@ -42,7 +42,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
         calibrateLightLevel(stack, world, holdingEntity);
 
         if (world.isClientSide)
@@ -68,7 +68,7 @@ public class FireGoldSword extends SwordItem implements ILevelableItem, IIgnitab
             dynamicAttributeHandler.updateAttributes(livingEntity, newModifiers, attackInstance);
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     @Override

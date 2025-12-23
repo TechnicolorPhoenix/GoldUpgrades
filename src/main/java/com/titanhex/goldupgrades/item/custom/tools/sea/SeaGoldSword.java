@@ -136,7 +136,7 @@ public class SeaGoldSword extends EffectSword implements IWeatherInfluencedItem,
 
     @NotNull
     @Override
-    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, @NotNull Hand hand) {
         if (world.isClientSide)
             return super.use(world, player, hand);
 

@@ -19,7 +19,6 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biomes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +40,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int uInt, boolean uBoolean) {
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, Entity holdingEntity, int inventorySlot, boolean isSelected) {
         int currentBrightness = getLightLevel(stack, world, holdingEntity.blockPosition());
 
         int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
@@ -67,7 +66,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
             setIsDay(stack, currentIsDay);
         }
 
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
     }
 
     @Override
@@ -75,9 +74,7 @@ public class FireGoldPickaxe extends PickaxeItem implements ILevelableItem, IIgn
         if (world.isClientSide) return super.mineBlock(usedStack, world, blockState, blockPos, miningEntity);
         treasureHandler.tryDropTreasure(
                 world, blockPos, blockState, miningEntity, usedStack,
-                Biomes.BADLANDS.location(),
-                (state) -> state.is(BlockTags.BASE_STONE_OVERWORLD),
-                this::isClear,
+                () -> blockState.is(BlockTags.BASE_STONE_OVERWORLD),
                 new ResourceLocation("goldupgrades", "gameplay/treasure/badlands_mining"),
                 13
         );

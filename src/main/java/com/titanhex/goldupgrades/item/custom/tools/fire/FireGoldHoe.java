@@ -1,13 +1,10 @@
 package com.titanhex.goldupgrades.item.custom.tools.fire;
 
 import com.titanhex.goldupgrades.data.DimensionType;
-import com.titanhex.goldupgrades.enchantment.ElementalHoeEnchantment;
-import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
 import com.titanhex.goldupgrades.item.custom.inter.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -16,7 +13,6 @@ import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
-import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
@@ -46,8 +42,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     }
 
     @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int uInt, boolean uBoolean) {
-        super.inventoryTick(stack, world, holdingEntity, uInt, uBoolean);
+    public void inventoryTick(@NotNull ItemStack stack, @NotNull World world, @NotNull Entity holdingEntity, int inventorySlot, boolean isSelected) {
+        super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
 
         calibrateLightLevel(stack, world, holdingEntity);
 
@@ -90,7 +86,8 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
         treasureHandler.tryMonsterSpawn(
                 world, blockPos, blockState, miningEntity, usedStack,
                 Biomes.BADLANDS.location(),
-                Blocks.DEAD_BUSH,
+                () -> blockState.is(Blocks.DEAD_BUSH),
+                () -> isClear(usedStack, world),
                 magmaCube,
                 9
         );
@@ -120,7 +117,7 @@ public class FireGoldHoe extends HoeItem implements ILevelableItem, IIgnitableTo
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        treasureHandler.appendHoverText(stack, tooltip, "§eCutting dead bushes in badlands yields treasure in clear weather.");
+        treasureHandler.appendHoverText(stack, tooltip, "§eCutting dead bushes in badlands yields magma cubes in clear weather.");
         IIgnitableTool.appendHoverText(stack, tooltip);
         IElementalHoe.appendHoverText(stack, tooltip, "§eHold for Fire Resistance, use for Strength");
     }
