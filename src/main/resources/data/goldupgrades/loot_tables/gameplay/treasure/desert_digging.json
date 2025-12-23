@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:chest",
+  "type": "minecraft:block",
   "pools": [
     {
       "rolls": 1,
@@ -35,6 +35,26 @@
           "name": "minecraft:dragon_breath",
           "quality": 1,
           "weight": 1
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:table_bonus",
+          "enchantment": "goldupgrades:weather_booster_enchantment",
+          "chances": [0.0, 0.1, 0.2, 0.3, 0.4]
+        },
+        {
+          "condition": "minecraft:location_check",
+          "predicate": {
+            "biome": "minecraft:swamp"
+          }
+        },
+        {
+          "condition": "minecraft:weather_check",
+          "predicate": {
+            "thundering": false,
+            "raining": false
+          }
         }
       ]
     }

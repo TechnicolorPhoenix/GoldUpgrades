@@ -45,7 +45,7 @@ public class StormGoldShovel extends EffectShovel implements ILevelableItem, IWe
      * @param properties            Item properties.
      */
     public StormGoldShovel(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
-        super(tier, attackDamage, attackSpeed + 1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
+        super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
         this.treasureHandler = new TreasureToolComponent();
         this.stormToolHandler = new StormToolComponent();
     }

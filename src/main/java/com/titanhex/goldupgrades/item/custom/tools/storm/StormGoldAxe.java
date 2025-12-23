@@ -51,7 +51,7 @@ public class StormGoldAxe extends EffectAxe implements ILevelableItem, IWeatherI
      * @param properties            Item properties.
      */
     public StormGoldAxe(IItemTier tier, float attackDamage, float attackSpeed, Map<Effect, Integer> effectAmplifications, int effectDuration, int durabilityCost, Properties properties) {
-        super(tier, attackDamage, attackSpeed+1.333F, effectAmplifications, effectDuration, durabilityCost, properties);
+        super(tier, attackDamage, attackSpeed, effectAmplifications, effectDuration, durabilityCost, properties);
         this.stormToolHandler = new StormToolComponent();
         this.dynamicAttributeHandler = new DynamicAttributeComponent(StormToolComponent.STORM_DAMAGE_MODIFIER, EquipmentSlotType.MAINHAND);
     }

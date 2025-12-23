@@ -110,40 +110,32 @@ public class TreasureToolComponent {
         int weatherBoosterLevel = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(tool); // Retrieve this from your enchantment helper logic
         if (weatherBoosterLevel <= 0) return;
 
-        // 4. Calculate Chance (Luck + Enchantment)
         int minersLuck = (int) miner.getAttributeValue(Attributes.LUCK);
         int calculatedRoll = Math.max(2, baseRoll - weatherBoosterLevel - minersLuck);
 
-        // 5. Roll for Treasure
-        if (world.getRandom().nextInt(calculatedRoll) == 0) {
-            ServerWorld serverWorld = (ServerWorld) world;
+        ServerWorld serverWorld = (ServerWorld) world;
 
-            // Get the Loot Table
-            LootTable table = serverWorld.getServer().getLootTables().get(lootTableID);
+        LootTable table = serverWorld.getServer().getLootTables().get(lootTableID);
 
-            // Build Loot Context
-            LootContext.Builder builder = new LootContext.Builder(serverWorld)
-                    .withParameter(LootParameters.ORIGIN, Vector3d.atCenterOf(pos))
-                    .withParameter(LootParameters.BLOCK_STATE, state)
-                    .withParameter(LootParameters.TOOL, tool)
-                    .withParameter(LootParameters.THIS_ENTITY, miner)
-                    .withLuck(minersLuck);
+        LootContext.Builder builder = new LootContext.Builder(serverWorld)
+                .withParameter(LootParameters.ORIGIN, Vector3d.atCenterOf(pos))
+                .withParameter(LootParameters.BLOCK_STATE, state)
+                .withParameter(LootParameters.TOOL, tool)
+                .withParameter(LootParameters.THIS_ENTITY, miner)
+                .withLuck(minersLuck);
 
-            // Generate Items
-            List<ItemStack> drops = table.getRandomItems(builder.create(LootParameterSets.CHEST));
+        List<ItemStack> drops = table.getRandomItems(builder.create(LootParameterSets.BLOCK));
 
-            if (!drops.isEmpty()){
-                for (ItemStack drop : drops) {
-                    Block.popResource(world, pos, drop);
-                }
-
-                spawnTreasureParticlesAndXP(serverWorld, pos, state);
+        if (!drops.isEmpty()){
+            for (ItemStack drop : drops) {
+                Block.popResource(world, pos, drop);
             }
+
+            spawnTreasureParticlesAndXP(serverWorld, pos, state);
         }
     }
 
     private void spawnTreasureParticlesAndXP(ServerWorld world, BlockPos pos, BlockState state) {
-        // Moved your particle/XP logic here to keep the main method clean
         int bonusExp = state.getExpDrop(world, pos, 0, 0) + 5;
         double x = pos.getX() + 0.5D;
         double y = pos.getY() + 0.5D;

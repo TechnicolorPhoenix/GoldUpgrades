@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:chest",
+  "type": "minecraft:block",
   "pools": [
     {
       "rolls": 1,
@@ -27,6 +27,26 @@
           "type": "minecraft:item",
           "name": "minecraft:diamond",
           "weight": 1
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:table_bonus",
+          "enchantment": "goldupgrades:weather_booster_enchantment",
+          "chances": [0.0, 0.01, 0.02, 0.03, 0.04]
+        },
+        {
+          "condition": "minecraft:location_check",
+          "predicate": {
+            "biome": "minecraft:badlands"
+          }
+        },
+        {
+          "condition": "minecraft:weather_check",
+          "predicate": {
+            "raining": false,
+            "thundering": false
+          }
         }
       ]
     }

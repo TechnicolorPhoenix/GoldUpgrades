@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:chest",
+  "type": "minecraft:block",
   "pools": [
     {
       "rolls": 1,
@@ -19,6 +19,11 @@
       ],
       "conditions": [
         {
+          "condition": "minecraft:table_bonus",
+          "enchantment": "goldupgrades:weather_booster_enchantment",
+          "chances": [0.0, 0.1, 0.2, 0.3, 0.4]
+        },
+        {
           "condition": "minecraft:location_check",
           "predicate": {
             "biome": "minecraft:plains"
@@ -26,25 +31,9 @@
         },
         {
           "condition": "minecraft:weather_check",
-          "thundering": true
-        },
-        {
-          "condition": "minecraft:alternative",
-          "terms": [
-            {
-              "condition": "minecraft:match_tool",
-              "predicate": {
-                "enchantments": [
-                  {
-                    "enchantment": "goldupgrades:weather_booster_enchantment",
-                    "levels": {
-                      "min": 1
-                    }
-                  }
-                ]
-              }
-            }
-          ]
+          "predicate": {
+            "thundering": true
+          }
         }
       ]
     }

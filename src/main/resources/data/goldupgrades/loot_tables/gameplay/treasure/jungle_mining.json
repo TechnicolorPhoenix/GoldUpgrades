@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:chest",
+  "type": "minecraft:block",
   "pools": [
     {
       "rolls": 1,
@@ -8,7 +8,6 @@
           "type": "minecraft:item",
           "name": "minecraft:heart_of_the_sea",
           "weight": 20,
-          "quality": -1,
           "functions": [
             {
               "function": "minecraft:set_count",
@@ -19,6 +18,11 @@
       ],
       "conditions": [
         {
+          "condition": "minecraft:table_bonus",
+          "enchantment": "goldupgrades:weather_booster_enchantment",
+          "chances": [0.0, 0.01, 0.02, 0.03, 0.04]
+        },
+        {
           "condition": "minecraft:location_check",
           "predicate": {
             "biome": "minecraft:jungle"
@@ -26,25 +30,9 @@
         },
         {
           "condition": "minecraft:weather_check",
-          "raining": true
-        },
-        {
-          "condition": "minecraft:alternative",
-          "terms": [
-            {
-              "condition": "minecraft:match_tool",
-              "predicate": {
-                "enchantments": [
-                  {
-                    "enchantment": "goldupgrades:weather_booster_enchantment",
-                    "levels": {
-                      "min": 1
-                    }
-                  }
-                ]
-              }
-            }
-          ]
+          "predicate": {
+            "raining": true
+          }
         }
       ]
     }
