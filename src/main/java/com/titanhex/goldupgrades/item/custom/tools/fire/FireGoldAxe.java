@@ -3,7 +3,7 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
-import com.titanhex.goldupgrades.item.custom.inter.*;
+import com.titanhex.goldupgrades.item.interfaces.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;

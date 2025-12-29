@@ -1,8 +1,8 @@
 package com.titanhex.goldupgrades.item.components;
 
-import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWaterInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
+import com.titanhex.goldupgrades.item.interfaces.IWaterInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;

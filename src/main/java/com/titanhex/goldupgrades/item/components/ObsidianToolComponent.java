@@ -1,8 +1,10 @@
 package com.titanhex.goldupgrades.item.components;
 
-import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.MoonPhase;
-import com.titanhex.goldupgrades.item.custom.inter.*;
+import com.titanhex.goldupgrades.item.interfaces.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
+import com.titanhex.goldupgrades.item.interfaces.ILightInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IMoonPhaseInfluencedItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;

@@ -2,7 +2,7 @@ package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.item.components.ObsidianToolComponent;
-import com.titanhex.goldupgrades.item.custom.inter.*;
+import com.titanhex.goldupgrades.item.interfaces.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;

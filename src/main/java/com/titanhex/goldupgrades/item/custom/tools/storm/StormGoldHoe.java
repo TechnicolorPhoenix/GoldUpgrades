@@ -2,9 +2,9 @@ package com.titanhex.goldupgrades.item.custom.tools.storm;
 
 import com.titanhex.goldupgrades.item.components.StormToolComponent;
 import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
-import com.titanhex.goldupgrades.item.custom.inter.IElementalHoe;
-import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IElementalHoe;
+import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
+import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
 import com.titanhex.goldupgrades.item.custom.tools.effect.EffectHoe;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;

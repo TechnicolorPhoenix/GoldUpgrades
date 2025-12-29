@@ -33,23 +33,23 @@ public enum ModArmorMaterial implements IArmorMaterial {
         return Ingredient.of(Items.MAGMA_BLOCK);
     }),
     FIRE_UPGRADED_GOLD("fire_upgraded_gold", 16, new int[]{2, 5, 6, 2}, 28, 2,
-            SoundEvents.BUCKET_FILL_LAVA, 1.0F, 0.0F, () -> {
+            SoundEvents.BUCKET_FILL_LAVA, 0.5F, 0.0F, () -> {
         return Ingredient.of(Items.MAGMA_CREAM);
     }),
     FIRE_POWER_GOLD("fire_power_gold", 28, new int[]{3, 6, 8, 3}, 28, 3,
-            SoundEvents.BUCKET_FILL_LAVA, 2.0F, 0.0F, () -> {
-        return Ingredient.of(Items.WITHER_SKELETON_SKULL);
+            SoundEvents.BUCKET_FILL_LAVA, 1.0F, 0.0F, () -> {
+        return Ingredient.of(Items.DRAGON_BREATH);
     }),
     SEA_BASE_GOLD("sea_base_gold", 13, new int[]{2, 4, 5, 1}, 30, 1,
             SoundEvents.BUCKET_FILL, 0.0F, 0.0F, () -> {
         return Ingredient.of(Items.SALMON_BUCKET);
     }),
     SEA_UPGRADED_GOLD("sea_upgraded_gold", 16, new int[]{2, 5, 6, 2}, 30, 2,
-            SoundEvents.BUCKET_FILL, 1.0F, 0.0F, () -> {
+            SoundEvents.BUCKET_FILL, 0.5F, 0.0F, () -> {
         return Ingredient.of(Items.NAUTILUS_SHELL);
     }),
     SEA_POWER_GOLD("sea_power_gold", 28, new int[]{3, 6, 8, 3}, 30, 3,
-            SoundEvents.BUCKET_FILL, 2.0F, 0.0F, () -> {
+            SoundEvents.BUCKET_FILL, 1.0F, 0.0F, () -> {
         return Ingredient.of(Items.CONDUIT);
     }),
     STORM_BASE_GOLD("storm_base_gold", 13, new int[]{2, 4, 5, 1}, 25, 1,
@@ -57,11 +57,11 @@ public enum ModArmorMaterial implements IArmorMaterial {
         return Ingredient.of(Items.HONEYCOMB);
     }),
     STORM_UPGRADED_GOLD("storm_upgraded_gold", 16, new int[]{2, 5, 6, 2}, 25, 2,
-            SoundEvents.LIGHTNING_BOLT_IMPACT, 1.0F, 0.0F, () -> {
+            SoundEvents.LIGHTNING_BOLT_IMPACT, 0.5F, 0.0F, () -> {
         return Ingredient.of(Items.SLIME_BLOCK);
     }),
     STORM_POWER_GOLD("storm_power_gold", 28, new int[]{3, 6, 8, 3}, 25, 3,
-            SoundEvents.LIGHTNING_BOLT_IMPACT, 2.0F, 0.0F, () -> {
+            SoundEvents.LIGHTNING_BOLT_IMPACT, 1.0F, 0.0F, () -> {
         return Ingredient.of(Items.SHULKER_SHELL);
     })
     ;

@@ -2,10 +2,12 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.MoonPhase;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
-import com.titanhex.goldupgrades.item.custom.inter.*;
+import com.titanhex.goldupgrades.item.interfaces.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
+import com.titanhex.goldupgrades.item.interfaces.ILightInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IMoonPhaseInfluencedItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;

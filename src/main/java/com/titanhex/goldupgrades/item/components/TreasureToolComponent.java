@@ -1,6 +1,6 @@
 package com.titanhex.goldupgrades.item.components;
 
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
