@@ -1,8 +1,7 @@
 package com.titanhex.goldupgrades.item.components;
 
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
-import com.titanhex.goldupgrades.item.tool.StormToolItems;
+import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
@@ -14,7 +13,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TieredItem;
-import net.minecraft.item.ToolItem;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;

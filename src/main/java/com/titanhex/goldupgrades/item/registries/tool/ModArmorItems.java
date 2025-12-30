@@ -1,0 +1,17 @@
+package com.titanhex.goldupgrades.item.registries.tool;
+
+import com.titanhex.goldupgrades.item.registries.armor.FireArmorItems;
+import com.titanhex.goldupgrades.item.registries.armor.ObsidianArmorItems;
+import com.titanhex.goldupgrades.item.registries.armor.SeaArmorItems;
+import com.titanhex.goldupgrades.item.registries.armor.StormArmorItems;
+import net.minecraftforge.eventbus.api.IEventBus;
+
+public class ModArmorItems {
+
+    public static void register(IEventBus eventBus) {
+        ObsidianArmorItems.ITEMS.register(eventBus);
+        FireArmorItems.ITEMS.register(eventBus);
+        StormArmorItems.ITEMS.register(eventBus);
+        SeaArmorItems.ITEMS.register(eventBus);
+    }
+}

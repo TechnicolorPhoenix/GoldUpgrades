@@ -3,7 +3,7 @@ package com.titanhex.goldupgrades.item.custom.tools.fire;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.components.TreasureToolComponent;
-import com.titanhex.goldupgrades.item.custom.inter.*;
+import com.titanhex.goldupgrades.item.interfaces.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;

@@ -1,6 +1,6 @@
 package com.titanhex.goldupgrades.event;
 
-import com.titanhex.goldupgrades.item.custom.inter.IJumpBoostArmor;
+import com.titanhex.goldupgrades.item.interfaces.IJumpBoostArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

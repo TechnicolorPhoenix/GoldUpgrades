@@ -1,10 +1,10 @@
 package com.titanhex.goldupgrades.item.custom.tools.obsidian;
 
 import com.titanhex.goldupgrades.item.components.ObsidianToolComponent;
-import com.titanhex.goldupgrades.item.custom.inter.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
-import com.titanhex.goldupgrades.item.custom.inter.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.custom.inter.IMoonPhaseInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IDayInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
+import com.titanhex.goldupgrades.item.interfaces.ILightInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IMoonPhaseInfluencedItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;

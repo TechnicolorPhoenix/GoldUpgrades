@@ -23,7 +23,7 @@ public class DynamicAttributeComponent {
         this.slotType = slotType;
     }
 
-    public DynamicAttributeComponent(UUID dynamicUUID, Attribute attribute, String attributeName, EquipmentSlotType slotType) {
+    public DynamicAttributeComponent(UUID dynamicUUID, EquipmentSlotType slotType, Attribute attribute, String attributeName) {
         this.attribute = attribute;
         this.dynamicUUID = dynamicUUID;
         this.attributeName = attributeName;

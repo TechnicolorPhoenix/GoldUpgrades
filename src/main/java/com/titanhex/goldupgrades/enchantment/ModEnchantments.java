@@ -1,6 +1,7 @@
 package com.titanhex.goldupgrades.enchantment;
 
 import com.titanhex.goldupgrades.GoldUpgrades;
+import com.titanhex.goldupgrades.enchantment.custom.*;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.RegistryObject;
@@ -12,7 +13,7 @@ public class ModEnchantments {
             DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, GoldUpgrades.MOD_ID);
 
     public static final RegistryObject<Enchantment> DAY_AND_NIGHT_ENCHANTMENT = ENCHANTMENTS.register(
-            "day_and_night_enchantment", com.titanhex.goldupgrades.enchantment.DayNightEnchantment::new
+            "day_and_night_enchantment", DayNightEnchantment::new
     );
 
     public static final RegistryObject<Enchantment> WEATHER_BOOSTER_ENCHANTMENT = ENCHANTMENTS.register(

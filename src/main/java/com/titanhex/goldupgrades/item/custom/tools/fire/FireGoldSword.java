@@ -5,7 +5,7 @@ import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
-import com.titanhex.goldupgrades.item.custom.inter.*;
+import com.titanhex.goldupgrades.item.interfaces.*;
 import net.minecraft.block.*;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;

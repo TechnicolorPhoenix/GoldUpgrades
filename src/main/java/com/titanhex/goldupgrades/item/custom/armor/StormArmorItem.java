@@ -1,9 +1,9 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.titanhex.goldupgrades.data.Weather;
-import com.titanhex.goldupgrades.item.custom.inter.IJumpBoostArmor;
-import com.titanhex.goldupgrades.item.custom.inter.ILevelableItem;
-import com.titanhex.goldupgrades.item.custom.inter.IWeatherInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.IJumpBoostArmor;
+import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
+import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;

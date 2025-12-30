@@ -1,15 +1,17 @@
 package com.titanhex.goldupgrades.item;
 
-import com.titanhex.goldupgrades.item.armor.FireArmorItems;
-import com.titanhex.goldupgrades.item.armor.ObsidianArmorItems;
-import com.titanhex.goldupgrades.item.armor.SeaArmorItems;
+import com.titanhex.goldupgrades.item.registries.armor.FireArmorItems;
+import com.titanhex.goldupgrades.item.registries.armor.ObsidianArmorItems;
+import com.titanhex.goldupgrades.item.registries.armor.SeaArmorItems;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class ModItemGroup {
 
     public static final ItemGroup GOLD_BASE_ARMOR_GROUP = new ItemGroup("goldBaseArmorTab")
     {
+        @NotNull
         @Override
         public ItemStack makeIcon()
         {
@@ -18,6 +20,7 @@ public class ModItemGroup {
     };
     public static final ItemGroup GOLD_UPGRADED_ARMOR_GROUP = new ItemGroup("goldUpgradedArmorTab")
     {
+        @NotNull
         @Override
         public ItemStack makeIcon()
         {
@@ -26,6 +29,7 @@ public class ModItemGroup {
     };
     public static final ItemGroup GOLD_POWER_ARMOR_GROUP = new ItemGroup("goldPowerArmorTab")
     {
+        @NotNull
         @Override
         public ItemStack makeIcon()
         {

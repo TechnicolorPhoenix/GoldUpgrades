@@ -1,8 +1,7 @@
 package com.titanhex.goldupgrades.item.custom;
 
-import com.titanhex.goldupgrades.item.custom.inter.IJumpBoostArmor;
+import com.titanhex.goldupgrades.item.interfaces.IJumpBoostArmor;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.potion.Effect;
 
