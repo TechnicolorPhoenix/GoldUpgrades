@@ -72,8 +72,7 @@ public class ObsidianGoldHoe extends HoeItem implements IMoonPhaseInfluencedItem
 
     @Override
     public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
-        boolean appliedDamage = super.hurtEnemy(stack, target, attacker);
-        if (!appliedDamage) return false;
+        if (!super.hurtEnemy(stack, target, attacker)) return false;
 
         obsidianToolHandler.hurtEnemy(stack, target, Effects.MOVEMENT_SLOWDOWN);
 

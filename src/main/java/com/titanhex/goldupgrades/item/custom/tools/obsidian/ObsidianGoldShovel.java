@@ -64,11 +64,11 @@ public class ObsidianGoldShovel extends ShovelItem implements ILevelableItem, ID
 
     @Override
     public boolean hurtEnemy(@NotNull ItemStack stack, @NotNull LivingEntity target, @NotNull LivingEntity attacker) {
-        if (!hurtEnemy(stack, target, attacker)) return false;
+        if (!super.hurtEnemy(stack, target, attacker)) return false;
 
         obsidianToolHandler.hurtEnemy(stack, target, Effects.POISON);
 
-        return false;
+        return true;
     }
 
     @Override
