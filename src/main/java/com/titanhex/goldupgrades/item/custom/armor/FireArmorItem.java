@@ -3,6 +3,7 @@ package com.titanhex.goldupgrades.item.custom.armor;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.titanhex.goldupgrades.GoldUpgrades;
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
 import com.titanhex.goldupgrades.item.interfaces.*;
@@ -30,9 +31,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, IDimensionInfluencedItem, IDayInfluencedItem, IArmorCooldown, ILevelableItem {
-    protected float recoverAmount = 1.0F;
+    protected static double recoverAmount = GoldUpgradesConfig.FIRE_ARMOR_REGENERATION_AMOUNT.get();
+    protected static int perTickRecoverSpeed = GoldUpgradesConfig.FIRE_ARMOR_RECOVERY_SPEED.get();
+    protected static double perLevelRegenerationBonus = GoldUpgradesConfig.FIRE_ARMOR_PER_LEVEL_REGENERATION_AMOUNT.get();
+    protected static int perLevelRecoverySpeed = GoldUpgradesConfig.FIRE_ARMOR_PER_LEVEL_RECOVERY_SPEED.get();
     protected float toughnessBonus;
-    protected int perTickRecoverSpeed = 500;
 
     private final DynamicAttributeComponent dynamicAttributeHelper;
 
@@ -70,19 +73,28 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
         return builder.build();
     }
 
+    private int getRegenerationSpeed() {
+        return Math.max(0, perTickRecoverSpeed - perLevelRecoverySpeed);
+    }
+    private float getRegenerationAmount() {
+        return (float) (Math.max(0, recoverAmount + perLevelRegenerationBonus));
+    }
+
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         double bonusDamage = getBonusToughness(stack, worldIn);
         boolean isDay = isDay(stack, worldIn);
+        double regenerationAmount = getRegenerationAmount();
+        int regenerationSpeed = getRegenerationSpeed() / 20;
 
         if (bonusDamage == 0) {
             tooltip.add(new StringTextComponent("§cInactive: Toughness Bonus (Requires Clear Skies or Nether)"));
         }
 
         if (isDay) {
-            tooltip.add(new StringTextComponent("§aActive: +" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds"));
+            tooltip.add(new StringTextComponent("§aActive: +" + regenerationAmount + " Health per " + regenerationSpeed + " seconds"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Day)"));
         }
@@ -126,13 +138,11 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
             return;
 
         int timer = getArmorCooldown(stack);
-        GoldUpgrades.LOGGER.debug("Fire Armor Cooldown: {}", timer);
         if (timer <= 0) {
             if (isDay(stack, world)) {
-                GoldUpgrades.LOGGER.debug("RECOVER: {} and wait {} ticks.", this.recoverAmount, this.perTickRecoverSpeed);
-                player.heal(this.recoverAmount);
+                player.heal(getRegenerationAmount());
             }
-            setArmorCooldown(stack, this.perTickRecoverSpeed);
+            setArmorCooldown(stack, getRegenerationSpeed());
         } else {
             reduceArmorCooldown(stack);
         }

@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
 import com.titanhex.goldupgrades.item.interfaces.IJumpBoostArmor;
 import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
 import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
@@ -24,8 +25,9 @@ import java.util.List;
 public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevelableItem, IWeatherInfluencedItem
 {
     String NBT_FLIGHT_REQUIREMENT_MET = "FlightRequirementMet";
-    int BASE_TICK = 20;
-    int TICK_INCREASE_PER_LEVEL = 5;
+    protected static double JUMP_HEIGHT_BONUS = GoldUpgradesConfig.STORM_ARMOR_JUMP_BONUS.get();
+    protected static int BASE_TICK = GoldUpgradesConfig.STORM_ARMOR_ELYTRA_TICK.get();
+    protected static int TICK_INCREASE_PER_LEVEL = 5;
 
     public StormArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
@@ -53,14 +55,14 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
         int armorLevel = getItemLevel();
         double totalDesiredBonus = (armorLevel - 0.5);
 
-        return totalDesiredBonus / (10*4); // 4 pieces of armor
+        return totalDesiredBonus / (JUMP_HEIGHT_BONUS*4); // 4 pieces of armor
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        double jumpHeight = getJumpBoostModifier() * 10;
+        double jumpHeight = getJumpBoostModifier() * JUMP_HEIGHT_BONUS;
         boolean isThundering = isThundering(stack, worldIn);
         boolean flightRequirementsMet = getFlightRequirement(stack);
         int fallDamageReduction = (int) (getFallDamageReductionFraction()*100);
@@ -68,7 +70,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
 
         if (isThundering && flightRequirementsMet)
             if (weatherBoosterLevel > 0) {
-                float ratio = (float) (TICK_INCREASE_PER_LEVEL * weatherBoosterLevel) / BASE_TICK * 100F;
+                float ratio = (float) (TICK_INCREASE_PER_LEVEL * weatherBoosterLevel) / BASE_TICK * 100;
                 tooltip.add(new StringTextComponent("§eCan Fly, Durability Drained " + ratio + "% Slower"));
             } else
                 tooltip.add(new StringTextComponent("§eCan Fly"));
