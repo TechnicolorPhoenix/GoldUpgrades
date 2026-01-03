@@ -86,21 +86,29 @@ public class ObsidianToolComponent {
         }
     }
 
-    public void appendHoverText(World worldIn, ItemStack stack, List<ITextComponent> tooltip) {
+    public void appendMoonPhaseHoverText(World worldIn, ItemStack stack, List<ITextComponent> tooltip) {
         Item item = stack.getItem();
         IMoonPhaseInfluencedItem moonPhaseItem = (IMoonPhaseInfluencedItem) item;
-        IDayInfluencedItem nightItem = (IDayInfluencedItem) item;
         int phaseValue = moonPhaseItem.getMoonPhaseValue(stack, MoonPhase.getCurrentMoonPhase(worldIn));
+
+        if (phaseValue < 0)
+            tooltip.add(new StringTextComponent("§aEnchantment Boost from Moon"));
+        else
+            tooltip.add(new StringTextComponent("§9+" + getItemEnchantability(stack) + " Enchantment Bonus"));
+
+
+    }
+
+    public void appendHoverText(World worldIn, ItemStack stack, List<ITextComponent> tooltip) {
+        Item item = stack.getItem();
+        IDayInfluencedItem nightItem = (IDayInfluencedItem) item;
         boolean isNight = nightItem.isNight(stack, worldIn);
         float bonusSpeed = isNight ? 0.15F : 0F;
 
         if (ILightInfluencedItem.getLightLevel(stack) == 0)
             bonusSpeed += 0.1F;
 
-        if (phaseValue < 0)
-            tooltip.add(new StringTextComponent("§aEnchantment Boost from Moon"));
-        else
-            tooltip.add(new StringTextComponent("§9+" + getItemEnchantability(stack) + " Enchantment Bonus"));
+        appendMoonPhaseHoverText(worldIn, stack, tooltip);
 
         if (ILightInfluencedItem.getLightLevel(stack) == 0)
             tooltip.add(new StringTextComponent("§eHarvest Anything."));

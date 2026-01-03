@@ -1,6 +1,5 @@
 package com.titanhex.goldupgrades.item.custom.armor;
 
-import com.titanhex.goldupgrades.data.Weather;
 import com.titanhex.goldupgrades.item.interfaces.IJumpBoostArmor;
 import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
 import com.titanhex.goldupgrades.item.interfaces.IWeatherInfluencedItem;
@@ -46,8 +45,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
     public float getFallDamageReductionFraction() {
         int level = getItemLevel();
         float perLevelBonus = 0.03F * level;
-        float finalBonus = (0.06F + perLevelBonus);
-        return finalBonus;
+        return (0.06F + perLevelBonus);
     }
 
     @Override
@@ -55,14 +53,13 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
         int armorLevel = getItemLevel();
         double totalDesiredBonus = (armorLevel - 0.5);
 
-        return totalDesiredBonus / (10*4);
+        return totalDesiredBonus / (10*4); // 4 pieces of armor
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        int itemLevel = getItemLevel();
         double jumpHeight = getJumpBoostModifier() * 10;
         boolean isThundering = isThundering(stack, worldIn);
         boolean flightRequirementsMet = getFlightRequirement(stack);
@@ -71,7 +68,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
 
         if (isThundering && flightRequirementsMet)
             if (weatherBoosterLevel > 0) {
-                float ratio = (float) (itemLevel * TICK_INCREASE_PER_LEVEL) / BASE_TICK * 100F;
+                float ratio = (float) (TICK_INCREASE_PER_LEVEL * weatherBoosterLevel) / BASE_TICK * 100F;
                 tooltip.add(new StringTextComponent("§eCan Fly, Durability Drained " + ratio + "% Slower"));
             } else
                 tooltip.add(new StringTextComponent("§eCan Fly"));
@@ -87,13 +84,7 @@ public class StormArmorItem extends ArmorItem implements IJumpBoostArmor, ILevel
         if (world.isClientSide)
             return;
 
-        Weather oldWeather = getWeather(stack);
-
-        Weather currentWeather = Weather.getCurrentWeather(world);
-
-        if (oldWeather != currentWeather) {
-            setWeather(stack, currentWeather);
-        }
+        changeWeather(stack, world);
     }
 
     @Override

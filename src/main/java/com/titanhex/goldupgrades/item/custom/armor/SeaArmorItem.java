@@ -2,7 +2,8 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.data.Weather;
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
+import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeEffectArmor;
 import com.titanhex.goldupgrades.item.interfaces.IArmorCooldown;
 import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
@@ -20,8 +21,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -34,68 +33,42 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeatherInfluencedItem, IWaterInfluencedItem, ILevelableItem, IArmorCooldown {
-    int drainFactor = 15;
-    int itemLevel;
+    int drainFactor = GoldUpgradesConfig.SEA_ARMOR_DURABILITY_DRAIN_FACTOR.get();
 
-    private static final UUID[] WATER_ARMOR_MODIFIER_UUID = new UUID[]{
-            UUID.randomUUID(), // BOOTS (Existing)
-            UUID.randomUUID(), // LEGGINGS
-            UUID.randomUUID(), // CHESTPLATE
-            UUID.randomUUID()  // HELMET
-    };
-
-    private static final UUID[] RAIN_SPEED_MODIFIER_UUID = new UUID[]{
-            UUID.randomUUID(), // BOOTS (Existing)
-            UUID.randomUUID(), // LEGGINGS
-            UUID.randomUUID(), // CHESTPLATE
-            UUID.randomUUID()  // HELMET
-    };
+    private final DynamicAttributeComponent waterArmorHelper;
+    private final DynamicAttributeComponent rainSpeedHelper;
     private final Random RANDOM = new Random();
 
     public SeaArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Map<Effect, Integer> effects, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, effects, attributeBonuses, builderIn);
-        this.itemLevel = getItemLevel();
-    }
-
-    private boolean getSubmerged(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IS_SUBMERGED);
-    }
-    private void setSubmerged(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IS_SUBMERGED, value);
-    }
-
-    private boolean getInRain(ItemStack stack) {
-        return stack.getOrCreateTag().getBoolean(NBT_IS_IN_RAIN);
-    }
-    private void setInRain(ItemStack stack, boolean value) {
-        stack.getOrCreateTag().putBoolean(NBT_IS_IN_RAIN, value);
+        this.waterArmorHelper = new DynamicAttributeComponent(
+                UUID.randomUUID(), slot, Attributes.ARMOR,
+                "WaterArmor" + this.slot.getName()
+        );
+        this.rainSpeedHelper = new DynamicAttributeComponent(
+                UUID.randomUUID(), slot, Attributes.MOVEMENT_SPEED,
+                "RainSpeed" + this.slot.getName()
+        );
     }
 
     @Override
     public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         builder.putAll(super.getAttributeModifiers(equipmentSlot, stack));
+        boolean submerged = getIsSubmerged(stack);
+        boolean inRain = getIsInRain(stack);
 
-        // Guard 1: Only modify attributes if this item is in its correct slot.
-        if (equipmentSlot == this.slot) {
-            boolean submerged = this.getSubmerged(stack); // Read from NBT
-            boolean inRain = this.getInRain(stack);       // Read from NBT
-
-            if (inRain || submerged)
-                builder.put(Attributes.ARMOR, new AttributeModifier(
-                        WATER_ARMOR_MODIFIER_UUID[this.slot.getIndex()],
-                        "Armor Water Modifier " + this.slot.getName(),
-                        1F,
-                        AttributeModifier.Operation.ADDITION
-                ));
-            if (inRain)
-                builder.put(Attributes.MOVEMENT_SPEED, new AttributeModifier(
-                        RAIN_SPEED_MODIFIER_UUID[this.slot.getIndex()],
-                        "Armor Speed Modifier" + this.slot.getName(),
-                        0.05,
-                        AttributeModifier.Operation.MULTIPLY_TOTAL
-                ));
-        }
+        waterArmorHelper.getAttributeModifiers(
+                equipmentSlot, builder,
+                () -> inRain || submerged,
+                () -> 1D
+        );
+        rainSpeedHelper.getAttributeModifiers(
+                equipmentSlot, builder,
+                () -> inRain,
+                () -> 0.05D,
+                AttributeModifier.Operation.MULTIPLY_BASE
+        );
 
         return builder.build();
     }
@@ -105,8 +78,8 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
-        boolean inRain = this.getInRain(stack);
-        boolean submerged = this.getSubmerged(stack);
+        boolean inRain = getIsInRain(stack);
+        boolean submerged = getIsSubmerged(stack);
 
         if (inRain) {
             tooltip.add(new StringTextComponent("§aActive: Speed bonus +5%."));
@@ -128,41 +101,27 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
         if (world.isClientSide) return;
         if (!(holdingEntity instanceof LivingEntity)) return;
 
+        boolean submergedChanged = changeSubmerged(stack, holdingEntity);
+        boolean inRainChanged = changeIsInRain(stack, holdingEntity);
+
+        boolean environmentalStateChanged = submergedChanged || inRainChanged;
+
+        boolean lastWeatherClear = isClear(stack);
+        boolean weatherChanged = changeWeather(stack, world);
+
         LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
 
-        boolean currentSubmerged = holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
-        boolean inWaterOrRain = holdingEntity.isInWaterOrRain();
-        boolean currentInRain = inWaterOrRain && !currentSubmerged;
-
-        boolean oldSubmerged = this.getSubmerged(stack);
-        boolean oldInRain = this.getInRain(stack);
-
-        boolean environmentalStateChanged = oldInRain != currentInRain || currentSubmerged != oldSubmerged;
-
-        if (environmentalStateChanged) {
-            setInRain(stack, currentInRain);
-            setSubmerged(stack, currentSubmerged);
-
-            if (currentInRain || currentSubmerged) {
-                world.playSound(null, holdingEntity.blockPosition(), SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundCategory.BLOCKS, 1.0F, 1.0F);
-            }
-        }
-
-        Weather currentWeather = Weather.getCurrentWeather(world);
-        Weather lastWeather = getWeather(stack);
-
-        if (currentWeather != lastWeather) {
-            if (currentWeather == Weather.RAINING && lastWeather == Weather.CLEAR) {
+        if (weatherChanged) {
+            if (isRaining(stack, world) && lastWeatherClear) {
                 float weatherBoosterAmount = IWeatherInfluencedItem.getWeatherBoosterEnchantmentLevel(stack);
                 livingEntity.setAbsorptionAmount(
                         Math.min(
                                 16F + weatherBoosterAmount,
-                                livingEntity.getAbsorptionAmount() + weatherBoosterAmount + itemLevel
+                                livingEntity.getAbsorptionAmount() + weatherBoosterAmount + getItemLevel()
                         )
                 );
             }
-            setWeather(stack, currentWeather);
         }
 
         if (isEquipped && environmentalStateChanged) {
@@ -172,20 +131,8 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
             if (armorInstance != null && speedInstance != null) {
                 Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
-
-                int slotIdx = this.slot.getIndex();
-                armorInstance.removeModifier(WATER_ARMOR_MODIFIER_UUID[slotIdx]);
-                speedInstance.removeModifier(RAIN_SPEED_MODIFIER_UUID[slotIdx]);
-
-                for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                    ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                    if (instance != null) {
-                        if (entry.getValue().getId().equals(RAIN_SPEED_MODIFIER_UUID[slotIdx]) ||
-                                entry.getValue().getId().equals(WATER_ARMOR_MODIFIER_UUID[slotIdx])) {
-                            instance.addTransientModifier(entry.getValue());
-                        }
-                    }
-                }
+                waterArmorHelper.updateAttributes(livingEntity, newModifiers, armorInstance);
+                rainSpeedHelper.updateAttributes(livingEntity, newModifiers, speedInstance);
             }
         }
     }
@@ -196,7 +143,7 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
 
         if (world.isClientSide) return;
 
-        if (getSubmerged(stack)) {
+        if (getIsSubmerged(stack)) {
             int timer = getArmorCooldown(stack);
 
             if (timer > 0) {
@@ -208,12 +155,13 @@ public class SeaArmorItem extends CustomAttributeEffectArmor implements IWeather
             int maxOxygen = player.getMaxAirSupply();
             int oxygenDifference = maxOxygen - currentOxygen;
 
-            int toRestore = Math.min(oxygenDifference, 30);
+            int toRestore = Math.min(oxygenDifference, GoldUpgradesConfig.SEA_ARMOR_OXYGEN_RECOVERY.get());
 
-            if (currentOxygen <= 60 && timer == 0) {
+            int oxygenThreshold = Math.min(GoldUpgradesConfig.SEA_ARMOR_RECOVER_KICKIN.get(), player.getMaxAirSupply());
+            if (currentOxygen <= oxygenThreshold && timer == 0) {
                 stack.hurtAndBreak(toRestore / this.drainFactor, player, (p) -> p.broadcastBreakEvent(Objects.requireNonNull(stack.getEquipmentSlot())));
                 player.setAirSupply(currentOxygen + toRestore);
-                setArmorCooldown(stack, 120);
+                setArmorCooldown(stack, GoldUpgradesConfig.SEA_ARMOR_RECOVER_COOLDOWN.get());
             }
         }
     }

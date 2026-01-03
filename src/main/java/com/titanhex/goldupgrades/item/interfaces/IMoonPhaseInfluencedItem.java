@@ -45,7 +45,11 @@ public interface IMoonPhaseInfluencedItem {
 
         return phaseValue + getMoonBoostEnchantmentLevel(stack);
     }
+    default int getMoonPhaseValue(ItemStack stack, World world) {
+        MoonPhase phase = MoonPhase.getCurrentMoonPhase(world);
 
+        return getMoonPhaseValue(stack, phase);
+    }
     default boolean changeMoonPhase(ItemStack stack, World world) {
         MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
         MoonPhase oldMoonPhase = getMoonPhase(stack);

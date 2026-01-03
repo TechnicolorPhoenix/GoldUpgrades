@@ -2,6 +2,7 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.data.DimensionType;
 import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
 import com.titanhex.goldupgrades.item.interfaces.*;
@@ -29,27 +30,18 @@ import java.util.List;
 import java.util.UUID;
 
 public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, IDimensionInfluencedItem, IDayInfluencedItem, IArmorCooldown, ILevelableItem {
-    protected float recoverAmount;
+    protected float recoverAmount = 1.0F;
     protected float toughnessBonus;
-    protected int perTickRecoverSpeed;
+    protected int perTickRecoverSpeed = 500;
 
     private final DynamicAttributeComponent dynamicAttributeHelper;
 
-    private static final UUID[] SUN_DAMAGE_MODIFIER = new UUID[]{
-            UUID.randomUUID(), // BOOTS (Existing)
-            UUID.randomUUID(), // LEGGINGS
-            UUID.randomUUID(), // CHESTPLATE
-            UUID.randomUUID()  // HELMET
-    };
-
-    public FireArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, float recoverAmount, int perTickRecoverSpeed, float toughnessBonus, Properties builderIn) {
+    public FireArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, float toughnessBonus, Properties builderIn) {
         super(materialIn, slot, builderIn);
-        this.recoverAmount = recoverAmount;
-        this.perTickRecoverSpeed = perTickRecoverSpeed;
         this.toughnessBonus = toughnessBonus;
         this.dynamicAttributeHelper = new DynamicAttributeComponent(
-                SUN_DAMAGE_MODIFIER[slot.getIndex()], slot,
-                Attributes.ARMOR_TOUGHNESS, "Armor Modifier");
+                UUID.randomUUID(), slot,
+                Attributes.ARMOR_TOUGHNESS, "Armor Modifier" + this.slot.getName());
     }
 
     public double getBonusToughness(ItemStack stack, @Nullable World world) {
@@ -71,8 +63,8 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
 
         dynamicAttributeHelper.getAttributeModifiers(
                 equipmentSlot, builder,
-                () -> bonusToughness > 0,
-                () -> bonusToughness
+                () -> true,
+                () -> baseToughness + bonusToughness
             );
 
         return builder.build();
@@ -83,14 +75,14 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         double bonusDamage = getBonusToughness(stack, worldIn);
-        boolean isDay = isDay(stack);
+        boolean isDay = isDay(stack, worldIn);
 
         if (bonusDamage == 0) {
             tooltip.add(new StringTextComponent("§cInactive: Toughness Bonus (Requires Clear Skies or Nether)"));
         }
 
         if (isDay) {
-            tooltip.add(new StringTextComponent("§aActive: +" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds.)"));
+            tooltip.add(new StringTextComponent("§aActive: +" + this.recoverAmount + " Health per " + (this.perTickRecoverSpeed / 20) + " seconds"));
         } else {
             tooltip.add(new StringTextComponent("§cInactive: Regen Bonus (Requires Day)"));
         }
@@ -134,8 +126,10 @@ public class FireArmorItem extends ArmorItem implements IWeatherInfluencedItem, 
             return;
 
         int timer = getArmorCooldown(stack);
+        GoldUpgrades.LOGGER.debug("Fire Armor Cooldown: {}", timer);
         if (timer <= 0) {
-            if (isDay(stack)) {
+            if (isDay(stack, world)) {
+                GoldUpgrades.LOGGER.debug("RECOVER: {} and wait {} ticks.", this.recoverAmount, this.perTickRecoverSpeed);
                 player.heal(this.recoverAmount);
             }
             setArmorCooldown(stack, this.perTickRecoverSpeed);

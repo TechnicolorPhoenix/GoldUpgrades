@@ -4,6 +4,7 @@ import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public interface IWaterInfluencedItem {
     String NBT_IS_SUBMERGED = "ItemSubmerged";
@@ -20,16 +21,16 @@ public interface IWaterInfluencedItem {
         }
         return holdingEntity.isInWaterOrRain();
     }
-    default void setIsInRain(ItemStack stack, boolean value) {
+    default void setIsInRain(@NotNull ItemStack stack, boolean value) {
         stack.getOrCreateTag().putBoolean(NBT_IS_IN_RAIN, value);
     }
-    default boolean getIsSubmerged(ItemStack stack) {
+    default boolean getIsSubmerged(@NotNull ItemStack stack) {
         return stack.getOrCreateTag().getBoolean(NBT_IS_SUBMERGED);
     }
-    default boolean getIsSubmerged(Entity holdingEntity) {
+    default boolean getIsSubmerged(@NotNull Entity holdingEntity) {
         return holdingEntity.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
     }
-    default void setIsSubmerged(ItemStack stack, boolean value) {
+    default void setIsSubmerged(@NotNull ItemStack stack, boolean value) {
         stack.getOrCreateTag().putBoolean(NBT_IS_SUBMERGED, value);
     }
 

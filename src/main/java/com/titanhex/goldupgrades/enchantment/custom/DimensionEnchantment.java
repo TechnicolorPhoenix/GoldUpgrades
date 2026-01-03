@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.enchantment.custom;
 
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
 import com.titanhex.goldupgrades.helper.ItemHelper;
 import com.titanhex.goldupgrades.item.interfaces.IDimensionInfluencedItem;
 import net.minecraft.enchantment.Enchantment;
@@ -15,6 +16,8 @@ public class DimensionEnchantment extends Enchantment {
 
     @Override
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
-        return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof IDimensionInfluencedItem;
+        return super.canApplyAtEnchantingTable(stack) &&
+                stack.getItem() instanceof IDimensionInfluencedItem &&
+                GoldUpgradesConfig.DIMENSION_MARAUDER_ENCHANT_ENABLED.get();
     }
 }

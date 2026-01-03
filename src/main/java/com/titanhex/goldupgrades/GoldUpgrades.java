@@ -3,7 +3,7 @@ package com.titanhex.goldupgrades;
 import com.titanhex.goldupgrades.data.recipes.ModRecipeTypes;
 import com.titanhex.goldupgrades.enchantment.ModEnchantments;
 import com.titanhex.goldupgrades.event.*;
-import com.titanhex.goldupgrades.item.ModToolItems;
+import com.titanhex.goldupgrades.item.registries.ModToolItems;
 import com.titanhex.goldupgrades.item.registries.tool.ModArmorItems;
 import net.minecraft.block.Block;
 import net.minecraftforge.common.MinecraftForge;

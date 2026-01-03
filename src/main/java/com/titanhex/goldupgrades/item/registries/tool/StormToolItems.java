@@ -3,8 +3,6 @@ package com.titanhex.goldupgrades.item.registries.tool;
 import com.titanhex.goldupgrades.GoldUpgrades;
 import com.titanhex.goldupgrades.item.ModItemGroup;
 import com.titanhex.goldupgrades.item.ModItemTier;
-import com.titanhex.goldupgrades.item.ModToolItems;
-import com.titanhex.goldupgrades.item.custom.tools.effect.*;
 import com.titanhex.goldupgrades.item.custom.tools.storm.*;
 import net.minecraft.item.*;
 import net.minecraft.potion.Effect;

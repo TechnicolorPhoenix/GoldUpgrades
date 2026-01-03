@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.enchantment.custom;
 
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
 import com.titanhex.goldupgrades.helper.ItemHelper;
 import com.titanhex.goldupgrades.item.interfaces.ILightInfluencedItem;
 import net.minecraft.enchantment.Enchantment;
@@ -14,6 +15,8 @@ public class LightLevelMoonlightEnchantment extends Enchantment {
 
     @Override
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
-        return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof ILightInfluencedItem;
+        return super.canApplyAtEnchantingTable(stack) &&
+                stack.getItem() instanceof ILightInfluencedItem &&
+                GoldUpgradesConfig.MOONLIGHT_ENCHANT_ENABLED.get();
     }
 }

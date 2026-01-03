@@ -33,11 +33,11 @@ public enum ModArmorMaterial implements IArmorMaterial {
         return Ingredient.of(Items.MAGMA_BLOCK);
     }),
     FIRE_UPGRADED_GOLD("fire_upgraded_gold", 16, new int[]{2, 5, 6, 2}, 28, 2,
-            SoundEvents.BUCKET_FILL_LAVA, 0.5F, 0.0F, () -> {
+            SoundEvents.BUCKET_FILL_LAVA, 0.0F, 0.0F, () -> {
         return Ingredient.of(Items.MAGMA_CREAM);
     }),
     FIRE_POWER_GOLD("fire_power_gold", 28, new int[]{3, 6, 8, 3}, 28, 3,
-            SoundEvents.BUCKET_FILL_LAVA, 1.0F, 0.0F, () -> {
+            SoundEvents.BUCKET_FILL_LAVA, 0.0F, 0.0F, () -> {
         return Ingredient.of(Items.DRAGON_BREATH);
     }),
     SEA_BASE_GOLD("sea_base_gold", 13, new int[]{2, 4, 5, 1}, 30, 1,

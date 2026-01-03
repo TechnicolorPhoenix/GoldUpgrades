@@ -2,12 +2,10 @@ package com.titanhex.goldupgrades.item.custom.armor;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.titanhex.goldupgrades.data.MoonPhase;
+import com.titanhex.goldupgrades.item.components.DynamicAttributeComponent;
+import com.titanhex.goldupgrades.item.components.ObsidianToolComponent;
 import com.titanhex.goldupgrades.item.custom.CustomAttributeArmor;
-import com.titanhex.goldupgrades.item.interfaces.IDayInfluencedItem;
-import com.titanhex.goldupgrades.item.interfaces.ILevelableItem;
-import com.titanhex.goldupgrades.item.interfaces.ILightInfluencedItem;
-import com.titanhex.goldupgrades.item.interfaces.IMoonPhaseInfluencedItem;
+import com.titanhex.goldupgrades.item.interfaces.*;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -19,7 +17,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -29,22 +26,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelableItem, ILightInfluencedItem, IMoonPhaseInfluencedItem, IDayInfluencedItem {
+public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelableItem, ILightInfluencedItem, IMoonPhaseInfluencedItem, IDayInfluencedItem, IArmorCooldown {
 
-    private final UUID[] LIGHT_LEVEL_TOUGHNESS_UUID = new UUID[]{
-            UUID.randomUUID(), // BOOTS
-            UUID.randomUUID(), // LEGGINGS
-            UUID.randomUUID(), // CHESTPLATE
-            UUID.randomUUID()  // HELMET
-    };
-
-    private static final String NBT_ARMOR_TIMER_KEY = "ArmorTimer";
+    private final DynamicAttributeComponent dynamicAttributeHelper;
+    private final ObsidianToolComponent obsidianHelper;
 
     public ObsidianArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, attributeBonuses, builderIn);
+        dynamicAttributeHelper = new DynamicAttributeComponent(
+            UUID.randomUUID(), slot, Attributes.ARMOR_TOUGHNESS,
+            "ArmorModifier" + this.slot.getName()
+        );
+        this.obsidianHelper = new ObsidianToolComponent();
     }
 
     @Override
@@ -52,47 +47,20 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         if (world.isClientSide)
             return;
 
-        int slotIndex = this.slot.getIndex();
-        LivingEntity livingEntity = (LivingEntity) holdingEntity;
+        calibrateLightLevel(stack, world, holdingEntity);
+        changeMoonPhase(stack, world);
 
+        boolean shouldRefresh = changeDay(stack, world);
+
+        LivingEntity livingEntity = (LivingEntity) holdingEntity;
         boolean isEquipped = livingEntity.getItemBySlot(this.slot) == stack;
 
-        int currentBrightness = world.getRawBrightness(holdingEntity.blockPosition(), 0);
-        MoonPhase currentMoonPhase = MoonPhase.getCurrentMoonPhase(world);
-        boolean currentIsDay = isDay(stack, world);
+        ModifiableAttributeInstance toughnessAttribute = livingEntity.getAttribute(Attributes.ARMOR_TOUGHNESS);
 
-        int oldBrightness = ILightInfluencedItem.getLightLevel(stack);
-        MoonPhase oldMoonPhase = this.getMoonPhase(stack);
-        boolean oldIsDay = isDay(stack);
-
-        boolean shouldRefresh = false;
-
-        ModifiableAttributeInstance attackInstance = livingEntity.getAttribute(Attributes.ARMOR_TOUGHNESS);
-
-        if (isEquipped && attackInstance != null)
-            if (attackInstance.getModifier(LIGHT_LEVEL_TOUGHNESS_UUID[slotIndex]) != null)
-                shouldRefresh = oldMoonPhase != currentMoonPhase;
-
-        if (currentIsDay != oldIsDay || oldMoonPhase != currentMoonPhase || oldBrightness != currentBrightness) {
-            ILightInfluencedItem.setLightLevel(stack, currentBrightness);
-            setMoonPhase(stack, currentMoonPhase);
-            setIsDay(stack, currentIsDay);
-        }
-
-        if (shouldRefresh && holdingEntity instanceof LivingEntity) {
-
+        if (isEquipped && shouldRefresh && holdingEntity instanceof LivingEntity && toughnessAttribute != null) {
             Multimap<Attribute, AttributeModifier> newModifiers = this.getAttributeModifiers(this.slot, stack);
 
-            attackInstance.removeModifier(LIGHT_LEVEL_TOUGHNESS_UUID[slotIndex]);
-
-            for (Map.Entry<Attribute, AttributeModifier> entry : newModifiers.entries()) {
-                ModifiableAttributeInstance instance = livingEntity.getAttribute(entry.getKey());
-                if (instance != null) {
-                    if (entry.getValue().getId().equals(LIGHT_LEVEL_TOUGHNESS_UUID[slotIndex])) {
-                        instance.addTransientModifier(entry.getValue());
-                    }
-                }
-            }
+            dynamicAttributeHelper.updateAttributes(livingEntity, newModifiers, toughnessAttribute);
         }
 
         super.inventoryTick(stack, world, holdingEntity, inventorySlot, isSelected);
@@ -100,7 +68,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
 
     @Override
     public int getItemEnchantability(ItemStack stack) {
-        return super.getItemEnchantability(stack) + getMoonPhaseValue(stack);
+        return super.getItemEnchantability(stack) + obsidianHelper.getItemEnchantability(stack);
     }
 
     @Override
@@ -111,14 +79,11 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         int itemLevel = getItemLevel();
         float toughnessBonus = (float) (15 - lightLevel) / 5;
 
-        if (equipmentSlot == this.slot)
-            builder.put(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(
-                    LIGHT_LEVEL_TOUGHNESS_UUID[this.slot.getIndex()],
-                    "Obsidian Armor Toughness Bonus",
-                    (-0.5 + itemLevel) + toughnessBonus,
-                    AttributeModifier.Operation.ADDITION
-                    )
-            );
+        dynamicAttributeHelper.getAttributeModifiers(
+                equipmentSlot, builder,
+                () -> true,
+                () -> (-0.5 + itemLevel) + toughnessBonus
+        );
 
         return builder.build();
     }
@@ -127,17 +92,11 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<ITextComponent> tooltip, @NotNull ITooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
-        MoonPhase moonPhase = getMoonPhase(stack);
-        int itemLevel = getItemLevel();
-        int phaseValue = getMoonPhaseValue(stack, moonPhase);
 
-        if (phaseValue < 0)
-            tooltip.add(new StringTextComponent("§eEnchantment Level Influenced by Moon."));
-        else
-            tooltip.add(new StringTextComponent("§9+" + phaseValue + " Enchantment Level"));
+        obsidianHelper.appendMoonPhaseHoverText(worldIn, stack, tooltip);
 
         if (isNight(stack, worldIn))
-            tooltip.add(new StringTextComponent("§aActive: Absorption Generation."));
+            tooltip.add(new StringTextComponent("§aActive: Absorption Regeneration."));
         else
             tooltip.add(new StringTextComponent("§cInactive: Absorption Regeneration."));
     }
@@ -149,8 +108,7 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
         if (world.isClientSide)
             return;
 
-        CompoundNBT nbt = stack.getOrCreateTag();
-        int timer = nbt.getInt(NBT_ARMOR_TIMER_KEY);
+        int timer = getArmorCooldown(stack);
         int totalSetLevel = getTotalSetLevel(player);
         int itemLevel = getItemLevel();
 
@@ -158,16 +116,16 @@ public class ObsidianArmorItem extends CustomAttributeArmor implements ILevelabl
             if (isNight(stack, world)) {
                 float toAdd = 0.1F*itemLevel;
                 float currentAbsorptionAmount = player.getAbsorptionAmount();
-                final int MAX_CAP = (totalSetLevel+1)/2 * 2;
+                final int MAX_CAP = (totalSetLevel+1)/2 * 2 + getMoonPhaseValue(stack, world) - 1;
 
                 if (currentAbsorptionAmount < MAX_CAP) {
                     player.setAbsorptionAmount(Math.min(MAX_CAP, currentAbsorptionAmount + toAdd));
                 }
             }
 
-            nbt.putInt(NBT_ARMOR_TIMER_KEY, (20*40) - totalSetLevel*20);
+            setArmorCooldown(stack, (20*40) - totalSetLevel*20);
         } else
-            nbt.putInt(NBT_ARMOR_TIMER_KEY, timer - 1);
+            setArmorCooldown(stack, timer - 1);
     }
 
     @Override

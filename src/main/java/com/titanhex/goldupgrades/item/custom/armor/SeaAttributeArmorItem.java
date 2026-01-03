@@ -14,6 +14,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 public class SeaAttributeArmorItem extends SeaArmorItem {
@@ -25,7 +26,7 @@ public class SeaAttributeArmorItem extends SeaArmorItem {
 
     public SeaAttributeArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Multimap<Attribute, Double> attributeBonuses, Properties builderIn) {
         super(materialIn, slot, new HashMap<>(), attributeBonuses, builderIn);
-        this.drainFactor = itemLevel;
+        this.drainFactor = getItemLevel();
     }
 
     @Override
@@ -71,7 +72,7 @@ public class SeaAttributeArmorItem extends SeaArmorItem {
         }
 
         if (!player.isSprinting() && currentOxygen <= 60 && this.cooldown == 0) {
-            stack.hurtAndBreak(toRestore / this.drainFactor, player, (p) -> p.broadcastBreakEvent(stack.getEquipmentSlot()));
+            stack.hurtAndBreak(toRestore / this.drainFactor, player, (p) -> p.broadcastBreakEvent(Objects.requireNonNull(stack.getEquipmentSlot())));
             player.setAirSupply(currentOxygen + toRestore);
             this.cooldown = 120;
         }

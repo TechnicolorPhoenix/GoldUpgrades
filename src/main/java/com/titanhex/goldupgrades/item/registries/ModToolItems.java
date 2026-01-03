@@ -1,4 +1,4 @@
-package com.titanhex.goldupgrades.item;
+package com.titanhex.goldupgrades.item.registries;
 
 import com.titanhex.goldupgrades.item.registries.tool.FireToolItems;
 import com.titanhex.goldupgrades.item.registries.tool.ObsidianToolItems;

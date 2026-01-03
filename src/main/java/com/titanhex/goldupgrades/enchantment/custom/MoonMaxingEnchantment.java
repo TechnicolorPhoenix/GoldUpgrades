@@ -1,5 +1,6 @@
 package com.titanhex.goldupgrades.enchantment.custom;
 
+import com.titanhex.goldupgrades.GoldUpgradesConfig;
 import com.titanhex.goldupgrades.helper.ItemHelper;
 import com.titanhex.goldupgrades.item.interfaces.IMoonPhaseInfluencedItem;
 import net.minecraft.enchantment.Enchantment;
@@ -15,6 +16,8 @@ public class MoonMaxingEnchantment extends Enchantment {
 
     @Override
     public boolean canApplyAtEnchantingTable(@NotNull ItemStack stack) {
-        return super.canApplyAtEnchantingTable(stack) && stack.getItem() instanceof IMoonPhaseInfluencedItem;
+        return super.canApplyAtEnchantingTable(stack) &&
+                stack.getItem() instanceof IMoonPhaseInfluencedItem &&
+                GoldUpgradesConfig.MOON_MAXING_ENCHANT_ENABLED.get();
     }
 }
